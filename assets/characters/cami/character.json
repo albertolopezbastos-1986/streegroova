@@ -1,0 +1,110 @@
+{
+  "id": "cami",
+  "display_name": "Cami",
+  "status": "pending_assets",
+  "default_facing": "right",
+  "scale": 1,
+  "pivot": "feet_center",
+  "notes": "Una hoja por movimiento. El juego todavia no lee este manifiesto. FPS y cuadros de impacto se ajustaran al integrar las animaciones.",
+  "animations": {
+    "idle": {
+      "path": "animations/idle",
+      "format": "sheet",
+      "fps": 8,
+      "loop": true,
+      "frame_size": null,
+      "frame_count": null,
+      "sheet_columns": null,
+      "sheet_rows": null,
+      "active_hit_frames": null
+    },
+    "walk": {
+      "path": "animations/walk",
+      "format": "sheet",
+      "fps": 10,
+      "loop": true,
+      "frame_size": null,
+      "frame_count": null,
+      "sheet_columns": null,
+      "sheet_rows": null,
+      "active_hit_frames": null
+    },
+    "attack_01": {
+      "path": "animations/attack_01",
+      "format": "sheet",
+      "fps": 12,
+      "loop": false,
+      "frame_size": null,
+      "frame_count": null,
+      "sheet_columns": null,
+      "sheet_rows": null,
+      "active_hit_frames": null
+    },
+    "attack_02": {
+      "path": "animations/attack_02",
+      "format": "sheet",
+      "fps": 12,
+      "loop": false,
+      "frame_size": null,
+      "frame_count": null,
+      "sheet_columns": null,
+      "sheet_rows": null,
+      "active_hit_frames": null
+    },
+    "attack_03": {
+      "path": "animations/attack_03",
+      "format": "sheet",
+      "fps": 12,
+      "loop": false,
+      "frame_size": null,
+      "frame_count": null,
+      "sheet_columns": null,
+      "sheet_rows": null,
+      "active_hit_frames": null
+    },
+    "jump": {
+      "path": "animations/jump",
+      "format": "sheet",
+      "fps": 10,
+      "loop": false,
+      "frame_size": null,
+      "frame_count": null,
+      "sheet_columns": null,
+      "sheet_rows": null,
+      "active_hit_frames": null
+    },
+    "jump_attack": {
+      "path": "animations/jump_attack",
+      "format": "sheet",
+      "fps": 12,
+      "loop": false,
+      "frame_size": null,
+      "frame_count": null,
+      "sheet_columns": null,
+      "sheet_rows": null,
+      "active_hit_frames": null
+    },
+    "hurt": {
+      "path": "animations/hurt",
+      "format": "sheet",
+      "fps": 10,
+      "loop": false,
+      "frame_size": null,
+      "frame_count": null,
+      "sheet_columns": null,
+      "sheet_rows": null,
+      "active_hit_frames": null
+    },
+    "death": {
+      "path": "animations/death",
+      "format": "sheet",
+      "fps": 8,
+      "loop": false,
+      "frame_size": null,
+      "frame_count": null,
+      "sheet_columns": null,
+      "sheet_rows": null,
+      "active_hit_frames": null
+    }
+  }
+}

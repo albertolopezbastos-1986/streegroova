@@ -14,6 +14,8 @@ npm run build
 
 ## Controles
 
+Después de **Press Start** se abre la selección con tres portraits. Cambiá con A/D, flechas o mando; confirmá con **Enter / A**, o tocá un portrait y el botón **ELEGIR**. Esc / B vuelve al inicio. Por ahora los tres casilleros muestran y cargan Beto.
+
 | Acción | Teclado | Mando |
 | --- | --- | --- |
 | Mover por la calle | WASD / flechas | Stick izquierdo / cruceta |
@@ -28,12 +30,14 @@ Sin dirección, el salto es vertical. Con dirección, conserva el impulso hasta 
 
 ## El nivel
 
-Tres encuentros a lo largo de una calle nocturna con desplazamiento de cámara y edificios en parallax. No son tres niveles: es el **primer nivel**, dividido en tres rondas. Para avanzar hay que eliminar la ronda y caminar hacia la derecha. Cada transición recupera 25 de energía.
+Tres encuentros sobre una vereda frente a una fila de casas y un local de discos, con encuadre cercano de **2,625×**, un **50% más grande** que el anterior de 1,75×. Los personajes, las fachadas y los efectos comparten el mismo zoom; HUD y menús mantienen su tamaño. El fondo muestra paredes, ventanas y puertas grandes, con una franja angosta de vereda y cordón. No son tres niveles: es el **primer nivel**, dividido en tres rondas. Para avanzar hay que eliminar la ronda y caminar hacia la derecha. Cada transición recupera 25 de energía.
 
-- **Axel:** 100 de energía, tres vidas, combo de puños y remate con patada, salto y patada aérea.
-- **Rival rosa:** luchador equilibrado.
-- **Rival amarillo:** rápido, con menos energía y golpes más débiles.
-- **Rival violeta:** pesado, lento, resistente, con golpes fuertes y anticipación mayor.
+El movimiento en profundidad está limitado a la vereda y es más lento que el horizontal. La cámara conserva espacio por delante del jugador y acompaña verticalmente los saltos para mantener a Beto debajo del HUD sin cambiar su física. Los límites del nivel y los efectos se calculan con el zoom. [Ver encuadre](docs/primer-nivel.png).
+
+- **Beto:** personaje pixel art animado con sus nueve hojas originales; 100 de energía, tres vidas, dos puños y remate con guitarra, salto y patada aérea.
+- **Clon rosa:** luchador equilibrado con los sprites de Beto.
+- **Clon amarillo:** rápido, con menos energía y golpes más débiles.
+- **Clon violeta:** pesado, lento, resistente, con golpes fuertes y anticipación mayor.
 - **Groova Break:** se carga al dar y recibir golpes. Con la barra completa, activa una pose invulnerable, oscurece la escena y daña a todos los rivales del encuentro.
 
 Incluye pausa por pérdida de foco, efectos de impacto, breve congelación de golpes, partículas, música sintetizada, efectos de sonido, victoria, derrota, reinicio y récord local en `user://record.cfg`.
@@ -44,12 +48,29 @@ Toda la interfaz usa **Press Start 2P**, la misma fuente arcade de Groova Invade
 
 La marca usa los mismos archivos de Invaders: ícono y pantalla de carga de Groova, y logo blanco de Groova IPA en el inicio. Los originales están en `assets/branding/`. [Ver pantalla de inicio](docs/pantalla-inicio.png).
 
-Los personajes y el escenario están dibujados y animados con código: es una primera versión jugable con arte geométrico propio. No usa sprites, personajes ni escenarios de Final Fight. Agarrar, lanzar enemigos, armas y cooperativo quedan fuera de esta versión.
+Beto y los tres tipos de enemigos usan sprites pixel art; el escenario usa una franja de fachadas y vereda pixel art con filtrado nearest. Los clones se distinguen mediante paletas de ropa, tamaño y marcas de color. Todos pueden caminar, hacer el combo completo, saltar en avance, esquivar con salto vertical, ejecutar una patada aérea y mostrar daño y KO. **Sólo el jugador tiene ulti**; los rivales usan el golpe con guitarra como remate de alcance cercano, sin daño global. No usa sprites, personajes ni escenarios de Final Fight. Agarrar, lanzar enemigos, armas recogibles y cooperativo quedan fuera de esta versión.
+
+El arte nuevo del escenario está en `assets/environment/neighborhood-pixel.png`; su [prompt y detalles de integración](assets/environment/README.md) quedan documentados.
+
+Sus hojas se leen directamente: el primer puño usa la versión de **40 cuadros**, con cuadrícula de 7 × 6 y dos celdas vacías omitidas; los otros movimientos conservan las hojas de 3 × 3. La duración del primer golpe sigue siendo de unos 0,409 segundos. Los cuadros de contacto hacen daño una vez por objetivo; un golpe pulsado cerca del final de la animación se guarda brevemente para encadenar el combo. La ulti reutiliza el barrido con guitarra, con pose y golpe sincronizados con el oscurecimiento de pantalla. El salto vertical y el salto en avance conservan la física existente.
 
 ## Organización
 
+- `assets/characters/`: carpetas para tres personajes pixel art, organizadas por animación. [Guía para colocar los sprites](assets/characters/README.md).
+- `assets/characters_40_frames/`: variantes separadas de Beto, Alito y Cami para probar hojas de 40 cuadros. [Guía de la variante](assets/characters_40_frames/README.md).
 - `scripts/game.gd`: escenario, oleadas, cámara, interfaz, controles, audio y ciclo de partida.
 - `scripts/fighter.gd`: movimiento, animación, combate e inteligencia de los tres enemigos.
+- `scripts/character_select.gd`: pantalla de selección y controles de sus tres casilleros.
+- `scripts/character_catalog.gd`: carga completa del personaje elegido desde su manifiesto y resuelve casilleros pendientes a Beto.
+- `scripts/character_visual.gd`: animador compartido; usa el manifiesto del personaje para sus hojas, escala, secuencias, dirección y cuadros de contacto.
 - `scenes/main.tscn`: escena principal.
 
 Validación funcional: `godot --headless --path . --script tests/smoke.gd`.
+
+Validación de animaciones y combate de Beto: `godot --headless --path . --script tests/test_beto.gd`.
+
+Validación de selección y carga de otros personajes: `godot --headless --path . --script tests/test_character_select.gd`.
+
+Validación de zoom, cámara, saltos y límites de la vereda: `godot --headless --path . --script tests/test_framing.gd`.
+
+Validación de clones, combos, saltos, patadas aéreas y bloqueo de ulti: `godot --headless --path . --script tests/test_enemies.gd`.

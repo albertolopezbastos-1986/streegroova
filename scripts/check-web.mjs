@@ -14,7 +14,7 @@ export function checkWeb(root = '.') {
     const path = join(directory, entry.name);
     return entry.isDirectory() ? files(path) : [path];
   });
-  const assets = existsSync(join(root, 'assets')) ? files(join(root, 'assets')).filter((file) => /\.(ttf|otf|tres|png|svg|jpg|webp)$/.test(file)) : [];
+  const assets = existsSync(join(root, 'assets')) ? files(join(root, 'assets')).filter((file) => /\.(ttf|otf|tres|png|svg|jpg|webp|json|gdshader)$/.test(file)) : [];
   const sources = [join(root, 'project.godot'), join(root, 'export_presets.cfg'), ...assets, ...files(join(root, 'scripts')).filter((file) => file.endsWith('.gd')), ...files(join(root, 'scenes')).filter((file) => file.endsWith('.tscn'))];
   const packTime = statSync(join(web, 'index.pck')).mtimeMs;
   if (sources.some((file) => statSync(file).mtimeMs > packTime)) {

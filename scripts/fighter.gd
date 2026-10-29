@@ -1,6 +1,10 @@
 extends Node2D
 
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
+const CharacterVisual = preload("res://scripts/character_visual.gd")
+const Catalog = preload("res://scripts/character_catalog.gd")
+const ENEMY_PALETTE = preload("res://assets/characters/enemy_palette.gdshader")
+const ENEMY_COLORS = [Color("d45c79"), Color("d6aa51"), Color("9980d2")]
 
 var game: Node2D
 var kind := -1
@@ -26,15 +30,32 @@ var ai_wait := 0.0
 var windup := 0.0
 var ultimate_pose := 0.0
 var air_attack := false
+var visual: Node2D
+var hurt_duration := 0.0
+var jump_elapsed := 0.0
+var attack_buffer := 0.0
+var jump_duration := 840.0 / 950.0
+var ai_jump_cooldown := 2.0
 
-func setup(owner_game: Node2D, type: int, at: Vector2) -> void:
+func setup(owner_game: Node2D, type: int, at: Vector2, character_pack: Dictionary = {}) -> void:
 	game = owner_game
 	kind = type
 	position = at
+	visual = CharacterVisual.new()
+	visual.configure(character_pack if not character_pack.is_empty() else Catalog.character("beto"))
+	add_child(visual)
 	if kind >= 0:
+		facing = 1 if game.player.position.x >= position.x else -1
 		max_hp = [65.0, 42.0, 130.0][kind]
 		hp = max_hp
 		ai_wait = randf_range(0.2, 0.8)
+		ai_jump_cooldown = randf_range(1.0, 2.2)
+		var palette := ShaderMaterial.new()
+		palette.shader = ENEMY_PALETTE
+		palette.set_shader_parameter("outfit_color", ENEMY_COLORS[kind])
+		visual.material = palette
+		visual.scale = Vector2.ONE * [1.0, 0.97, 1.06][kind]
+	update_visual(0)
 	queue_redraw()
 
 func tick(dt: float) -> void:
@@ -44,21 +65,31 @@ func tick(dt: float) -> void:
 	invincible = maxf(0, invincible - dt)
 	combo_window = maxf(0, combo_window - dt)
 	ultimate_pose = maxf(0, ultimate_pose - dt)
+	attack_buffer = maxf(0, attack_buffer - dt)
+	ai_jump_cooldown = maxf(0, ai_jump_cooldown - dt)
 	if dead:
 		death_time += dt
+		jump_speed = minf(0, jump_speed) - 950 * dt
+		height = maxf(0, height + jump_speed * dt)
+		position.x = clampf(position.x + velocity.x * dt, game.left_bound, game.right_bound)
+		velocity = velocity.move_toward(Vector2.ZERO, dt * 650)
+		update_visual(dt)
 		queue_redraw()
 		return
 	if height > 0 or jump_speed > 0:
+		jump_elapsed += dt
 		height += jump_speed * dt
 		jump_speed -= 950 * dt
 		if height <= 0:
 			height = 0
 			jump_speed = 0
+			if air_attack:
+				attack_time = 0
 			air_attack = false
 			game.dust(position)
 	if attack_time > 0:
 		attack_time = maxf(0, attack_time - dt)
-		if attack_time < attack_duration * 0.72 and attack_time > attack_duration * 0.2:
+		if attack_is_active():
 			strike()
 	if stun > 0:
 		position += velocity * dt
@@ -69,37 +100,60 @@ func tick(dt: float) -> void:
 			player_control(dt)
 		else:
 			enemy_control(dt)
-	position.y = clampf(position.y, 332, 465)
+	position.y = clampf(position.y, game.WALK_MIN_Y, game.WALK_MAX_Y)
 	position.x = clampf(position.x, game.left_bound, game.right_bound)
 	z_index = int(position.y)
+	update_visual(dt)
 	queue_redraw()
 
 func player_control(dt: float) -> void:
 	var direction: Vector2 = Input.get_vector("left", "right", "up", "down")
 	if height == 0:
-		velocity = direction * 170
-		if direction.x != 0:
+		velocity = Vector2(direction.x * 170, direction.y * game.DEPTH_SPEED)
+		if direction.x != 0 and attack_time <= 0:
 			facing = signf(direction.x)
 	# Horizontal momentum is conserved in the air: neutral and forward jumps differ.
 	if attack_time <= 0 or height > 0:
 		position += velocity * dt
 	moving = direction.length() > 0.1 and height == 0 and attack_time <= 0
 	if Input.is_action_just_pressed("jump") and height == 0 and attack_time <= 0:
-		jump_speed = 420
-		height = 1
-		game.sound("jump")
-	if Input.is_action_just_pressed("attack") and cooldown <= 0:
+		takeoff(velocity)
+	if Input.is_action_just_pressed("attack"):
+		attack_buffer = 0.18
+	if attack_buffer > 0 and cooldown <= 0:
+		attack_buffer = 0
 		begin_attack()
 	if Input.is_action_just_pressed("ultimate"):
 		game.use_ultimate()
 
+func takeoff(momentum: Vector2, impulse := 420.0) -> bool:
+	if dead or stun > 0 or height > 0 or attack_time > 0:
+		return false
+	jump_speed = impulse
+	jump_duration = impulse * 2.0 / 950.0
+	height = 1
+	jump_elapsed = 0
+	velocity = momentum
+	moving = false
+	game.sound("jump")
+	update_visual(0)
+	return true
+
+func can_use_ultimate() -> bool:
+	return kind == -1 and not dead
+
 func enemy_control(dt: float) -> void:
 	var target = game.player
+	ai_wait = maxf(0, ai_wait - dt)
+	moving = false
 	if target.dead:
 		return
 	var delta: Vector2 = target.position - position
-	facing = 1 if delta.x >= 0 else -1
-	moving = false
+	if height > 0:
+		position += velocity * dt
+		if not air_attack and jump_elapsed > 0.12 and cooldown <= 0 and absf(delta.x) < 105 and absf(delta.y) < game.MELEE_DEPTH:
+			begin_attack()
+		return
 	if windup > 0:
 		windup -= dt
 		if windup <= 0:
@@ -107,36 +161,91 @@ func enemy_control(dt: float) -> void:
 		return
 	if attack_time > 0:
 		return
-	ai_wait -= dt
+	facing = 1 if delta.x >= 0 else -1
+	var speed: float = [79.0, 125.0, 53.0][kind]
+	var in_lane: bool = absf(delta.y) < game.MELEE_DEPTH
+	if ai_jump_cooldown <= 0 and cooldown <= 0 and ai_wait <= 0 and in_lane:
+		var chase_jump := absf(delta.x) >= 85 and absf(delta.x) <= 175
+		var dodge_jump: bool = target.attack_time > 0 and absf(delta.x) < 75
+		if chase_jump or dodge_jump:
+			var momentum := Vector2(facing * speed * 1.25, clampf(delta.y * 2, -16, 16)) if chase_jump else Vector2.ZERO
+			takeoff(momentum, [250.0, 260.0, 240.0][kind])
+			ai_jump_cooldown = [3.8, 2.8, 5.0][kind]
+			return
 	var range_x: float = 65 if kind == 2 else 50
-	if absf(delta.x) < range_x and absf(delta.y) < 22:
+	if absf(delta.x) < range_x and in_lane:
 		if cooldown <= 0 and ai_wait <= 0:
-			windup = 0.55 if kind == 2 else 0.3
-			ai_wait = randf_range(0.35, 0.85)
+			windup = 0.5 if kind == 2 else 0.3
+			if combo_window > 0 and combo < 2:
+				windup *= 0.6
 	else:
 		var desired := Vector2(target.position.x - facing * (range_x - 9), target.position.y)
-		# A little separation prevents the entire wave stacking on one pixel.
 		var steer: Vector2 = (desired - position).normalized()
 		for other in game.enemies:
 			if other != self and not other.dead:
 				var away: Vector2 = position - other.position
-				if away.length() < 34 and away.length() > 0.1:
-					steer += away.normalized() * 0.8
-		var speed: float = [79.0, 125.0, 53.0][kind]
-		position += steer.limit_length() * speed * dt
+				if away.length() < 26 and away.length() > 0.1:
+					steer += away.normalized() * 0.55
+		position += steer.limit_length() * Vector2(speed, minf(speed, game.DEPTH_SPEED)) * dt
 		moving = true
 
 func begin_attack() -> void:
 	air_attack = height > 0
 	combo = (combo + 1) % 3 if combo_window > 0 else 0
-	combo_window = 0.7
-	attack_duration = 0.34 if kind != 2 else 0.58
-	if air_attack:
-		attack_duration = 0.5
+	attack_duration = visual.duration(attack_motion())
+	if kind >= 0:
+		attack_duration *= [1.0, 0.9, 1.22][kind]
+	combo_window = attack_duration + (1.1 if kind >= 0 else 0.45)
 	attack_time = attack_duration
-	cooldown = attack_duration + (0.55 if kind >= 0 else 0.015)
+	cooldown = attack_duration + (0.12 if kind >= 0 else 0.015)
+	if kind >= 0:
+		ai_wait = 0.12 if combo < 2 else 0.8
 	hits.clear()
 	game.sound("swing")
+	update_visual(0)
+
+func attack_motion() -> String:
+	return "jump_attack" if air_attack else "attack_%02d" % (combo + 1)
+
+func attack_is_active() -> bool:
+	if attack_time <= 0:
+		return false
+	var name := attack_motion()
+	var frame: int = visual.frame_at(name, 1.0 - attack_time / attack_duration)
+	for active_frame in visual.definition(name)["active_hit_frames"]:
+		# JSON numbers are floats; Array.has would compare their Variant types.
+		if frame == int(active_frame):
+			return true
+	return false
+
+func update_visual(dt: float) -> void:
+	if not is_instance_valid(visual):
+		return
+	var motion := "idle"
+	var progress := -1.0
+	if dead:
+		motion = "death"
+		progress = death_time / visual.duration("death")
+	elif ultimate_pose > 0 and can_use_ultimate():
+		motion = "ultimate"
+		progress = (1.6 - game.ult_time) / 1.6
+	elif stun > 0:
+		motion = "hurt"
+		progress = 1.0 - stun / maxf(hurt_duration, 0.01)
+	elif attack_time > 0:
+		motion = attack_motion()
+		progress = 1.0 - attack_time / attack_duration
+	elif height > 0:
+		motion = "jump"
+		progress = jump_elapsed / jump_duration
+	elif moving:
+		motion = "walk"
+	visual.position = Vector2(0, -roundf(height))
+	visual.modulate.a = 0.4 if invincible > 0 and stun <= 0 and ultimate_pose <= 0 and not dead and int(anim * 16) % 2 == 0 else 1.0
+	visual.visible = kind == -1 or not dead or death_time < 1.65
+	if dead and kind >= 0:
+		visual.modulate.a = clampf((1.65 - death_time) / 0.35, 0, 1)
+	visual.update_pose(motion, dt, facing, progress)
 
 func strike() -> void:
 	var targets: Array = game.enemies if kind == -1 else [game.player]
@@ -147,10 +256,9 @@ func strike() -> void:
 		var reach := 89.0 if air_attack or combo == 2 else 70.0
 		if kind == 2:
 			reach = 80
-		if delta.x * facing > -12 and delta.x * facing < reach and absf(delta.y) < 28:
-			if kind >= 0 and target.height > 40:
-				continue
-			if kind == -1 and height > 112:
+		if delta.x * facing > -12 and delta.x * facing < reach and absf(delta.y) < game.MELEE_DEPTH:
+			var height_difference: float = absf(height - target.height)
+			if height_difference > (112.0 if air_attack else 40.0):
 				continue
 			hits.append(target)
 			var damage := 16.0
@@ -166,7 +274,9 @@ func hurt(damage: float, direction: float, heavy := false) -> void:
 	if dead or invincible > 0:
 		return
 	hp = maxf(0, hp - damage)
-	stun = 0.32 if heavy else 0.2
+	stun = (0.44 if heavy else 0.36) if kind == -1 else (0.38 if heavy else 0.25)
+	hurt_duration = stun
+	attack_buffer = 0
 	velocity = Vector2(direction * (230 if heavy else 115), 0)
 	attack_time = 0
 	windup = 0
@@ -182,95 +292,31 @@ func hurt(damage: float, direction: float, heavy := false) -> void:
 		game.combo_timer = 2.0
 	if hp <= 0:
 		dead = true
+		death_time = 0
 		if kind != -1:
 			game.score += [250, 350, 600][kind]
-
-func limb(a: Vector2, b: Vector2, color: Color, width: float) -> void:
-	draw_line(a, b, Color("111526"), width + 4)
-	draw_line(a, b, color, width)
+	update_visual(0)
 
 func _draw() -> void:
-	if dead and death_time > 0.9:
+	if dead and kind >= 0 and death_time >= 1.65:
 		return
-	if invincible > 0 and int(anim * 22) % 2 == 0:
-		return
-	draw_set_transform(Vector2.ZERO)
 	draw_ellipse_shadow()
-	var bulk := 1.25 if kind == 2 else 1.0
-	var origin := Vector2(0, -height)
-	if dead:
-		draw_set_transform(Vector2(0, -7), facing * 1.4, Vector2(facing, 0.65))
-	else:
-		draw_set_transform(origin, 0, Vector2(facing * bulk, bulk))
-	var skin := Color("eeb78b") if kind == -1 else Color("bb8374")
-	var shirt := Color("35d5cf")
-	var pants := Color("263f6c")
-	if kind == 0:
-		shirt = Color("e26887")
-		pants = Color("452e53")
-	elif kind == 1:
-		shirt = Color("e9bc4b")
-		pants = Color("333152")
-	elif kind == 2:
-		shirt = Color("9a83d5")
-		pants = Color("2c263e")
-	if stun > 0:
-		shirt = Color("fff4d4")
-	var stride := sin(anim * 14) * 10 if moving else sin(anim * 3) * 1.5
-	var attacking := attack_time > 0
-	var leg_left := Vector2(-9 - stride, -4)
-	var leg_right := Vector2(10 + stride, -4)
-	if height > 0:
-		leg_left = Vector2(-15, -15)
-		leg_right = Vector2(16, -22)
-	if air_attack and attacking:
-		leg_right = Vector2(52, -37)
-	elif attacking and combo == 2:
-		leg_right = Vector2(46, -30)
-	limb(Vector2(-7, -32), leg_left, pants, 12)
-	limb(Vector2(7, -32), leg_right, pants.lightened(0.12), 12)
-	draw_rect(Rect2(leg_left + Vector2(-8, -3), Vector2(20, 7)), Color("101929"))
-	draw_rect(Rect2(leg_right + Vector2(-7, -3), Vector2(21, 7)), Color("101929"))
-	draw_style_box(body_style(shirt), Rect2(-17, -66, 34, 36))
-	draw_rect(Rect2(-17, -36, 34, 5), Color("e6c17c"))
-	draw_rect(Rect2(-3, -36, 7, 5), Color("fff0ad"))
-	var fist := Vector2(22, -48 + stride * 0.3)
-	if attacking and not air_attack:
-		fist = Vector2(52, -55 if combo == 1 else -48)
-	if ultimate_pose > 0:
-		fist = Vector2(5, -99)
-	limb(Vector2(-12, -60), Vector2(-22, -39 - stride * 0.4), shirt.darkened(0.2), 10)
-	limb(Vector2(12, -60), fist, skin, 10)
-	draw_circle(fist, 7, Color("f2f3de") if kind == -1 else shirt.lightened(0.25))
-	draw_rect(Rect2(-11, -87, 24, 24), skin)
-	draw_rect(Rect2(-13, -91, 27, 10), Color("202033"))
-	draw_rect(Rect2(-13, -85, 8, 13), Color("202033"))
-	draw_rect(Rect2(8, -80, 4, 4), Color("151526"))
-	if kind == -1:
-		draw_rect(Rect2(-14, -84, 29, 4), Color("f26788"))
-		draw_line(Vector2(-12, -82), Vector2(-29 - sin(anim * 10) * 5, -74), Color("f26788"), 4)
-	elif kind == 1:
-		draw_rect(Rect2(-7, -98, 17, 12), Color("e9bc4b"))
-	elif kind == 2:
-		draw_rect(Rect2(-12, -70, 25, 8), Color("312139"))
-	if attacking:
-		var end := Vector2(55, -37 if air_attack else -52)
-		draw_arc(end - Vector2(12, 0), 24, -1.3, 1.2, 10, Color(1, 0.9, 0.6, 0.8), 3)
+	if kind < 0:
+		return
+	var color: Color = ENEMY_COLORS[kind]
+	# Colored pixel marker identifies clones without changing the player's art.
+	draw_rect(Rect2(-13, 1, 26, 2), Color(color, 0.7))
+	if not is_instance_valid(visual) or dead:
+		return
+	var data: Dictionary = visual.character_data
+	var head := float(data["pivot_pixels"][1]) * float(data["scale"]) * visual.scale.y
+	if hp < max_hp:
+		draw_rect(Rect2(-20, -head - height - 5, 40, 4), Color("171b2b"))
+		draw_rect(Rect2(-19, -head - height - 4, 38 * hp / max_hp, 2), color)
 	if windup > 0:
-		draw_string(ArcadeUI.FONT, Vector2(-4, -111), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("ffbf69"))
-	draw_set_transform(Vector2.ZERO)
-	if kind >= 0 and hp < max_hp and not dead:
-		draw_rect(Rect2(-22, -112 * bulk, 44, 4), Color("211d34"))
-		draw_rect(Rect2(-22, -112 * bulk, 44 * hp / max_hp, 4), shirt)
+		draw_string(ArcadeUI.FONT, Vector2(-4, -head * 0.65), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("ffdb8b"))
 
 func draw_ellipse_shadow() -> void:
-	draw_set_transform(Vector2.ZERO, 0, Vector2(1, 0.27))
-	draw_circle(Vector2.ZERO, 22 if kind != 2 else 29, Color(0.015, 0.02, 0.06, 0.55))
-	draw_set_transform(Vector2.ZERO)
-
-func body_style(color: Color) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = color
-	style.border_color = Color("14182b")
-	style.set_border_width_all(2)
-	return style
+	var shade := Color(0.015, 0.02, 0.06, 0.5)
+	draw_rect(Rect2(-15, -3, 30, 6), shade)
+	draw_rect(Rect2(-20, -1, 40, 3), shade)

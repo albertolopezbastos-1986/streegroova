@@ -1,0 +1,300 @@
+{
+  "id": "alito",
+  "display_name": "Alito",
+  "status": "integrated",
+  "default_facing": "right",
+  "scale": 0.75,
+  "pivot": "feet_center",
+  "notes": "Test fixture: reuses real imported textures to verify a different roster entry and animation configuration.",
+  "animations": {
+    "idle": {
+      "path": "../../assets/characters/beto/animations/attack_01",
+      "format": "sheet",
+      "fps": 8,
+      "loop": true,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": null,
+      "file": "firstpunch.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "walk": {
+      "path": "../../assets/characters/beto/animations/walk",
+      "format": "sheet",
+      "fps": 12,
+      "loop": true,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": null,
+      "file": "walk.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "attack_01": {
+      "path": "../../assets/characters/beto/animations/attack_01",
+      "format": "sheet",
+      "fps": 15,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": [
+        5,
+        6
+      ],
+      "file": "firstpunch.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "attack_02": {
+      "path": "../../assets/characters/beto/animations/attack_02",
+      "format": "sheet",
+      "fps": 22,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": [
+        5,
+        6
+      ],
+      "file": "secondpunch.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "attack_03": {
+      "path": "../../assets/characters/beto/animations/attack_03",
+      "format": "sheet",
+      "fps": 18,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": [
+        6,
+        7
+      ],
+      "file": "thirdpunch.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "jump": {
+      "path": "../../assets/characters/beto/animations/jump",
+      "format": "sheet",
+      "fps": 10,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": null,
+      "file": "jump.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "frame_times": [
+        0,
+        0.025,
+        0.05,
+        0.075,
+        0.1,
+        0.35,
+        0.6,
+        0.8,
+        0.95
+      ]
+    },
+    "jump_attack": {
+      "path": "../../assets/characters/beto/animations/jump_attack",
+      "format": "sheet",
+      "fps": 18,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": [
+        5,
+        6,
+        7
+      ],
+      "file": "flykick.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "hurt": {
+      "path": "../../assets/characters/beto/animations/hurt",
+      "format": "sheet",
+      "fps": 10,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": null,
+      "file": "damage.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "death": {
+      "path": "../../assets/characters/beto/animations/death",
+      "format": "sheet",
+      "fps": 8,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": null,
+      "file": "ko.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "ultimate": {
+      "source_animation": "attack_03",
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "impact_frame": 6,
+      "impact_progress": 0.59
+    }
+  },
+  "reference": "source/betopixel.png",
+  "pivot_pixels": [
+    100,
+    190
+  ],
+  "portrait_region": [
+    50,
+    0,
+    110,
+    120
+  ]
+}

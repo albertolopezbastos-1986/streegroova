@@ -3,9 +3,21 @@ extends Node2D
 const Fighter = preload("res://scripts/fighter.gd")
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const START_LOGO: Texture2D = preload("res://assets/branding/groovaipa-logo.png")
+const CharacterCatalog = preload("res://scripts/character_catalog.gd")
+const PIXEL_STREET = preload("res://assets/environment/neighborhood-pixel.png")
+const LIFE_PIXELS = ["0110110", "1111111", "1111111", "0111110", "0011100", "0001000"]
 const INK = Color("101322")
 const CREAM = Color("f5e9d0")
 const MINT = Color("62efd4")
+const WORLD_ZOOM := 2.625
+const WALK_MIN_Y := 410.0
+const WALK_MAX_Y := 430.0
+const START_Y := 420.0
+const MELEE_DEPTH := 10.0
+const DEPTH_SPEED := 46.6667
+const LEVEL_WIDTH := 2550.0
+const CAMERA_ANCHOR_X := 300.0
+const WORLD_OFFSET_Y := 480.0 - START_Y * WORLD_ZOOM
 var player: Node2D
 var enemies: Array = []
 var particles: Array = []
@@ -39,11 +51,15 @@ var font: Font
 var world: Node2D
 var online_scores: Node
 var ranking_panel: CanvasLayer
+var character_select: CanvasLayer
+var active_character_id := "beto"
+var character_pack: Dictionary = {}
 var run_id := ""
 var show_help := false
 var touch_buttons := {"left": Vector2(55, 438), "right": Vector2(159, 438), "up": Vector2(107, 388), "down": Vector2(107, 487), "jump": Vector2(790, 455), "attack": Vector2(886, 416), "ultimate": Vector2(875, 499)}
 
 func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	RenderingServer.set_default_clear_color(INK)
 	font = ArcadeUI.FONT
 	font.antialiasing = TextServer.FONT_ANTIALIASING_NONE
@@ -53,6 +69,7 @@ func _ready() -> void:
 	if save.load("user://record.cfg") == OK:
 		best = save.get_value("score", "best", 0)
 	world = Node2D.new()
+	world.scale = Vector2.ONE * WORLD_ZOOM
 	add_child(world)
 	var overlay := Node2D.new()
 	overlay.name = "Overlay"
@@ -64,7 +81,11 @@ func _ready() -> void:
 	ranking_panel = preload("res://scripts/ranking_panel.gd").new()
 	add_child(ranking_panel)
 	ranking_panel.setup(online_scores)
-	ranking_panel.replay_requested.connect(new_run)
+	ranking_panel.replay_requested.connect(show_character_selection)
+	character_select = preload("res://scripts/character_select.gd").new()
+	add_child(character_select)
+	character_select.confirmed.connect(confirm_character)
+	character_select.cancelled.connect(cancel_character_selection)
 	new_run()
 	state = "title"
 
@@ -88,6 +109,9 @@ func setup_inputs() -> void:
 		InputMap.action_add_event(entry[0], event)
 
 func new_run() -> void:
+	character_select.hide_panel()
+	character_pack = CharacterCatalog.character(active_character_id)
+	active_character_id = character_pack["id"]
 	ranking_panel.reset_run()
 	run_id = online_scores.new_run_id()
 	show_help = false
@@ -106,25 +130,51 @@ func new_run() -> void:
 	respawn_time = 0
 	transition = 0
 	combo_hits = 0
+	freeze = 0
+	shake = 0
 	player = Fighter.new()
 	world.add_child(player)
-	player.setup(self, -1, Vector2(165, 407))
+	player.setup(self, -1, Vector2(CAMERA_ANCHOR_X / WORLD_ZOOM, START_Y), character_pack)
 	player.invincible = 1.5
 	spawn_wave()
+	update_world_transform()
 	state = "play"
+
+func show_character_selection() -> void:
+	ranking_panel.reset_run()
+	ranking_panel.entry_button.hide()
+	show_help = false
+	state = "select"
+	touches.clear()
+	for action in touch_buttons:
+		Input.action_release(action)
+	character_select.show_panel()
+
+func confirm_character(slot: int) -> void:
+	active_character_id = CharacterCatalog.character_for_slot(slot)["id"]
+	for action in touch_buttons:
+		Input.action_release(action)
+	new_run()
+
+func cancel_character_selection() -> void:
+	character_select.hide_panel()
+	state = "title"
 
 func spawn_wave() -> void:
 	var waves := [[0, 0, 1], [1, 0, 2, 1], [2, 0, 1, 2, 0]]
 	for i in range(waves[stage].size()):
 		var enemy = Fighter.new()
 		world.add_child(enemy)
-		var x := minf(right_bound - 45, left_bound + 590 + i * 48)
-		enemy.setup(self, waves[stage][i], Vector2(x, 350 + (i % 3) * 47))
+		var x := minf(right_bound - 45, left_bound + 230 + i * 36)
+		enemy.setup(self, waves[stage][i], Vector2(x, WALK_MIN_Y + (i % 3) * 10))
 		enemies.append(enemy)
 	banner_time = 3
 
 func _input(event: InputEvent) -> void:
 	if ranking_panel.open:
+		return
+	if state == "select":
+		character_select.handle_input(event)
 		return
 	if state == "title":
 		if event is InputEventKey and event.pressed and event.physical_keycode == KEY_R:
@@ -149,10 +199,12 @@ func _input(event: InputEvent) -> void:
 			else:
 				Input.action_release(action)
 		if event is InputEventScreenTouch and event.pressed and state in ["title", "over", "won"]:
-			new_run()
+			show_character_selection()
+			return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if state in ["title", "over", "won"]:
-			new_run()
+			show_character_selection()
+			return
 	if event.is_action_pressed("mute"):
 		muted = not muted
 		AudioServer.set_bus_mute(0, muted)
@@ -160,7 +212,8 @@ func _input(event: InputEvent) -> void:
 		show_help = not show_help
 	if event.is_action_pressed("start") or event.is_action_pressed("attack") or event.is_action_pressed("jump"):
 		if state in ["title", "over", "won"]:
-			new_run()
+			show_character_selection()
+			return
 	if event.is_action_pressed("pause_game"):
 		if state == "pause":
 			state = previous_state
@@ -188,9 +241,23 @@ func _process(dt: float) -> void:
 			p.vel.y += dt * 220
 		particles = particles.filter(func(p): return p.life > 0)
 	shake = maxf(0, shake - dt * 30)
-	var offset := Vector2(randf_range(-shake, shake), randf_range(-shake, shake))
-	world.position = Vector2(-camera_x, 0) + offset
+	update_world_transform()
 	queue_redraw()
+
+func update_world_transform() -> void:
+	var offset := Vector2(randf_range(-shake, shake), randf_range(-shake, shake))
+	var follow_y := 0.0
+	if is_instance_valid(player) and is_instance_valid(player.visual):
+		var data: Dictionary = player.visual.character_data
+		var sprite_height := float(data["pivot_pixels"][1]) * float(data["scale"])
+		var top: float = (player.position.y - player.height - sprite_height) * WORLD_ZOOM + WORLD_OFFSET_Y
+		# At this close range a full jump exceeds the viewport height. Pan up
+		# with the player while keeping the HUD fixed and the jump physics intact.
+		follow_y = maxf(0, 100.0 - top)
+	world.position = Vector2(-camera_x * WORLD_ZOOM, WORLD_OFFSET_Y + follow_y) + offset
+
+func world_to_screen(point: Vector2) -> Vector2:
+	return world.position + point * WORLD_ZOOM
 
 func update_game(dt: float) -> void:
 	banner_time = maxf(0, banner_time - dt)
@@ -203,6 +270,7 @@ func update_game(dt: float) -> void:
 	if ult_time > 0:
 		ult_time -= dt
 		player.ultimate_pose = 0.1
+		player.update_visual(dt)
 		player.queue_redraw()
 		if ult_time < 0.65 and not ult_applied:
 			ult_applied = true
@@ -214,6 +282,7 @@ func update_game(dt: float) -> void:
 			sound("ultimate")
 		if ult_time <= 0:
 			player.ultimate_pose = 0
+			player.update_visual(0)
 		return
 	player.tick(dt)
 	for enemy in enemies:
@@ -233,6 +302,13 @@ func update_game(dt: float) -> void:
 				player.jump_speed = 0
 				player.invincible = 2.5
 				player.position.x = maxf(left_bound + 80, player.position.x)
+				player.stun = 0
+				player.attack_time = 0
+				player.air_attack = false
+				player.attack_buffer = 0
+				player.velocity = Vector2.ZERO
+				player.moving = false
+				player.update_visual(0)
 		return
 	var alive := enemies.filter(func(e): return not e.dead).size()
 	if alive == 0:
@@ -247,7 +323,7 @@ func update_game(dt: float) -> void:
 				transition = 0
 				player.hp = minf(player.max_hp, player.hp + 25)
 				spawn_wave()
-	camera_x = lerpf(camera_x, clampf(player.position.x - 310, 0, 2550 - 960), minf(1, dt * 6))
+	camera_x = lerpf(camera_x, clampf(player.position.x - CAMERA_ANCHOR_X / WORLD_ZOOM, 0, LEVEL_WIDTH - 960.0 / WORLD_ZOOM), minf(1, dt * 6))
 
 func finish(result: String) -> void:
 	state = result
@@ -258,15 +334,21 @@ func finish(result: String) -> void:
 		save.save("user://record.cfg")
 	ranking_panel.show_result(result, score, run_id)
 
-func use_ultimate() -> void:
-	if charge < 100 or ult_time > 0 or player.dead:
+func use_ultimate(actor: Node2D = null) -> void:
+	if actor != null and actor != player:
+		return
+	if charge < 100 or ult_time > 0 or not player.can_use_ultimate():
 		return
 	charge = 0
 	ult_time = 1.6
 	ult_applied = false
 	player.ultimate_pose = 1.6
 	player.attack_time = 0
+	player.attack_buffer = 0
+	player.stun = 0
+	player.moving = false
 	player.invincible = 2.1
+	player.update_visual(0)
 	sound("power")
 
 func impact(at: Vector2, direction: float, heavy: bool) -> void:
@@ -294,79 +376,27 @@ func _draw() -> void:
 	get_node("Overlay").queue_redraw()
 
 func draw_city() -> void:
-	rect(0, 0, 960, 540, Color("12182c"))
-	draw_circle(Vector2(752 - camera_x * 0.04, 113), 46, Color("e9baad"))
-	draw_circle(Vector2(735 - camera_x * 0.04, 100), 44, Color("12182c"))
-	for i in range(18):
-		var bx := i * 91.0 - fmod(camera_x * 0.18, 91)
-		var bh := 80 + (i * 73 % 117)
-		rect(bx, 270 - bh, 73, bh, Color("1c2440"))
-		for row in range(7):
-			for col in range(4):
-				if (row * 7 + col * 3 + i) % 4 != 0:
-					rect(bx + 9 + col * 16, 282 - bh + row * 22, 5, 8, Color("3b425e"))
-	for i in range(10):
-		var x := i * 300.0 - camera_x * 0.82 - 150
-		if x < -350 or x > 1000:
-			continue
-		var palette := [Color("30304a"), Color("292b43"), Color("343047")]
-		rect(x, 139, 296, 192, palette[i % 3])
-		rect(x, 139, 296, 8, Color("4b435b"))
-		for row in range(6):
-			for col in range(8):
-				rect(x + col * 40 + (20 if row % 2 else 0), 153 + row * 26, 33, 2, Color("3d354f"))
-		for j in range(3):
-			var wx := x + 25 + j * 88
-			rect(wx, 167, 54, 70, Color("161c30"))
-			rect(wx + 4, 171, 21, 58, Color("4d5368") if (i + j) % 3 else Color("ad866e"))
-			rect(wx + 29, 171, 20, 58, Color("29364c"))
-			rect(wx - 3, 234, 60, 5, Color("63566b"))
-		rect(x + 16, 257, 261, 74, Color("181e30"))
-		for slat in range(10):
-			rect(x + 20, 260 + slat * 7, 254, 2, Color("34354d"))
-		if i % 3 == 0:
-			neon_sign(x + 22, 246, "GROOVA", Color("ed7c9c"), 28)
-		elif i % 3 == 1:
-			neon_sign(x + 40, 252, "24 / RAMEN", MINT, 21)
-		else:
-			neon_sign(x + 37, 252, "NIGHT RECORDS", Color("ddbf82"), 19)
-		# Fire escape.
-		rect(x + 220, 160, 5, 159, Color("151b2a"))
-		rect(x + 269, 160, 5, 159, Color("151b2a"))
-		for rung in range(11):
-			rect(x + 220, 165 + rung * 14, 54, 3, Color("1b2131"))
-	rect(0, 328, 960, 23, Color("676078"))
-	rect(0, 347, 960, 9, Color("292a40"))
-	rect(0, 356, 960, 143, Color("343549"))
-	rect(0, 499, 960, 41, Color("252a3e"))
-	for i in range(34):
-		var px := fposmod(i * 113.0 - camera_x, 1050) - 30
-		var py := 370 + (i * 43 % 118)
-		rect(px, py, 24 + i % 30, 2, Color("424257"))
-		if i % 4 == 0:
-			rect(px, py + 6, 48, 3, Color("51445f"))
-	for i in range(12):
-		var px := i * 240.0 - camera_x
-		rect(px, 515, 98, 4, Color("9c8d88"))
-	for i in range(6):
-		var px := i * 475.0 + 275 - camera_x
-		rect(px, 183, 7, 166, Color("101b2b"))
-		rect(px - 30, 179, 42, 6, Color("152034"))
-		draw_circle(Vector2(px - 25, 191), 18, Color(1, 0.79, 0.52, 0.07))
-		rect(px - 35, 184, 22, 5, Color("ffdfa0"))
-		# Bin, pavement litter and glowing wet reflections.
-		rect(px + 39, 306, 33, 39, Color("253f49"))
-		rect(px + 35, 301, 41, 7, Color("537074"))
-		for line in range(3):
-			rect(px + 44 + line * 9, 313, 3, 25, Color("36515a"))
-		rect(px - 51, 390, 62, 3, Color("77586d"))
-		rect(px - 33, 397, 32, 2, Color("8c6474"))
-		rect(px + 96, 365, 12, 5, Color("b0a5a1"))
+	rect(0, 0, 960, 540, Color("151b29"))
+	draw_set_transform(world.position, 0, Vector2.ONE * WORLD_ZOOM)
+	var tile_width := 492.0
+	var first := floori((camera_x + 80) / tile_width) - 1
+	var last := ceili((camera_x + 960.0 / WORLD_ZOOM + 80) / tile_width)
+	for i in range(first, last + 1):
+		var x := -80.0 + i * tile_width
+		# Artwork wall base is at source row 748, aligned to world y=399.
+		draw_texture_rect(PIXEL_STREET, Rect2(x, 159, tile_width, 328), false)
+		# Expansion joint hides the material change at horizontal strip seams.
+		rect(x - 2, 159, 5, 240, Color("171d28"))
+		rect(x, 159, 1, 240, Color("4c4d52"))
+		for bracket in range(8):
+			rect(x - 3, 178 + bracket * 28, 7, 2, Color("282c35"))
+		label_at("GROOVA", Vector2(x + 361, 253), 20, Color("dfb179"))
 	if enemies.filter(func(e): return not e.dead).size() > 0:
-		var edge := right_bound - camera_x
-		if edge < 960:
+		var visible_width := 960.0 / WORLD_ZOOM
+		if right_bound >= camera_x and right_bound < camera_x + visible_width:
 			for j in range(4):
-				draw_line(Vector2(edge, 338 + j * 36), Vector2(edge, 358 + j * 36), Color("e17e8a"), 3)
+				rect(right_bound, 409 + j * 6, 1, 3, Color("e17e8a"))
+	draw_set_transform(Vector2.ZERO)
 
 func neon_sign(x: float, y: float, words: String, color: Color, size: int) -> void:
 	var width := font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1, ArcadeUI.font_size(size)).x
@@ -378,12 +408,12 @@ func neon_sign(x: float, y: float, words: String, color: Color, size: int) -> vo
 func draw_overlay() -> void:
 	var canvas: Node2D = get_node("Overlay")
 	for p in particles:
-		canvas.draw_rect(Rect2(p.pos - Vector2(camera_x, 0), Vector2.ONE * p.size), p.color)
+		canvas.draw_rect(Rect2(world_to_screen(p.pos), Vector2.ONE * p.size * WORLD_ZOOM), p.color)
 	if ult_time > 0:
 		canvas.draw_rect(Rect2(0, 0, 960, 540), Color(0.015, 0.02, 0.08, 0.72))
-		var center: Vector2 = player.position - Vector2(camera_x, 45 + player.height)
-		canvas.draw_circle(center, 85 + sin(time * 30) * 8, Color(0.3, 1, 0.9, 0.10))
-		canvas.draw_arc(center, (1.6 - ult_time) * 600, 0, TAU, 96, MINT, 5)
+		var center: Vector2 = world_to_screen(player.position - Vector2(0, 45 + player.height))
+		canvas.draw_circle(center, (85 + sin(time * 30) * 8) * WORLD_ZOOM, Color(0.3, 1, 0.9, 0.10))
+		canvas.draw_arc(center, (1.6 - ult_time) * 600 * WORLD_ZOOM, 0, TAU, 96, MINT, 5)
 		# Draw the posed hero above the darkened scene.
 		player.z_index = 1001
 		overlay_text(canvas, "G R O O V A   B R E A K", Vector2(235, 172), 32, MINT)
@@ -391,7 +421,7 @@ func draw_overlay() -> void:
 		player.z_index = int(player.position.y)
 	draw_hud(canvas)
 	if state == "play":
-		if banner_time > 0:
+		if banner_time > 0 and player.height < 10 and not enemies.any(func(e): return not e.dead and e.height > 10):
 			overlay_text(canvas, ["01 / EL DISTRITO NEON", "02 / CALLEJON DEL RITMO", "03 / ULTIMA RONDA"][stage], Vector2(300, 127), 21, CREAM)
 		if transition > 0 and stage < 2:
 			overlay_text(canvas, "AVANZA  >>", Vector2(740, 267), 22, MINT)
@@ -446,12 +476,16 @@ func draw_hud(canvas: Node2D) -> void:
 	canvas.draw_line(Vector2(24, 91), Vector2(936, 91), Color("3b4059"), 1)
 	canvas.draw_rect(Rect2(24, 19, 47, 51), Color("2c4b58"))
 	overlay_text(canvas, "G", Vector2(34, 58), 34, MINT)
-	overlay_text(canvas, "AXEL  /  1P", Vector2(85, 28), 16, CREAM)
+	overlay_text(canvas, str(character_pack["display_name"]).to_upper() + " / 1P", Vector2(85, 28), 16, CREAM)
 	canvas.draw_rect(Rect2(85, 36, 264, 16), Color("393044"))
 	canvas.draw_rect(Rect2(87, 38, 260 * player.hp / player.max_hp, 12), MINT if player.hp > 30 else Color("f187a5"))
 	overlay_text(canvas, "%03d / 100" % int(player.hp), Vector2(360, 50), 14, CREAM)
 	for i in range(3):
-		canvas.draw_circle(Vector2(92 + i * 20, 69), 5, Color("f187a5") if i < lives else Color("34374c"))
+		var life_color := Color("f187a5") if i < lives else Color("34374c")
+		for row in range(LIFE_PIXELS.size()):
+			for col in range(LIFE_PIXELS[row].length()):
+				if LIFE_PIXELS[row][col] == "1":
+					canvas.draw_rect(Rect2(85 + i * 20 + col * 2, 62 + row * 2, 2, 2), life_color)
 	overlay_text(canvas, "VIDAS", Vector2(151, 74), 11, Color("98a3b9"))
 	overlay_text(canvas, "GROOVA BREAK", Vector2(474, 28), 14, MINT)
 	canvas.draw_rect(Rect2(474, 36, 192, 14), Color("30344c"))
@@ -461,6 +495,7 @@ func draw_hud(canvas: Node2D) -> void:
 	var remaining := enemies.filter(func(e): return not e.dead).size()
 	overlay_text(canvas, "RONDA %d/3   /   %d RIVALES" % [stage + 1, remaining], Vector2(743, 69), 12, Color("98a3b9"))
 	if not touch_visible and state == "play":
+		canvas.draw_rect(Rect2(0, 514, 960, 26), Color(0.04, 0.06, 0.12, 0.94))
 		overlay_text(canvas, "J GOLPE    ESPACIO SALTO    L ULTI", Vector2(24, 524), 12, CREAM)
 		overlay_text(canvas, "H AYUDA / ESC PAUSA / M SONIDO", Vector2(669, 524), 11, CREAM)
 
@@ -479,6 +514,7 @@ func setup_audio() -> void:
 	music.play()
 
 func _exit_tree() -> void:
+	CharacterCatalog.cache.clear()
 	if is_instance_valid(music):
 		music.stop()
 		music.stream = null

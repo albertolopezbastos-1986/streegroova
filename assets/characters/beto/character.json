@@ -1,0 +1,340 @@
+{
+  "id": "beto",
+  "display_name": "Beto",
+  "status": "integrated",
+  "default_facing": "right",
+  "scale": 0.6,
+  "pivot": "feet_center",
+  "notes": "Beto integrado al jugador. Primer golpe: hoja de 40 cuadros (7x6, ultimas dos celdas vacias); resto de movimientos: hojas originales 3x3. Cuadros de 200x200, pivote fijo y contactos sincronizados. La ulti reutiliza el golpe con guitarra.",
+  "animations": {
+    "idle": {
+      "path": "animations/idle",
+      "format": "sheet",
+      "fps": 8,
+      "loop": true,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": null,
+      "file": "idle.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "walk": {
+      "path": "animations/walk",
+      "format": "sheet",
+      "fps": 12,
+      "loop": true,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": null,
+      "file": "walk.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "attack_01": {
+      "path": "../../characters_40_frames/beto/animations/attack_01",
+      "format": "sheet",
+      "fps": 97.77777777777777,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 40,
+      "sheet_columns": 7,
+      "sheet_rows": 6,
+      "active_hit_frames": [
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22
+      ],
+      "file": "firstpunch.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ]
+    },
+    "attack_02": {
+      "path": "animations/attack_02",
+      "format": "sheet",
+      "fps": 22,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": [
+        5,
+        6
+      ],
+      "file": "secondpunch.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "attack_03": {
+      "path": "animations/attack_03",
+      "format": "sheet",
+      "fps": 18,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": [
+        6,
+        7
+      ],
+      "file": "thirdpunch.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "jump": {
+      "path": "animations/jump",
+      "format": "sheet",
+      "fps": 10,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": null,
+      "file": "jump.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "frame_times": [
+        0,
+        0.025,
+        0.05,
+        0.075,
+        0.1,
+        0.35,
+        0.6,
+        0.8,
+        0.95
+      ]
+    },
+    "jump_attack": {
+      "path": "animations/jump_attack",
+      "format": "sheet",
+      "fps": 18,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": [
+        5,
+        6,
+        7
+      ],
+      "file": "flykick.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "hurt": {
+      "path": "animations/hurt",
+      "format": "sheet",
+      "fps": 10,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": null,
+      "file": "damage.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "death": {
+      "path": "animations/death",
+      "format": "sheet",
+      "fps": 8,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "active_hit_frames": null,
+      "file": "ko.png",
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "ultimate": {
+      "source_animation": "attack_03",
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "impact_frame": 6,
+      "impact_progress": 0.59
+    }
+  },
+  "reference": "source/betopixel.png",
+  "pivot_pixels": [
+    100,
+    190
+  ],
+  "portrait_region": [
+    50,
+    0,
+    110,
+    120
+  ],
+  "portrait_file": "portraits/portrait.png"
+}
