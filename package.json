@@ -1,0 +1,16 @@
+{
+  "name": "street-groova-online",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "export": "node scripts/export-game.mjs",
+    "build": "node scripts/check-web.mjs",
+    "test": "node --test tests/backend.test.mjs tests/web-build.test.mjs tests/deploy.test.mjs",
+    "dev": "npx netlify-cli dev",
+    "deploy": "node scripts/deploy.mjs",
+    "verify:deploy": "node scripts/verify-deploy.mjs",
+    "postinstall": "node scripts/ignore-node-modules.mjs"
+  },
+  "dependencies": { "@netlify/blobs": "^10.5.0" }
+}
