@@ -1,5 +1,7 @@
 extends Node2D
 
+const Breakable = preload("res://scripts/breakable.gd")
+const CombatDirector = preload("res://scripts/combat_director.gd")
 const Fighter = preload("res://scripts/fighter.gd")
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const START_LOGO: Texture2D = preload("res://assets/branding/groovaipa-logo.png")
@@ -9,18 +11,24 @@ const LIFE_PIXELS = ["0110110", "1111111", "1111111", "0111110", "0011100", "000
 const INK = Color("101322")
 const CREAM = Color("f5e9d0")
 const MINT = Color("62efd4")
-const WORLD_ZOOM := 2.625
+const WORLD_ZOOM := 1.96875
 const WALK_MIN_Y := 410.0
 const WALK_MAX_Y := 430.0
 const START_Y := 420.0
 const MELEE_DEPTH := 10.0
 const DEPTH_SPEED := 46.6667
-const LEVEL_WIDTH := 2550.0
+const WAVE_COUNT := 10
+const SECTION_WIDTH := 850.0
+const BACKTRACK_DISTANCE := 700.0
+const LEVEL_WIDTH := SECTION_WIDTH * WAVE_COUNT
 const CAMERA_ANCHOR_X := 300.0
 const WORLD_OFFSET_Y := 480.0 - START_Y * WORLD_ZOOM
+var combat_director: RefCounted
 var player: Node2D
 var enemies: Array = []
 var particles: Array = []
+var props: Array = []
+var food: Array = []
 var state := "title"
 var previous_state := "play"
 var score := 0
@@ -118,6 +126,9 @@ func new_run() -> void:
 	for child in world.get_children():
 		child.queue_free()
 	enemies.clear()
+	props.clear()
+	food.clear()
+	combat_director = CombatDirector.new(self)
 	particles.clear()
 	score = 0
 	lives = 3
@@ -161,14 +172,43 @@ func cancel_character_selection() -> void:
 	state = "title"
 
 func spawn_wave() -> void:
-	var waves := [[0, 0, 1], [1, 0, 2, 1], [2, 0, 1, 2, 0]]
+	combat_director.reset()
+	var waves := [[0, 0, 1], [1, 0, 2], [0, 1, 0, 1], [2, 0, 1], [1, 2, 0, 1], [2, 2, 1, 0], [0, 1, 2, 1, 0], [2, 1, 2, 0], [1, 2, 0, 2, 1], [0]]
 	for i in range(waves[stage].size()):
 		var enemy = Fighter.new()
 		world.add_child(enemy)
-		var x := minf(right_bound - 45, left_bound + 230 + i * 36)
+		var x := minf(right_bound - 65, player.position.x + 155 + i * 38)
 		enemy.setup(self, waves[stage][i], Vector2(x, WALK_MIN_Y + (i % 3) * 10))
+		if stage == WAVE_COUNT - 1:
+			enemy.make_boss()
 		enemies.append(enemy)
+	# Supplies persist when backtracking; they spawn only once per section.
+	for i in range(2):
+		var prop = Breakable.new()
+		world.add_child(prop)
+		prop.setup(self, Vector2(stage * SECTION_WIDTH + 380 + i * 290, START_Y + (6 if i == 0 else -6)), i == 1)
+		props.append(prop)
 	banner_time = 3
+
+func drop_chicken(at: Vector2) -> void:
+	var pickup = Breakable.new()
+	world.add_child(pickup)
+	pickup.setup(self, at, false)
+	pickup.as_food = true
+	food.append(pickup)
+
+func update_supplies(dt: float) -> void:
+	for prop in props:
+		prop.tick(dt)
+	for pickup in food:
+		pickup.tick(dt)
+		if pickup.dead or player.dead or player.height > 8 or player.hp >= player.max_hp:
+			continue
+		if absf(player.position.x - pickup.position.x) < 23 and absf(player.position.y - pickup.position.y) < MELEE_DEPTH:
+			player.hp = minf(player.max_hp, player.hp + 50)
+			pickup.dead = true
+			pickup.hide()
+			sound("power")
 
 func _input(event: InputEvent) -> void:
 	if ranking_panel.open:
@@ -285,8 +325,10 @@ func update_game(dt: float) -> void:
 			player.update_visual(0)
 		return
 	player.tick(dt)
+	combat_director.update(dt)
 	for enemy in enemies:
 		enemy.tick(dt)
+	update_supplies(dt)
 	if player.dead:
 		respawn_time += dt
 		if respawn_time > 1.4:
@@ -295,6 +337,7 @@ func update_game(dt: float) -> void:
 			if lives <= 0:
 				finish("over")
 			else:
+				player.grapple.release()
 				player.dead = false
 				player.death_time = 0
 				player.hp = player.max_hp
@@ -313,15 +356,14 @@ func update_game(dt: float) -> void:
 	var alive := enemies.filter(func(e): return not e.dead).size()
 	if alive == 0:
 		transition += dt
-		if stage == 2 and transition > 2:
+		if stage == WAVE_COUNT - 1 and transition > 2:
 			finish("won")
-		elif stage < 2:
-			right_bound = (stage + 2) * 850.0
-			if player.position.x > (stage + 1) * 850 + 80:
+		elif stage < WAVE_COUNT - 1:
+			right_bound = (stage + 2) * SECTION_WIDTH
+			if player.position.x > (stage + 1) * SECTION_WIDTH + 80:
 				stage += 1
-				left_bound = stage * 850.0
+				left_bound = maxf(30, stage * SECTION_WIDTH - BACKTRACK_DISTANCE)
 				transition = 0
-				player.hp = minf(player.max_hp, player.hp + 25)
 				spawn_wave()
 	camera_x = lerpf(camera_x, clampf(player.position.x - CAMERA_ANCHOR_X / WORLD_ZOOM, 0, LEVEL_WIDTH - 960.0 / WORLD_ZOOM), minf(1, dt * 6))
 
@@ -339,6 +381,8 @@ func use_ultimate(actor: Node2D = null) -> void:
 		return
 	if charge < 100 or ult_time > 0 or not player.can_use_ultimate():
 		return
+	player.grapple.release()
+	combat_director.reset()
 	charge = 0
 	ult_time = 1.6
 	ult_applied = false
@@ -422,8 +466,8 @@ func draw_overlay() -> void:
 	draw_hud(canvas)
 	if state == "play":
 		if banner_time > 0 and player.height < 10 and not enemies.any(func(e): return not e.dead and e.height > 10):
-			overlay_text(canvas, ["01 / EL DISTRITO NEON", "02 / CALLEJON DEL RITMO", "03 / ULTIMA RONDA"][stage], Vector2(300, 127), 21, CREAM)
-		if transition > 0 and stage < 2:
+			overlay_text(canvas, ("10 / EL JEFE DEL BARRIO" if stage == WAVE_COUNT - 1 else "%02d / EL DISTRITO NEON" % (stage + 1)), Vector2(300, 127), 21, CREAM)
+		if transition > 0 and stage < WAVE_COUNT - 1:
 			overlay_text(canvas, "AVANZA  >>", Vector2(740, 267), 22, MINT)
 		if combo_hits > 1:
 			overlay_text(canvas, "%02d HITS" % combo_hits, Vector2(779, 164), 27, Color("ffc785"))
@@ -442,7 +486,7 @@ func draw_overlay() -> void:
 			var logo_scale := minf(360.0 / START_LOGO.get_width(), 190.0 / START_LOGO.get_height())
 			var logo_size := START_LOGO.get_size() * logo_scale
 			canvas.draw_texture_rect(START_LOGO, Rect2(Vector2((960 - logo_size.x) / 2, 8), logo_size), false)
-			overlay_centered(canvas, "UN BARRIO. TRES RONDAS. CERO MARCHA ATRAS.", 199, 16, MINT)
+			overlay_centered(canvas, "UN BARRIO. DIEZ OLEADAS. CERO MARCHA ATRAS.", 199, 16, MINT)
 			overlay_centered(canvas, "STREET GROOVA", 258, 60, Color("f187a5"))
 			overlay_centered(canvas, "EPISODIO 01 / LA ULTIMA NOCHE", 292, 16, MINT)
 			draw_controls(canvas, 340)
@@ -467,7 +511,7 @@ func overlay_centered(canvas: Node2D, value: String, y: float, size: int, color:
 	overlay_text(canvas, value, Vector2((960 - width) / 2, y), size, color)
 
 func draw_controls(canvas: Node2D, y: float) -> void:
-	var lines := ["WASD / FLECHAS   mover     J / Z   combo de 3 golpes", "ESPACIO / K   salto     direccion + salto   salto en avance", "En el aire + J   patada voladora     L / X   ulti cargada", "MANDO: stick / cruceta   |   X golpe   A salto   Y ulti", "ESC pausa    H ayuda    M sonido   |   Recuperas energia entre rondas"]
+	var lines := ["WASD / FLECHAS   mover     J / Z   combo de 3 golpes", "ESPACIO / K   salto     direccion + salto   salto en avance", "En el aire + J   patada voladora     L / X   ulti cargada", "Pegado al rival: agarre   |   J golpe   |   atras + J lanzar", "MANDO: stick / cruceta   |   X golpe   A salto   Y ulti", "ESC pausa    H ayuda    M sonido   |   Busca pollo en cajas y barriles"]
 	for i in range(lines.size()):
 		overlay_text(canvas, lines[i], Vector2(219 if i < 4 else 190, y + i * 23), 16 if i < 4 else 14, CREAM if i < 3 else Color("98a3b9"))
 
@@ -493,7 +537,12 @@ func draw_hud(canvas: Node2D) -> void:
 	overlay_text(canvas, "L / Y  LISTA!" if charge >= 100 else "SE CARGA AL PEGAR Y RECIBIR", Vector2(474, 70), 11, MINT if charge >= 100 else Color("98a3b9"))
 	overlay_text(canvas, "%06d" % score, Vector2(778, 38), 29, CREAM)
 	var remaining := enemies.filter(func(e): return not e.dead).size()
-	overlay_text(canvas, "RONDA %d/3   /   %d RIVALES" % [stage + 1, remaining], Vector2(743, 69), 12, Color("98a3b9"))
+	overlay_text(canvas, "OLEADA %d/10   /   %d RIVALES" % [stage + 1, remaining], Vector2(743, 69), 12, Color("98a3b9"))
+	for enemy in enemies:
+		if enemy.is_boss and not enemy.dead and state == "play":
+			canvas.draw_rect(Rect2(270, 102, 420, 20), Color("241b2c"))
+			canvas.draw_rect(Rect2(272, 104, 416 * enemy.hp / enemy.max_hp, 16), Color("d45c79"))
+			overlay_centered(canvas, "JEFE DEL BARRIO  %d / %d" % [enemy.hp, enemy.max_hp], 115, 12, CREAM)
 	if not touch_visible and state == "play":
 		canvas.draw_rect(Rect2(0, 514, 960, 26), Color(0.04, 0.06, 0.12, 0.94))
 		overlay_text(canvas, "J GOLPE    ESPACIO SALTO    L ULTI", Vector2(24, 524), 12, CREAM)

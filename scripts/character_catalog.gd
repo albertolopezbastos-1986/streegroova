@@ -75,6 +75,9 @@ static func load_pack(path: String) -> Dictionary:
 		if not animation.get("active_hit_frames") is Array:
 			animation["active_hit_frames"] = [frames[int(frames.size() * 0.6)]]
 		sheets[name] = texture
+	# A character can use the grab mechanic before its dedicated punch art arrives.
+	if animations.has("grab_throw") and not animations.has("grab_punch_01"):
+		animations["grab_punch_01"] = {"source_animation": "attack_01", "placeholder": true}
 	# An optional dedicated ultimate sheet can replace this alias later.
 	if not animations.has("ultimate"):
 		animations["ultimate"] = {"source_animation": "attack_03"}

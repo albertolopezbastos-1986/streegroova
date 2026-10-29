@@ -1,5 +1,6 @@
 extends Node2D
 
+const Grapple = preload("res://scripts/grapple.gd")
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const CharacterVisual = preload("res://scripts/character_visual.gd")
 const Catalog = preload("res://scripts/character_catalog.gd")
@@ -8,6 +9,10 @@ const ENEMY_COLORS = [Color("d45c79"), Color("d6aa51"), Color("9980d2")]
 
 var game: Node2D
 var kind := -1
+var is_boss := false
+var grapple: RefCounted
+var grabbed_by: Node2D
+var thrown_time := 0.0
 var hp := 100.0
 var max_hp := 100.0
 var facing := 1.0
@@ -39,6 +44,7 @@ var ai_jump_cooldown := 2.0
 
 func setup(owner_game: Node2D, type: int, at: Vector2, character_pack: Dictionary = {}) -> void:
 	game = owner_game
+	grapple = Grapple.new(self)
 	kind = type
 	position = at
 	visual = CharacterVisual.new()
@@ -46,7 +52,7 @@ func setup(owner_game: Node2D, type: int, at: Vector2, character_pack: Dictionar
 	add_child(visual)
 	if kind >= 0:
 		facing = 1 if game.player.position.x >= position.x else -1
-		max_hp = [65.0, 42.0, 130.0][kind]
+		max_hp = [130.0, 84.0, 260.0][kind]
 		hp = max_hp
 		ai_wait = randf_range(0.2, 0.8)
 		ai_jump_cooldown = randf_range(1.0, 2.2)
@@ -58,8 +64,17 @@ func setup(owner_game: Node2D, type: int, at: Vector2, character_pack: Dictionar
 	update_visual(0)
 	queue_redraw()
 
+func make_boss() -> void:
+	is_boss = true
+	max_hp = 130.0 * 3.0
+	hp = max_hp
+	visual.scale = Vector2.ONE * 2.0
+	visual.material.set_shader_parameter("outfit_color", Color("a347ce"))
+	queue_redraw()
+
 func tick(dt: float) -> void:
 	anim += dt
+	grapple.retry = maxf(0, grapple.retry - dt)
 	cooldown = maxf(0, cooldown - dt)
 	stun = maxf(0, stun - dt)
 	invincible = maxf(0, invincible - dt)
@@ -67,9 +82,18 @@ func tick(dt: float) -> void:
 	ultimate_pose = maxf(0, ultimate_pose - dt)
 	attack_buffer = maxf(0, attack_buffer - dt)
 	ai_jump_cooldown = maxf(0, ai_jump_cooldown - dt)
+	if is_instance_valid(grabbed_by) and not dead:
+		update_visual(0)
+		queue_redraw()
+		return
+	if grapple.active():
+		grapple.tick(dt)
+		update_visual(0)
+		queue_redraw()
+		return
 	if dead:
 		death_time += dt
-		jump_speed = minf(0, jump_speed) - 950 * dt
+		jump_speed -= 950 * dt
 		height = maxf(0, height + jump_speed * dt)
 		position.x = clampf(position.x + velocity.x * dt, game.left_bound, game.right_bound)
 		velocity = velocity.move_toward(Vector2.ZERO, dt * 650)
@@ -87,6 +111,17 @@ func tick(dt: float) -> void:
 				attack_time = 0
 			air_attack = false
 			game.dust(position)
+	if thrown_time > 0:
+		thrown_time = maxf(0, thrown_time - dt)
+		position.x = clampf(position.x + velocity.x * dt, game.left_bound, game.right_bound)
+		if height == 0:
+			velocity = velocity.move_toward(Vector2.ZERO, dt * 650)
+		if thrown_time == 0 and height > 0:
+			thrown_time = dt
+		stun = maxf(stun, thrown_time)
+		update_visual(dt)
+		queue_redraw()
+		return
 	if attack_time > 0:
 		attack_time = maxf(0, attack_time - dt)
 		if attack_is_active():
@@ -116,6 +151,8 @@ func player_control(dt: float) -> void:
 	if attack_time <= 0 or height > 0:
 		position += velocity * dt
 	moving = direction.length() > 0.1 and height == 0 and attack_time <= 0
+	if moving and grapple.try_start():
+		return
 	if Input.is_action_just_pressed("jump") and height == 0 and attack_time <= 0:
 		takeoff(velocity)
 	if Input.is_action_just_pressed("attack"):
@@ -127,7 +164,7 @@ func player_control(dt: float) -> void:
 		game.use_ultimate()
 
 func takeoff(momentum: Vector2, impulse := 420.0) -> bool:
-	if dead or stun > 0 or height > 0 or attack_time > 0:
+	if dead or stun > 0 or height > 0 or attack_time > 0 or is_instance_valid(grabbed_by) or grapple.active():
 		return false
 	jump_speed = impulse
 	jump_duration = impulse * 2.0 / 950.0
@@ -149,11 +186,15 @@ func enemy_control(dt: float) -> void:
 	if target.dead:
 		return
 	var delta: Vector2 = target.position - position
+	var committed: bool = game.combat_director.allowed(self)
+	var on_flank: bool = (position.x - target.position.x) * game.combat_director.side_for(self) > 18
 	if height > 0:
 		position += velocity * dt
-		if not air_attack and jump_elapsed > 0.12 and cooldown <= 0 and absf(delta.x) < 105 and absf(delta.y) < game.MELEE_DEPTH:
+		if committed and not air_attack and jump_elapsed > 0.12 and cooldown <= 0 and absf(delta.x) < 105 and absf(delta.y) < game.MELEE_DEPTH:
 			begin_attack()
 		return
+	if windup > 0 and not committed:
+		windup = 0
 	if windup > 0:
 		windup -= dt
 		if windup <= 0:
@@ -164,7 +205,7 @@ func enemy_control(dt: float) -> void:
 	facing = 1 if delta.x >= 0 else -1
 	var speed: float = [79.0, 125.0, 53.0][kind]
 	var in_lane: bool = absf(delta.y) < game.MELEE_DEPTH
-	if ai_jump_cooldown <= 0 and cooldown <= 0 and ai_wait <= 0 and in_lane:
+	if committed and on_flank and ai_jump_cooldown <= 0 and cooldown <= 0 and ai_wait <= 0 and in_lane:
 		var chase_jump := absf(delta.x) >= 85 and absf(delta.x) <= 175
 		var dodge_jump: bool = target.attack_time > 0 and absf(delta.x) < 75
 		if chase_jump or dodge_jump:
@@ -173,23 +214,27 @@ func enemy_control(dt: float) -> void:
 			ai_jump_cooldown = [3.8, 2.8, 5.0][kind]
 			return
 	var range_x: float = 65 if kind == 2 else 50
-	if absf(delta.x) < range_x and in_lane:
+	if committed and on_flank and absf(delta.x) < range_x and in_lane:
 		if cooldown <= 0 and ai_wait <= 0:
 			windup = 0.5 if kind == 2 else 0.3
 			if combo_window > 0 and combo < 2:
 				windup *= 0.6
 	else:
-		var desired := Vector2(target.position.x - facing * (range_x - 9), target.position.y)
+		var desired: Vector2 = game.combat_director.destination(self)
+		if position.distance_to(desired) < 1.0:
+			return
 		var steer: Vector2 = (desired - position).normalized()
 		for other in game.enemies:
 			if other != self and not other.dead:
 				var away: Vector2 = position - other.position
-				if away.length() < 26 and away.length() > 0.1:
+				if absf(away.y) < 6 and away.length() < 26 and away.length() > 0.1:
 					steer += away.normalized() * 0.55
 		position += steer.limit_length() * Vector2(speed, minf(speed, game.DEPTH_SPEED)) * dt
 		moving = true
 
 func begin_attack() -> void:
+	if is_instance_valid(grabbed_by) or grapple.active() or thrown_time > 0:
+		return
 	air_attack = height > 0
 	combo = (combo + 1) % 3 if combo_window > 0 else 0
 	attack_duration = visual.duration(attack_motion())
@@ -226,6 +271,12 @@ func update_visual(dt: float) -> void:
 	if dead:
 		motion = "death"
 		progress = death_time / visual.duration("death")
+	elif is_instance_valid(grabbed_by):
+		motion = "hurt"
+		progress = -1
+	elif thrown_time > 0:
+		motion = "death"
+		progress = clampf((1.1 - thrown_time) / 0.8, 0, 1)
 	elif ultimate_pose > 0 and can_use_ultimate():
 		motion = "ultimate"
 		progress = (1.6 - game.ult_time) / 1.6
@@ -246,9 +297,15 @@ func update_visual(dt: float) -> void:
 	if dead and kind >= 0:
 		visual.modulate.a = clampf((1.65 - death_time) / 0.35, 0, 1)
 	visual.update_pose(motion, dt, facing, progress)
+	if not dead and is_instance_valid(grabbed_by):
+		visual.source_frame = 3
+		visual.modulate.a = 1
+		visual.queue_redraw()
+	elif not dead and grapple.active():
+		grapple.pose()
 
 func strike() -> void:
-	var targets: Array = game.enemies if kind == -1 else [game.player]
+	var targets: Array = (game.enemies + game.props) if kind == -1 else [game.player]
 	for target in targets:
 		if target.dead or target in hits:
 			continue
@@ -266,13 +323,18 @@ func strike() -> void:
 				damage = 29 if combo == 2 or air_attack else 19
 			elif kind == 1:
 				damage = 10
-			elif kind == 2:
+			elif kind == 2 or is_boss:
 				damage = 26
 			target.hurt(damage, facing, combo == 2 or air_attack or kind == 2)
 
-func hurt(damage: float, direction: float, heavy := false) -> void:
+func hurt(damage: float, direction: float, heavy := false, from_grab := false) -> void:
 	if dead or invincible > 0:
 		return
+	if not from_grab:
+		if grapple.active():
+			grapple.release()
+		if is_instance_valid(grabbed_by):
+			grabbed_by.grapple.release()
 	hp = maxf(0, hp - damage)
 	stun = (0.44 if heavy else 0.36) if kind == -1 else (0.38 if heavy else 0.25)
 	hurt_duration = stun

@@ -29,6 +29,8 @@ func run() -> void:
 		check(enemy.visual.material is ShaderMaterial, "enemy has a separate clothing palette")
 		check(not enemy.can_use_ultimate(), "enemy has no ultimate permission")
 	var enemy = game.enemies[0]
+	# Isolate animation/move coverage from the separately tested group director.
+	game.combat_director.turns[enemy] = 999.0
 	enemy.position = hero.position + Vector2(45, 0)
 	enemy.ai_wait = 0
 	enemy.cooldown = 0

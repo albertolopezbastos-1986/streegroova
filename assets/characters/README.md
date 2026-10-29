@@ -1,6 +1,6 @@
 # Sprites de Beto, Alito y Cami
 
-Las variantes de prueba de **40 cuadros** tienen su propia estructura en [`../characters_40_frames/`](../characters_40_frames/README.md), separada de estos sprites.
+**Las nuevas animaciones se preparan en [characters_20_frames](../characters_20_frames/README.md), con 20 cuadros por secuencia.** Las variantes anteriores de **40 cuadros** conservan su propia estructura en [`../characters_40_frames/`](../characters_40_frames/README.md), separada de estos sprites.
 
 Cada personaje usa **una hoja completa por movimiento**. Godot podrá leer los cuadros directamente: no hace falta separar las imágenes ni guardar despegue, caída y aterrizaje en carpetas distintas.
 
@@ -11,6 +11,11 @@ assets/characters/
     animations/
       idle/idle.png
       walk/walk.png
+      run/
+      grab_throw/
+      grab_punch_01/
+      grab_punch_02/
+      grab_punch_03/
       attack_01/firstpunch.png
       attack_02/secondpunch.png
       attack_03/thirdpunch.png
@@ -86,3 +91,28 @@ La animación `ultimate` puede tener su propia hoja o usar `source_animation` pa
 Conservá los PNG a su tamaño original y con transparencia. Si los sprites miran hacia la izquierda, anotá `"default_facing": "left"` en el manifiesto. Si hay variantes reales para ambas direcciones, se pueden organizar en subcarpetas `right/` y `left/`.
 
 **Beto reemplaza al jugador geométrico durante la partida.** Alito y Cami siguen pendientes de sus imágenes e integración. Las carpetas antiguas `jump_start`, `jump_up`, `jump_fall` y `jump_land` se sustituyeron por `jump`; también se retiraron las carpetas opcionales que estaban vacías.
+
+## Nuevos movimientos: correr y agarres
+
+Carpetas preparadas para Beto, Alito y Cami dentro de `animations/`:
+
+| Carpeta | Movimiento |
+| --- | --- |
+| `grab_throw/` | Agarrar y lanzar. |
+| `grab_punch_01/` | Primer golpe durante el agarre. |
+| `grab_punch_02/` | Segundo golpe durante el agarre. |
+| `grab_punch_03/` | Tercer golpe durante el agarre. |
+| `run/` | Correr. |
+
+Colocá una hoja PNG por movimiento en su carpeta, conservando el tamaño original y la transparencia. Estas carpetas también existen en la otra estructura de personajes (originales / 40 cuadros). Son espacios para recibir los sprites: los movimientos y sus metadatos se integrarán cuando estén las imágenes.
+
+## Agarre y lanzamiento de Beto
+
+Al caminar hacia un enemigo por la misma franja y acercarse a menos de 25 unidades, Beto inicia `grab_throw` automáticamente. El rival queda inmovilizado en el cuadro **3** de `hurt`, contando desde 0. Beto reproduce los cuadros 0–8 del agarre y queda detenido en el **8** hasta elegir:
+
+- **Golpe (J/Z o botón de golpe):** `grab_punch_01`, daño 19 y regreso al agarre. De momento reutiliza el primer golpe normal, hasta recibir la hoja dedicada.
+- **Atrás + golpe:** continúa `grab_throw` desde el cuadro 9, suelta al enemigo en el 15 y lo arroja hacia atrás, con 40 de daño. Atrás es izquierda mirando a la derecha y derecha mirando a la izquierda; la orientación no cambia durante el agarre.
+
+Un golpe de otro rival interrumpe el agarre y libera a ambos. La ulti también lo cancela. El enemigo agarrado no recibe turnos de ataque mientras esté inmovilizado. El rival arrojado usa la animación de caída, vuela, aterriza y se recupera si conserva energía.
+
+La hoja activa es `assets/characters_20_frames/beto/animations/grab_throw/grabthrow.png`: 5 × 5 celdas de 200 × 200, índices 0–19. No se usa la celda adicional 20. Los campos `hold_frame: 8` y `release_frame: 15` del manifiesto sincronizan la mecánica. Para conectar el futuro golpe de agarre, reemplazá su alias `source_animation` por los datos de la hoja (`path`, `file`, cuadrícula, tamaño, secuencia, FPS y `active_hit_frames`), igual que cualquier ataque. El cargador también ofrece este reemplazo provisional cuando un personaje tiene `grab_throw` pero todavía no tiene su primer golpe de agarre.

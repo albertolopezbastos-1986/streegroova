@@ -30,7 +30,9 @@ Sin dirección, el salto es vertical. Con dirección, conserva el impulso hasta 
 
 ## El nivel
 
-Tres encuentros sobre una vereda frente a una fila de casas y un local de discos, con encuadre cercano de **2,625×**, un **50% más grande** que el anterior de 1,75×. Los personajes, las fachadas y los efectos comparten el mismo zoom; HUD y menús mantienen su tamaño. El fondo muestra paredes, ventanas y puertas grandes, con una franja angosta de vereda y cordón. No son tres niveles: es el **primer nivel**, dividido en tres rondas. Para avanzar hay que eliminar la ronda y caminar hacia la derecha. Cada transición recupera 25 de energía.
+Un primer nivel de **10 oleadas** y **8500 unidades de largo** (antes 2550), con zoom **1,96875×**, un 25% menos que el anterior. Se puede retroceder hasta 700 unidades detrás del inicio de la oleada actual. La décima oleada presenta al jefe: un clon de Beto al doble de tamaño, con 390 de energía (triple del rival común de 130). Los enemigos comunes tienen 130/84/260 de energía, el doble que antes. Los turnos y rodeos del sistema de combate se mantienen.
+
+Cada sección tiene una caja de madera y un barril que se rompen a golpes y dejan un pollo rostizado. Al acercarse por el suelo, el pollo recupera **50 de energía**; si la barra está llena, queda disponible. La comida es la única curación durante una vida: avanzar de oleada ya no cura. Una vida nueva empieza con energía completa.
 
 El movimiento en profundidad está limitado a la vereda y es más lento que el horizontal. La cámara conserva espacio por delante del jugador y acompaña verticalmente los saltos para mantener a Beto debajo del HUD sin cambiar su física. Los límites del nivel y los efectos se calculan con el zoom. [Ver encuadre](docs/primer-nivel.png).
 
@@ -74,3 +76,13 @@ Validación de selección y carga de otros personajes: `godot --headless --path 
 Validación de zoom, cámara, saltos y límites de la vereda: `godot --headless --path . --script tests/test_framing.gd`.
 
 Validación de clones, combos, saltos, patadas aéreas y bloqueo de ulti: `godot --headless --path . --script tests/test_enemies.gd`.
+
+### Coordinación de los rivales
+
+`scripts/combat_director.gd` distribuye posiciones a ambos lados del jugador y reserva turnos para atacar. Normalmente entra un rival con anticipación y combo; después descansa entre 1,2 y 2 segundos y deja una pausa de 0,35–0,65 segundos entre turnos. Cada 6–10 segundos puede intervenir un segundo rival durante un turno activo; nunca hay más de dos reservas. Saltar para atacar también requiere turno. Los demás rodean por otra franja de la vereda y esperan a distancia. El sistema libera turnos ante daño, KO o ulti y adapta los flancos cerca de los límites del escenario.
+
+`tests/test_combat_director.gd` simula un minuto de pelea con tres rivales y verifica rodeo real, rotación, predominio de ataques individuales, intervenciones y límites de concurrencia.
+
+### Agarre y lanzamiento
+
+Beto agarra automáticamente al caminar hasta quedar pegado a un enemigo de frente y en la misma franja. Se inmoviliza en el cuadro 8 de `grab_throw` y el rival en el cuadro 3 de daño. Golpe solo hace el primer golpe de agarre (hoja provisional del primer puñetazo); atrás + golpe completa el lanzamiento hacia atrás. Un golpe recibido o la ulti liberan el agarre. Las nuevas hojas de 20 cuadros van en `assets/characters_20_frames/{beto,alito,cami}/animations/`; los originales anteriores se conservan. Ver `assets/characters/README.md` para cuadros y configuración, y `tests/test_grapple.gd` para controles de agarre, daño, lanzamiento e interrupción.

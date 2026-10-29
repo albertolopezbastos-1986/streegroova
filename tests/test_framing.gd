@@ -21,8 +21,8 @@ func run() -> void:
 	await process_frame
 	var hero = game.player
 	hero.invincible = 0
-	check(game.world.scale == Vector2(2.625, 2.625), "world has 2.625x close framing")
-	check(is_equal_approx(game.WORLD_ZOOM / 1.75, 1.5), "characters are exactly 50 percent larger than previous framing")
+	check(game.world.scale == Vector2(1.96875, 1.96875), "world has 1.96875x framing")
+	check(is_equal_approx(game.WORLD_ZOOM / 2.625, 0.75), "zoom is exactly 25 percent lower than previous framing")
 	check(is_equal_approx(game.world_to_screen(hero.position).y, 480), "player feet start on the foreground sidewalk")
 	check(game.world_to_screen(hero.position).distance_to(hero.global_position) < 0.01, "effects transform matches actor transform")
 	check(is_equal_approx(float(hero.visual.character_data.scale), 0.6), "zoom preserves character's configured sprite scale")

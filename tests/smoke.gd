@@ -62,6 +62,7 @@ func run() -> void:
 	hero.invincible = 0
 	enemy.stun = 0
 	enemy.position = hero.position + Vector2(45, 0)
+	game.combat_director.turns[enemy] = 999.0
 	var telegraphed := false
 	for i in range(140):
 		enemy.tick(0.016)
@@ -100,11 +101,11 @@ func run() -> void:
 	for i in range(110):
 		game.update_game(0.016)
 	check(game.lives == 2 and not hero.dead and hero.hp == 100, "losing life respawns with full health")
-	for wave in range(3):
+	for wave in range(game.WAVE_COUNT):
 		for target in game.enemies:
 			target.dead = true
 		game.freeze = 0
-		if wave < 2:
+		if wave < game.WAVE_COUNT - 1:
 			game.update_game(0.016)
 			hero.position.x = (wave + 1) * 850 + 100
 			game.update_game(0.016)

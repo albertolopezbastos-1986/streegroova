@@ -1,4 +1,6 @@
-# Prueba de animaciones de 40 cuadros
+# Prueba anterior de animaciones de 40 cuadros
+
+**El nuevo destino es [`characters_20_frames`](../characters_20_frames/README.md): las próximas animaciones serán de 20 cuadros.** Esta carpeta conserva los archivos anteriores y el primer golpe activo de 40 cuadros. La nueva hoja `grabthrow.png` se copió a la estructura de 20 y se integró desde allí.
 
 Estas carpetas están separadas de las versiones que usa el juego:
 
@@ -9,6 +11,11 @@ assets/characters_40_frames/
     animations/
       idle/idle.png
       walk/walk.png
+      run/
+      grab_throw/
+      grab_punch_01/
+      grab_punch_02/
+      grab_punch_03/
       attack_01/firstpunch.png
       attack_02/secondpunch.png
       attack_03/thirdpunch.png
@@ -37,3 +44,17 @@ Las carpetas de imágenes están vacías: colocá allí las **nuevas versiones d
 **El primer golpe de Beto ya está activo:** su manifiesto principal referencia `beto/animations/attack_01/firstpunch.png` de esta carpeta. Tiene 7 columnas × 6 filas, cuadros de 200 × 200 y reproduce los índices 0–39; las celdas 40 y 41 están vacías y se omiten. Los cuadros de impacto son 13–22. Usa aproximadamente 97,78 FPS para conservar los 0,409 segundos del golpe anterior. La reproducción se ajusta al tiempo real; en una pantalla de 60 Hz no se dibujarán los 40 cuadros en cada golpe.
 
 El resto del juego sigue usando las animaciones de `assets/characters/`. No se activó el conjunto incompleto de 40 cuadros. Cuando esté completo se podrá probar cambiando la ruta `definition` del personaje en `assets/characters/roster.json`, por ejemplo a `res://assets/characters_40_frames/beto/character.json`, y reexportando Web. No cambies la ruta antes de completar y revisar las hojas.
+
+## Nuevos movimientos: correr y agarres
+
+Carpetas preparadas para Beto, Alito y Cami dentro de `animations/`:
+
+| Carpeta | Movimiento |
+| --- | --- |
+| `grab_throw/` | Agarrar y lanzar. |
+| `grab_punch_01/` | Primer golpe durante el agarre. |
+| `grab_punch_02/` | Segundo golpe durante el agarre. |
+| `grab_punch_03/` | Tercer golpe durante el agarre. |
+| `run/` | Correr. |
+
+Colocá una hoja PNG por movimiento en su carpeta, conservando el tamaño original y la transparencia. Estas carpetas también existen en la otra estructura de personajes (originales / 40 cuadros). Son espacios para recibir los sprites: los movimientos y sus metadatos se integrarán cuando estén las imágenes.

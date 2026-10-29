@@ -13,9 +13,9 @@ config_version=5
 config/name="Street Groova"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
-config/icon="res://assets/branding/groova-icon.png"
-boot_splash/image="res://assets/branding/groova-icon.png"
 boot_splash/bg_color=Color(0, 0, 0, 1)
+boot_splash/image="res://assets/branding/groova-icon.png"
+config/icon="res://assets/branding/groova-icon.png"
 boot_splash/scale=true
 
 [display]
@@ -25,7 +25,6 @@ window/size/viewport_height=540
 window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
 
 [gui]
 
