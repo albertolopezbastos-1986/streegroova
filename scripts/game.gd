@@ -80,6 +80,13 @@ var active_character_id := "beto"
 var character_pack: Dictionary = {}
 var run_id := ""
 var show_help := false
+const FADE_DURATION := 0.65
+const BLACK_HOLD_DURATION := 1.0
+const START_DURATION := 0.8
+var fade_screen: ColorRect
+var cinematic_time := 0.0
+var starting_campaign := false
+var entrance_target := 0.0
 
 
 func _ready() -> void:
@@ -118,6 +125,14 @@ func _ready() -> void:
 	character_select.debug_requested.connect(func(): new_run(true))
 	if touch_visible:
 		character_select.setup_mobile()
+	var fade_layer := CanvasLayer.new()
+	fade_layer.layer = 100
+	add_child(fade_layer)
+	fade_screen = ColorRect.new()
+	fade_layer.add_child(fade_screen)
+	fade_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	fade_screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	fade_screen.color = Color(0, 0, 0, 0)
 	new_run()
 	state = "title"
 
@@ -143,6 +158,8 @@ func setup_inputs() -> void:
 		InputMap.action_add_event(entry[0], event)
 
 func new_run(as_debug := false) -> void:
+	if is_instance_valid(fade_screen):
+		fade_screen.color.a = 0
 	mobile_controls.release_all()
 	debug_room = as_debug
 	debug_panel.get_child(0).visible = as_debug
@@ -207,11 +224,64 @@ func show_character_selection() -> void:
 	character_select.show_panel()
 
 func confirm_character(slot: int) -> void:
+	if state != "select":
+		return
 	active_character_id = CharacterCatalog.character_for_slot(slot)["id"]
 	mobile_controls.release_all()
-	new_run()
+	begin_level_transition(true)
+
+func begin_level_transition(new_campaign := false) -> void:
+	starting_campaign = new_campaign
+	cinematic_time = 0
+	state = "fade_out"
+	mobile_controls.release_all()
+
+func update_level_transition(dt: float) -> void:
+	cinematic_time += dt
+	match state:
+		"fade_out":
+			fade_screen.color.a = clampf(cinematic_time / FADE_DURATION, 0, 1)
+			if cinematic_time >= FADE_DURATION:
+				if starting_campaign:
+					new_run()
+				else:
+					var health: float = player.hp
+					level_index += 1
+					load_level(health)
+				entrance_target = player.position.x
+				player.position.x = -60.0 / WORLD_ZOOM
+				player.facing = 1
+				player.update_visual(0)
+				fade_screen.color.a = 1
+				state = "black_hold"
+				cinematic_time = 0
+		"black_hold":
+			if cinematic_time >= BLACK_HOLD_DURATION:
+				state = "fade_in"
+				cinematic_time = 0
+		"fade_in":
+			fade_screen.color.a = 1 - clampf(cinematic_time / FADE_DURATION, 0, 1)
+			if cinematic_time >= FADE_DURATION:
+				state = "entrance"
+				cinematic_time = 0
+		"entrance":
+			player.position.x = move_toward(player.position.x, entrance_target, player.WALK_SPEED * dt)
+			player.moving = player.position.x < entrance_target
+			player.update_visual(dt)
+			player.queue_redraw()
+			if not player.moving:
+				state = "start"
+				cinematic_time = 0
+		"start":
+			if cinematic_time >= START_DURATION:
+				mobile_controls.release_all()
+				player.attack_buffer = 0
+				player.invincible = 1.5
+				state = "play"
 
 func cancel_character_selection() -> void:
+	if state != "select":
+		return
 	character_select.hide_panel()
 	state = "title"
 
@@ -356,7 +426,7 @@ func _input(event: InputEvent) -> void:
 		return
 	if ranking_panel.open:
 		return
-	if state in ["stage_clear", "victory"]:
+	if state in ["stage_clear", "victory", "fade_out", "black_hold", "fade_in", "entrance", "start"]:
 		return
 	if state == "select":
 		if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_TAB:
@@ -422,6 +492,8 @@ func _process(dt: float) -> void:
 		update_game(minf(dt, 0.04))
 	elif state in ["stage_clear", "victory"]:
 		update_presentation(dt)
+	elif state in ["fade_out", "black_hold", "fade_in", "entrance", "start"]:
+		update_level_transition(dt)
 	if state != "pause":
 		for p in particles:
 			p.life -= dt
@@ -577,9 +649,7 @@ func complete_level() -> void:
 func update_presentation(dt: float) -> void:
 	presentation_time += dt
 	if state == "stage_clear" and presentation_time >= STAGE_CLEAR_DURATION:
-		var remaining_health: float = player.hp
-		level_index += 1
-		load_level(remaining_health)
+		begin_level_transition()
 	elif state == "victory":
 		player.victory_time = presentation_time
 		player.update_visual(dt)
@@ -601,6 +671,8 @@ func use_ultimate(actor: Node2D = null) -> void:
 		return
 	if charge < 100 or ult_time > 0 or not player.can_use_ultimate():
 		return
+	# Keep the variant chosen at activation for the entire ultimate.
+	player.ultimate_airborne = player.height > 0 or player.jump_speed > 0
 	player.grapple.release()
 	player.reset_running()
 	player.velocity = Vector2.ZERO
@@ -727,8 +799,10 @@ func draw_overlay() -> void:
 			overlay_text(canvas, "%02d HITS" % combo_hits, Vector2(779, 164), 27, Color("ffc785"))
 		if respawn_time > 0:
 			overlay_text(canvas, "LEVANTATE. LA NOCHE SIGUE.", Vector2(273, 253), 24, CREAM)
-	if state in ["stage_clear", "victory"]:
+	if state in ["stage_clear", "victory"] or (state == "fade_out" and not starting_campaign):
 		draw_stage_presentation(canvas)
+	if state == "start":
+		overlay_centered(canvas, "START", VIEW_HEIGHT * 0.45, 76, MINT)
 	if state in ["title", "pause", "over", "won"] or show_help:
 		canvas.draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.025, 0.035, 0.08, 0.90))
 		canvas.draw_set_transform(Vector2(0, (VIEW_HEIGHT - 540.0) / 2))
@@ -764,7 +838,8 @@ func draw_stage_presentation(canvas: Node2D) -> void:
 	var color := MINT if sin(presentation_time * 8) > -0.5 else Color("f7c47e")
 	overlay_centered(canvas, "CONGRATULATIONS!" if final else "STAGE CLEAR", top + 112, 65 if final else 76, color)
 	overlay_centered(canvas, "LOS TRES NIVELES COMPLETADOS" if final else "PREPARATE PARA EL NIVEL %02d" % (level_index + 2), top + 157, 20, CREAM)
-	overlay_centered(canvas, "PUNTOS  %06d" % score if final else "SIGUIENTE NIVEL EN %d" % maxi(1, ceili(STAGE_CLEAR_DURATION - presentation_time)), top + 192, 18, Color("f7c47e"))
+	if final:
+		overlay_centered(canvas, "PUNTOS  %06d" % score, top + 192, 18, Color("f7c47e"))
 	for i in range(18):
 		var x := 90.0 + i * 46
 		var glow := MINT if (i + int(presentation_time * 8)) % 3 == 0 else Color("34434e")

@@ -92,6 +92,12 @@ static func load_pack(path: String) -> Dictionary:
 		combined.merge(alias, true)
 		animations[name] = combined
 		sheets[name] = sheets[source]
+	# Replace with an ultimate_air animation in the character manifest when art arrives.
+	if not animations.has("ultimate_air"):
+		animations["ultimate_air"] = animations["ultimate"].duplicate(true)
+		animations["ultimate_air"]["source_animation"] = "ultimate"
+		animations["ultimate_air"]["placeholder"] = true
+		sheets["ultimate_air"] = sheets["ultimate"]
 	var idle: Dictionary = animations["idle"]
 	data["pivot_pixels"] = data.get("pivot_pixels", [float(idle["frame_size"][0]) / 2, float(idle["frame_size"][1]) - 10])
 	var portrait: Texture2D

@@ -43,7 +43,7 @@ func update_pose(name: String, dt: float, direction: float, progress := -1.0) ->
 		clock = 0
 	clock += dt
 	facing = direction
-	if name == "ultimate":
+	if name in ["ultimate", "ultimate_air"]:
 		var data := definition(name)
 		var frames: Array = data["frame_indices"]
 		var impact := int(data.get("impact_frame", data["active_hit_frames"][0]))

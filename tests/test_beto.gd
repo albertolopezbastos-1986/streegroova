@@ -82,6 +82,16 @@ func run() -> void:
 	check(hero.visual.motion == "jump" and hero.visual.position.y < 0, "jump sheet follows physical jump height")
 	hero.begin_attack()
 	check(hero.visual.motion == "jump_attack", "air attack uses flying kick sheet")
+	target.position = hero.position + Vector2(45, 0)
+	target.invincible = 0
+	before = target.hp
+	hero.strike()
+	check(target.hp == before - 29 and target.thrown_time > 0 and target.jump_speed > 0 and target.velocity.x == target.THROW_SPEED, "flying kick launches its victim forward and upward")
+	var launch_x: float = target.position.x
+	target.tick(0.05)
+	check(target.position.x > launch_x and target.height > 25 and target.visual.motion == "death" and not target.dead, "kicked survivor flies through the air with knockdown animation")
+	hero.strike()
+	check(target.hp == before - 29, "flying kick damages its victim only once")
 	for i in range(80):
 		hero.tick(0.016)
 	check(hero.height == 0 and not hero.air_attack and hero.visual.motion == "idle", "landing ends aerial motion cleanly")
@@ -97,6 +107,22 @@ func run() -> void:
 	game.ult_time = 0.6
 	hero.update_visual(0.01)
 	check(hero.visual.source_frame >= 6, "ultimate impact uses guitar sweep frames")
+	game.ult_time = 0
+	hero.ultimate_pose = 0
+	hero.height = 65
+	game.charge = 100
+	game.use_ultimate()
+	check(hero.ultimate_airborne and hero.visual.motion == "ultimate_air", "ultimate activated mid-jump selects a distinct aerial animation")
+	check(hero.visual.sheets["ultimate_air"] == hero.visual.sheets["ultimate"] and hero.visual.definition("ultimate_air")["placeholder"], "aerial ultimate temporarily shares ground art")
+	game.ult_time = 0.6
+	hero.height = 0
+	hero.update_visual(0.01)
+	check(hero.visual.motion == "ultimate_air" and hero.visual.source_frame >= 6, "aerial variant retains its identity and impact timing throughout ultimate")
+	game.ult_time = 0
+	hero.ultimate_pose = 0
+	game.charge = 100
+	game.use_ultimate()
+	check(not hero.ultimate_airborne and hero.visual.motion == "ultimate", "next grounded ultimate resets aerial variant")
 	game.ult_time = 0
 	hero.ultimate_pose = 0
 	hero.invincible = 0

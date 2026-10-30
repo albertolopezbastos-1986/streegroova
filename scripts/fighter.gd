@@ -35,6 +35,7 @@ var getup_time := 0.0
 var victory_time := -1.0
 const GETUP_DURATION := 0.4
 var ai_special_cooldown := 4.0
+var ai_slide_cooldown := 8.0
 var rush_windup := 0.0
 var rush_time := 0.0
 var hp := 100.0
@@ -58,6 +59,7 @@ var hits: Array = []
 var ai_wait := 0.0
 var windup := 0.0
 var ultimate_pose := 0.0
+var ultimate_airborne := false
 var air_attack := false
 var visual: Node2D
 var hurt_duration := 0.0
@@ -79,7 +81,8 @@ func setup(owner_game: Node2D, type: int, at: Vector2, character_pack: Dictionar
 		max_hp = [130.0, 84.0, 260.0][kind]
 		hp = max_hp
 		ai_wait = randf_range(0.2, 0.8)
-		ai_jump_cooldown = randf_range(1.0, 2.2)
+		ai_jump_cooldown = randf_range(4.0, 7.0)
+		ai_slide_cooldown = randf_range(7.0, 11.0)
 		var palette := ShaderMaterial.new()
 		palette.shader = ENEMY_PALETTE
 		palette.set_shader_parameter("outfit_color", ENEMY_COLORS[kind])
@@ -107,6 +110,7 @@ func tick(dt: float) -> void:
 	attack_buffer = maxf(0, attack_buffer - dt)
 	ai_jump_cooldown = maxf(0, ai_jump_cooldown - dt)
 	ai_special_cooldown = maxf(0, ai_special_cooldown - dt)
+	ai_slide_cooldown = maxf(0, ai_slide_cooldown - dt)
 	if is_instance_valid(grabbed_by) and not dead:
 		if kind == -1:
 			grabbed_by.grapple.try_escape(dt)
@@ -315,8 +319,9 @@ func enemy_control(dt: float) -> void:
 		if absf(delta.x) < 25 and grapple.try_start():
 			ai_special_cooldown = 5.0
 			return
-		if absf(delta.x) >= 100 and absf(delta.x) <= 220 and target.height == 0:
+		if ai_slide_cooldown <= 0 and absf(delta.x) >= 100 and absf(delta.x) <= 220 and target.height == 0:
 			rush_windup = 0.4
+			ai_slide_cooldown = 12.0
 			ai_special_cooldown = 5.0
 			velocity = Vector2.ZERO
 			return
@@ -326,7 +331,7 @@ func enemy_control(dt: float) -> void:
 		if chase_jump or dodge_jump:
 			var momentum := Vector2(facing * speed * 1.25, clampf(delta.y * 2, -16, 16)) if chase_jump else Vector2.ZERO
 			takeoff(momentum, [250.0, 260.0, 240.0][kind])
-			ai_jump_cooldown = [3.8, 2.8, 5.0][kind]
+			ai_jump_cooldown = [7.6, 5.6, 10.0][kind]
 			return
 	var range_x: float = 65 if kind == 2 else 50
 	if committed and on_flank and absf(delta.x) < range_x and in_lane:
@@ -416,7 +421,7 @@ func update_visual(dt: float) -> void:
 		motion = "get_up" if visual.sheets.has("get_up") else "jump"
 		progress = 1.0 - getup_time / GETUP_DURATION
 	elif ultimate_pose > 0 and can_use_ultimate():
-		motion = "ultimate"
+		motion = "ultimate_air" if ultimate_airborne else "ultimate"
 		progress = (1.6 - game.ult_time) / 1.6
 	elif stun > 0:
 		motion = "hurt"
@@ -466,7 +471,7 @@ func strike() -> void:
 				damage = 10
 			elif kind == 2 or is_boss:
 				damage = 26
-			if run_attack and target.has_method("launch_away"):
+			if (run_attack or air_attack) and target.has_method("launch_away"):
 				target.launch_away(damage, facing)
 			else:
 				target.hurt(damage, facing, combo == 2 or air_attack or kind == 2)

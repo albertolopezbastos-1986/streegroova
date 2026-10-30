@@ -61,6 +61,7 @@ func run() -> void:
 	enemy.ai_wait = 0
 	enemy.cooldown = 0
 	enemy.ai_special_cooldown = 0
+	enemy.ai_slide_cooldown = 0
 	game.combat_director.turns[enemy] = 999.0
 	enemy.tick(0.016)
 	check(enemy.grapple.active() and hero.grabbed_by == enemy, "AI chooses a close-range grab")
