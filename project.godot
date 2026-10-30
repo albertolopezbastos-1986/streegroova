@@ -21,14 +21,18 @@ boot_splash/scale=true
 [display]
 
 window/size/viewport_width=960
-window/size/viewport_height=540
+window/size/viewport_height=720
 window/size/window_width_override=1280
-window/size/window_height_override=720
+window/size/window_height_override=960
 window/stretch/mode="canvas_items"
 
 [gui]
 
 theme/custom="res://assets/ui/arcade_theme.tres"
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
 
 [physics]
 

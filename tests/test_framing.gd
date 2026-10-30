@@ -19,18 +19,23 @@ func run() -> void:
 	game.set_process(false)
 	game.new_run()
 	await process_frame
+	check(ProjectSettings.get_setting("display/window/size/viewport_height") == 720, "viewport is taller to show the buildings")
+	check(game.CURB_TOP_Y > game.WALK_MIN_Y and game.CURB_BOTTOM_Y < game.WALK_MAX_Y, "walkable floor spans sidewalk and asphalt")
+	check(game.CURB_TOP_Y - game.FLOOR_BACK_Y == 54, "sidewalk takes half the main floor")
+	check(453 - game.CURB_BOTTOM_Y == 54, "asphalt takes the other half of the main floor")
 	var hero = game.player
 	hero.invincible = 0
 	check(game.world.scale == Vector2(1.96875, 1.96875), "world has 1.96875x framing")
 	check(is_equal_approx(game.WORLD_ZOOM / 2.625, 0.75), "zoom is exactly 25 percent lower than previous framing")
-	check(is_equal_approx(game.world_to_screen(hero.position).y, 480), "player feet start on the foreground sidewalk")
+	check(is_equal_approx(game.world_to_screen(hero.position).y, 630), "player feet start on the foreground asphalt")
 	check(game.world_to_screen(hero.position).distance_to(hero.global_position) < 0.01, "effects transform matches actor transform")
 	check(is_equal_approx(float(hero.visual.character_data.scale), 0.6), "zoom preserves character's configured sprite scale")
 	for enemy in game.enemies:
 		check(enemy.position.y >= game.WALK_MIN_Y and enemy.position.y <= game.WALK_MAX_Y, "enemy spawns in sidewalk combat lane")
 		check(game.world_to_screen(enemy.position).x < 960, "first encounter is visible at the closer zoom")
+	check(game.WALK_MAX_Y - game.WALK_MIN_Y == 80, "sidewalk allows four times the previous depth travel")
 	Input.action_press("up")
-	for i in range(80):
+	for i in range(160):
 		hero.tick(0.016)
 	Input.action_release("up")
 	check(hero.position.y == game.WALK_MIN_Y, "back of sidewalk blocks walking through the wall")
@@ -38,7 +43,7 @@ func run() -> void:
 	hero.tick(0.016)
 	Input.action_release("jump")
 	await process_frame
-	var top := 540.0
+	var top := 720.0
 	for i in range(70):
 		hero.tick(0.016)
 		game.update_world_transform()
@@ -47,10 +52,10 @@ func run() -> void:
 	check(top >= 92, "jump at back of sidewalk clears the HUD")
 	check(hero.height == 0, "jump still lands with zoomed world")
 	Input.action_press("down")
-	for i in range(80):
+	for i in range(160):
 		hero.tick(0.016)
 	Input.action_release("down")
-	check(hero.position.y == game.WALK_MAX_Y and game.world_to_screen(hero.position).y < 520, "curb blocks walking into the street")
+	check(hero.position.y == game.WALK_MAX_Y and game.world_to_screen(hero.position).y < 694, "foreground movement stays above bottom HUD")
 	hero.facing = 1
 	var target = game.enemies[0]
 	target.position = hero.position + Vector2(45, -game.MELEE_DEPTH - 1)

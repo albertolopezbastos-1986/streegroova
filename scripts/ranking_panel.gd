@@ -29,7 +29,7 @@ func setup(online_service: Node) -> void:
 	service = online_service
 	layer = 20
 	entry_button = make_button("TOP 10 [R]", show_ranking)
-	entry_button.position = Vector2(760, 477)
+	entry_button.position = Vector2(760, 567)
 	entry_button.size = Vector2(174, 40)
 	entry_button.hide()
 	add_child(entry_button)
@@ -41,7 +41,7 @@ func setup(online_service: Node) -> void:
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	screen.add_child(backdrop)
 	var panel := VBoxContainer.new()
-	panel.position = Vector2(100, 24)
+	panel.position = Vector2(100, 114)
 	panel.size = Vector2(760, 490)
 	panel.add_theme_constant_override("separation", 8)
 	screen.add_child(panel)
@@ -127,7 +127,7 @@ func show_result(result: String, final_score: int, run_id: String) -> void:
 	saved = false
 	busy = false
 	submitted_name = ""
-	heading.text = "BARRIO LIBERADO" if result == "won" else "FIN DE LA RONDA"
+	heading.text = "CONGRATULATIONS!" if result == "won" else "FIN DE LA RONDA"
 	subtitle.text = "PUNTOS: %06d  /  Guarda tu partida en el ranking online" % points
 	name_input.editable = true
 	save_button.disabled = false
@@ -236,7 +236,7 @@ func _process(_dt: float) -> void:
 		return
 	var area := name_input.get_global_rect()
 	var shown := open and is_result and name_input.editable
-	var data := {"session": pending_id, "value": name_input.text, "visible": shown, "x": area.position.x, "y": area.position.y, "w": area.size.x, "h": area.size.y, "width": 960, "height": 540}
+	var data := {"session": pending_id, "value": name_input.text, "visible": shown, "x": area.position.x, "y": area.position.y, "w": area.size.x, "h": area.size.y, "width": 960, "height": 720}
 	var response: Variant = JavaScriptBridge.eval("window.GroovaNameInput ? JSON.stringify(window.GroovaNameInput.update(%s)) : null" % JSON.stringify(data))
 	if response is String:
 		var parsed: Variant = JSON.parse_string(response)

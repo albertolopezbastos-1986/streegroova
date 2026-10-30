@@ -1,6 +1,6 @@
 # Street Groova
 
-Primer nivel de un beat 'em up original inspirado en los arcade de los 90. Hecho en Godot 4, sin dependencias ni recursos externos. Abrí `project.godot` y presioná **F6 sobre `scenes/main.tscn`** o **F5** para jugar.
+Beat 'em up de tres niveles, original inspirado en los arcade de los 90. Hecho en Godot 4, sin dependencias ni recursos externos. Abrí `project.godot` y presioná **F6 sobre `scenes/main.tscn`** o **F5** para jugar.
 
 Para generar la versión Web desde la terminal, como en Groova Invaders:
 
@@ -19,6 +19,8 @@ Después de **Press Start** se abre la selección con tres portraits. Cambiá co
 | Acción | Teclado | Mando |
 | --- | --- | --- |
 | Mover por la calle | WASD / flechas | Stick izquierdo / cruceta |
+| Correr | Doble toque izquierda/derecha y mantener el segundo | Doble toque stick / cruceta y mantener |
+| Golpe deslizante | J / Z mientras corrés | X mientras corrés |
 | Golpear / combo de tres golpes | J / Z | X |
 | Saltar | Espacio / K | A |
 | Patada voladora | Golpear durante el salto | X en el aire |
@@ -26,15 +28,32 @@ Después de **Press Start** se abre la selección con tres portraits. Cambiá co
 | Pausa | Esc / P | Start |
 | Ayuda / sonido | H / M | — |
 
-Sin dirección, el salto es vertical. Con dirección, conserva el impulso hasta aterrizar. Los controles táctiles aparecen al tocar la pantalla; el tamaño de ventana mantiene la proporción 16:9.
+La carrera requiere dos toques hacia el mismo lado dentro de 0,28 segundos y mantener el segundo. Usa la animación de caminar y aumenta la velocidad de 170 a 300 unidades/s. Soltar o invertir la dirección termina la carrera. Atacar corriendo ejecuta un golpe deslizante con puño 1: avanza unas 65 unidades, frena progresivamente y causa 29 de daño una vez por rival y lo lanza por el aire como un agarre y lanzamiento. No activa el agarre automático durante la carrera. Por ahora todos los personajes usan esta misma animación; barridas y codazos propios quedan pendientes de sus sprites. Saltar corriendo conserva el impulso; recibir daño o usar la ulti cancela el deslizamiento.
+
+Sin dirección, el salto es vertical. Con dirección, conserva el impulso hasta aterrizar. Los controles táctiles aparecen sólo en móviles; la vista usa una resolución de 960 × 720 (4:3) y la ventana mantiene esa proporción.
+
+## Debug room
+
+Desde la selección de personaje, **TAB** abre una sala de pruebas con el fondo actual, sin oleadas automáticas y con vidas infinitas. **TAB** vuelve a la selección. Los botones en pantalla hacen lo mismo que estas teclas; se pueden crear enemigos y jefes repetidamente, sin límite.
+
+| Tecla | Acción |
+| --- | --- |
+| 1 / 2 / 3 | Cambiar a Beto / Cami / Alito, recuperando salud |
+| 4 / 5 / 6 | Crear rival rosa / amarillo / violeta |
+| 7 | Crear jefe final |
+| 8 | Cargar ulti al máximo |
+| 9 | Agregar una oleada aleatoria de 3 a 7 rivales |
+| 0 | Matar a todos los enemigos |
+
+Cami y Alito usan temporalmente los gráficos de Beto, indicado en pantalla, hasta que sus manifiestos y animaciones estén completos. La sala intenta cargar sus recursos propios al cambiar de personaje. Las pruebas no envían resultados al ranking.
 
 ## El nivel
 
-Un primer nivel de **10 oleadas** y **8500 unidades de largo** (antes 2550), con zoom **1,96875×**, un 25% menos que el anterior. Se puede retroceder hasta 700 unidades detrás del inicio de la oleada actual. La décima oleada presenta al jefe: un clon de Beto al doble de tamaño, con 390 de energía (triple del rival común de 130). Los enemigos comunes tienen 130/84/260 de energía, el doble que antes. Los turnos y rodeos del sistema de combate se mantienen.
+Una campaña de **3 niveles de 5 oleadas cada uno** (15 en total), cada uno de **4250 unidades de largo**, con zoom **1,96875×**, un 25% menos que el anterior. Se puede retroceder hasta 700 unidades detrás del inicio de la oleada actual. La quinta oleada presenta al jefe: un clon de Beto un 25% más grande, con 390 de energía (triple del rival común de 130). Los enemigos comunes tienen 130/84/260 de energía, el doble que antes. Los turnos y rodeos del sistema de combate se mantienen.
 
 Cada sección tiene una caja de madera y un barril que se rompen a golpes y dejan un pollo rostizado. Al acercarse por el suelo, el pollo recupera **50 de energía**; si la barra está llena, queda disponible. La comida es la única curación durante una vida: avanzar de oleada ya no cura. Una vida nueva empieza con energía completa.
 
-El movimiento en profundidad está limitado a la vereda y es más lento que el horizontal. La cámara conserva espacio por delante del jugador y acompaña verticalmente los saltos para mantener a Beto debajo del HUD sin cambiar su física. Los límites del nivel y los efectos se calculan con el zoom. [Ver encuadre](docs/primer-nivel.png).
+El movimiento en profundidad cubre 80 unidades (cuatro veces el recorrido anterior), abarca vereda y calle y es más lento que el horizontal. El piso visible se reparte entre baldosas y asfalto, separados por el cordón, con latas de cerveza vacías y diarios como decoración. La vista de 960 × 720 muestra más altura de las fachadas sin reducir a los personajes. La cámara conserva espacio por delante del jugador y acompaña verticalmente los saltos para mantener a Beto debajo del HUD sin cambiar su física. Los límites del nivel y los efectos se calculan con el zoom. [Ver encuadre](docs/primer-nivel.png).
 
 - **Beto:** personaje pixel art animado con sus nueve hojas originales; 100 de energía, tres vidas, dos puños y remate con guitarra, salto y patada aérea.
 - **Clon rosa:** luchador equilibrado con los sprites de Beto.
@@ -86,3 +105,28 @@ Validación de clones, combos, saltos, patadas aéreas y bloqueo de ulti: `godot
 ### Agarre y lanzamiento
 
 Beto agarra automáticamente al caminar hasta quedar pegado a un enemigo de frente y en la misma franja. Se inmoviliza en el cuadro 8 de `grab_throw` y el rival en el cuadro 3 de daño. Golpe solo hace el primer golpe de agarre (hoja provisional del primer puñetazo); atrás + golpe completa el lanzamiento hacia atrás. Un golpe recibido o la ulti liberan el agarre. Las nuevas hojas de 20 cuadros van en `assets/characters_20_frames/{beto,alito,cami}/animations/`; los originales anteriores se conservan. Ver `assets/characters/README.md` para cuadros y configuración, y `tests/test_grapple.gd` para controles de agarre, daño, lanzamiento e interrupción.
+
+Validación de carrera y golpe deslizante: `godot --headless --path . --script tests/test_running.gd`.
+
+Los enemigos también pueden agarrar y lanzar al jugador de cerca, o avisar con `!`, correr y ejecutar un golpe deslizante. Estas acciones requieren un turno del director de combate y tienen una espera de cinco segundos entre intentos especiales. Los lanzamientos y deslizamientos usan la misma trayectoria de caída: animación de derrota, aterrizaje y recuperación si queda salud. La recuperación dura 0,4 segundos y usa `jump` temporalmente, sin un salto físico. Se puede agregar la animación opcional `get_up` al manifiesto de cada personaje para reemplazarla; por ahora no se necesita ese recurso. Durante la caída y al levantarse hay protección para evitar lanzamientos encadenados; un golpe letal conserva el KO y el sistema de vidas habitual.
+
+Validación de lanzamientos, derribos, recuperación e IA: `godot --headless --path . --script tests/test_knockdown.gd`.
+
+## Controles mobile
+
+En Android, iPhone y iPad se detecta el dispositivo al iniciar (también en la versión Web). La vista mantiene el escenario de 960 × 720 y agrega una franja inferior de 180 unidades para los controles, sin cubrir el piso. En escritorio no se muestra esta franja.
+
+- Palanca analógica multidireccional a la izquierda, con diagonales, zona muerta y retorno al centro al soltar. Doble toque hacia el mismo lado y mantener permite correr.
+- Botones **PEGAR**, **SALTAR** y **ULTI** a la derecha, con multitouch para combinar movimiento y acciones. El aro de ulti muestra su carga.
+- Botón **PAUSA / SEGUIR** en el centro. Cambiar de pantalla, cancelar un toque o mandar la app al fondo libera los controles.
+- Selección por toque y botones para volver o entrar al debug room sin teclado. El debug room tiene un botón para volver a selección.
+
+Validación de palanca, multitouch, carrera y limpieza de controles: `godot --headless --path . --script tests/test_mobile_controls.gd`.
+
+## Campaña de tres niveles
+
+Los tres niveles repiten por ahora el escenario, las cinco oleadas y el jefe del nivel 1. El HUD indica el nivel y la oleada. Al superar los niveles 1 y 2 se muestra **STAGE CLEAR** con luces arcade durante 3,5 segundos y se carga automáticamente la primera oleada del siguiente nivel. Se conservan personaje, salud, vidas, carga de ulti, puntos y el identificador de la partida; se reinician la cámara, los enemigos, las cajas, los barriles y la comida del escenario.
+
+Al superar el nivel 3 aparece **CONGRATULATIONS!** con confeti y una celebración de cinco segundos. El personaje usa `jump` como animación provisional de victoria; agregar una animación opcional `victory` al manifiesto la reemplaza automáticamente. Después se abre el ranking con el puntaje acumulado de los tres niveles. El debug room no participa de la progresión de campaña.
+
+Validación de las 15 oleadas, intermedios, continuidad y victoria final: `godot --headless --path . --script tests/test_campaign.gd`.

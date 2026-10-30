@@ -4,7 +4,7 @@ Archivo del juego: `neighborhood-pixel.png` (1536 × 1024, opaco).
 
 Generado con la herramienta integrada de generación de imágenes (`image_gen`), sin CLI. El original quedó en el directorio de imágenes generadas; esta copia del proyecto es la que consume Godot. No se modificó el PNG después de generarlo.
 
-La franja se dibuja repetida horizontalmente, con filtrado nearest, en rectángulos de 492 × 328 unidades del mundo desde Y=159. La base de las fachadas está aproximadamente en la fila 748 del PNG, alineada con Y=399 del mundo. Una junta vertical pixelada disimula los cambios de material entre repeticiones. Las casas, la vereda, los actores y los efectos comparten el zoom de 2,625×. El texto del local se agrega con la fuente arcade del juego.
+La franja se repite horizontalmente con filtrado nearest y zoom de 1,96875×, en una vista de 960 × 720. Se dibuja por secciones del PNG: fachadas (filas 0–748) en Y=99–339; baldosas (748–930) en Y=339–393; cordón (930–964) en Y=393–399; y asfalto desde Y=399, repitiendo una franja interior (984–1024) sin la junta del cordón. Vereda y asfalto ocupan aproximadamente la mitad del piso cada uno. El recorrido caminable va de Y=350 a Y=430 y abarca ambos materiales. Las latas de cerveza vacías y los diarios se dibujan con formas pixeladas en posiciones fijas sobre ambos sectores; no afectan las colisiones. Se conservan las proporciones de las fachadas. Una junta vertical pixelada disimula los cambios de material entre repeticiones. El texto del local se agrega con la fuente arcade del juego.
 
 ## Prompt utilizado
 

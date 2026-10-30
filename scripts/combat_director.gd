@@ -86,10 +86,10 @@ func update(dt: float) -> void:
 	for enemy in turns.keys():
 		var invalid := not is_instance_valid(enemy)
 		if not invalid:
-			invalid = enemy.dead or enemy.stun > 0 or is_instance_valid(enemy.grabbed_by) or enemy.thrown_time > 0 or game.player.dead
+			invalid = enemy.dead or enemy.stun > 0 or is_instance_valid(enemy.grabbed_by) or enemy.thrown_time > 0 or enemy.getup_time > 0 or game.player.dead
 		var finished: bool = false
 		if not invalid:
-			finished = enemy.height == 0 and enemy.attack_time <= 0 and enemy.windup <= 0 and (clock >= float(turns[enemy]) or (enemy.combo == 2 and enemy.combo_window > 0))
+			finished = enemy.height == 0 and enemy.attack_time <= 0 and enemy.windup <= 0 and enemy.rush_windup <= 0 and not enemy.running and not enemy.grapple.active() and (clock >= float(turns[enemy]) or (enemy.combo == 2 and enemy.combo_window > 0))
 		if invalid or finished:
 			turns.erase(enemy)
 			if is_instance_valid(enemy):
@@ -97,7 +97,7 @@ func update(dt: float) -> void:
 				rested_until[enemy] = clock + randf_range(1.2, 2.0)
 				last_attacker = enemy
 			next_turn = maxf(next_turn, clock + randf_range(0.35, 0.65))
-	if game.player.dead or game.player.stun > 0 or game.player.invincible > 0.7:
+	if game.player.dead or game.player.stun > 0 or game.player.invincible > 0.7 or game.player.thrown_time > 0 or game.player.getup_time > 0 or is_instance_valid(game.player.grabbed_by):
 		return
 	if turns.is_empty() and clock >= next_turn:
 		grant_turn()
@@ -111,7 +111,7 @@ func grant_turn() -> bool:
 	var candidate: Node2D
 	var best := INF
 	for enemy in game.enemies:
-		if enemy.dead or enemy.stun > 0 or allowed(enemy) or enemy.height > 0 or enemy.attack_time > 0 or is_instance_valid(enemy.grabbed_by) or enemy.thrown_time > 0:
+		if enemy.dead or enemy.stun > 0 or allowed(enemy) or enemy.height > 0 or enemy.attack_time > 0 or is_instance_valid(enemy.grabbed_by) or enemy.thrown_time > 0 or enemy.getup_time > 0 or enemy.grapple.active():
 			continue
 		if clock < float(rested_until.get(enemy, 0.0)):
 			continue

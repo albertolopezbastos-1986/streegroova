@@ -2,6 +2,7 @@ extends CanvasLayer
 
 signal confirmed(slot: int)
 signal cancelled
+signal debug_requested
 
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const Catalog = preload("res://scripts/character_catalog.gd")
@@ -22,7 +23,7 @@ func _ready() -> void:
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	screen.add_child(background)
 	add_label("ELIGE TU PERSONAJE", Rect2(70, 44, 820, 40), 26, Color("62efd4"))
-	add_label("LA NOCHE TE ESPERA", Rect2(70, 92, 820, 24), 11, Color("98a3b9"))
+	add_label("LA NOCHE TE ESPERA   /   TAB: DEBUG ROOM", Rect2(70, 92, 820, 24), 11, Color("98a3b9"))
 	for i in range(Catalog.slots().size()):
 		var pack: Dictionary = Catalog.character_for_slot(i)
 		var card := Button.new()
@@ -70,6 +71,9 @@ func _ready() -> void:
 	confirm.pressed.connect(func(): confirmed.emit(selected))
 	screen.add_child(confirm)
 	add_label("A / D O FLECHAS PARA CAMBIAR   -   ESC PARA VOLVER", Rect2(50, 491, 860, 22), 10, Color("98a3b9"))
+	for child in screen.get_children():
+		if child != background:
+			child.position.y += 90
 	hide_panel()
 
 func add_label(value: String, bounds: Rect2, pixels: int, color: Color) -> void:
@@ -126,3 +130,19 @@ func handle_input(event: InputEvent) -> void:
 	else:
 		return
 	get_viewport().set_input_as_handled()
+
+func setup_mobile() -> void:
+	var back := Button.new()
+	back.text = "VOLVER"
+	back.position = Vector2(294, 628)
+	back.size = Vector2(180, 48)
+	back.add_theme_font_size_override("font_size", 12)
+	back.pressed.connect(func(): cancelled.emit())
+	screen.add_child(back)
+	var debug := Button.new()
+	debug.text = "DEBUG ROOM"
+	debug.position = Vector2(486, 628)
+	debug.size = Vector2(180, 48)
+	debug.add_theme_font_size_override("font_size", 12)
+	debug.pressed.connect(func(): debug_requested.emit())
+	screen.add_child(debug)

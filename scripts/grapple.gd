@@ -16,14 +16,19 @@ func active() -> bool:
 
 func try_start() -> bool:
 	var hero := owner_fighter
-	if active() or retry > 0 or hero.dead or hero.stun > 0 or hero.height > 0 or hero.attack_time > 0 or hero.cooldown > 0:
+	if active() or retry > 0 or hero.dead or hero.stun > 0 or hero.height > 0 or hero.attack_time > 0 or hero.cooldown > 0 or hero.thrown_time > 0 or hero.getup_time > 0 or is_instance_valid(hero.grabbed_by):
 		return false
 	if not hero.visual.sheets.has("grab_throw"):
 		return false
 	var closest := 25.0
 	var candidate: Node2D
-	for enemy in hero.game.enemies:
-		if enemy.dead or enemy.height > 0 or enemy.thrown_time > 0 or is_instance_valid(enemy.grabbed_by):
+	var candidates: Array = hero.game.enemies if hero.kind == -1 else [hero.game.player]
+	if hero.kind >= 0 and not hero.game.combat_director.allowed(hero):
+		return false
+	for enemy in candidates:
+		if enemy.dead or enemy.height > 0 or enemy.thrown_time > 0 or enemy.getup_time > 0 or enemy.grapple.active() or is_instance_valid(enemy.grabbed_by):
+			continue
+		if hero.kind >= 0 and enemy.invincible > 0:
 			continue
 		var delta: Vector2 = enemy.position - hero.position
 		if delta.x * hero.facing < 0 or absf(delta.y) > 6 or absf(delta.x) >= closest:
@@ -41,6 +46,8 @@ func try_start() -> bool:
 	hero.moving = false
 	hero.attack_buffer = 0
 	hero.combo_window = 0
+	hero.reset_running()
+	victim.reset_running()
 	victim.grabbed_by = hero
 	victim.attack_time = 0
 	victim.windup = 0
@@ -65,7 +72,7 @@ func align_victim() -> void:
 
 func tick(dt: float) -> void:
 	var hero := owner_fighter
-	if hero.dead or hero.stun > 0 or (state != "recover" and (not is_instance_valid(victim) or victim.dead)):
+	if hero.dead or hero.stun > 0 or (hero.kind >= 0 and not hero.game.combat_director.allowed(hero)) or (state != "recover" and (not is_instance_valid(victim) or victim.dead)):
 		release()
 		return
 	elapsed += dt
@@ -82,6 +89,12 @@ func tick(dt: float) -> void:
 				state = "hold"
 				elapsed = 0
 		"hold":
+			if hero.kind >= 0:
+				if elapsed >= 0.3:
+					state = "throw"
+					elapsed = 0
+					hero.game.sound("swing")
+				return
 			if Input.is_action_just_pressed("ultimate"):
 				hero.game.use_ultimate()
 				return
@@ -123,15 +136,9 @@ func launch() -> void:
 	victim = null
 	target.grabbed_by = null
 	target.invincible = 0
-	target.hurt(40, -locked_facing, true)
 	target.position = hero.position + Vector2(-locked_facing * 36, 0)
-	target.velocity = Vector2(-locked_facing * 310, 0)
-	target.height = 25
-	target.jump_speed = 330
-	target.thrown_time = 1.1
-	target.stun = 1.1
-	target.hurt_duration = 1.1
-	target.update_visual(0)
+	target.position.x = clampf(target.position.x, hero.game.left_bound, hero.game.right_bound)
+	target.launch_away(40, -locked_facing)
 
 func release() -> void:
 	if is_instance_valid(victim):

@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://emrk5ptxhs28"]
 
-[ext_resource type="Script" path="res://scripts/game.gd" id="1"]
+[ext_resource type="Script" uid="uid://bnf0qlpctgi7g" path="res://scripts/game.gd" id="1"]
 
-[node name="StreetGroova" type="Node2D"]
+[node name="StreetGroova" type="Node2D" unique_id=133147420]
 script = ExtResource("1")
+simulate_mobile = true
