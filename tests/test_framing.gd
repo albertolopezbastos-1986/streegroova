@@ -84,6 +84,37 @@ func run() -> void:
 		game.update_game(0.016)
 	game.update_world_transform()
 	check(absf(game.world_to_screen(hero.position).x - game.CAMERA_ANCHOR_X) < 0.1, "scrolling keeps player in the left third of the screen")
+	hero.moving = true
+	hero.velocity = Vector2(-170, 0)
+	var smooth := true
+	for i in range(120):
+		hero.position.x -= 170 * 0.016
+		var previous: float = game.camera_x
+		game.update_camera(0.016)
+		if absf(game.camera_x - previous) > 15:
+			smooth = false
+	game.update_world_transform()
+	check(game.world_to_screen(hero.position).x > 500, "walking left gives the player more room to see behind")
+	check(smooth, "camera changes directional framing smoothly")
+	hero.moving = false
+	hero.velocity = Vector2.ZERO
+	for i in range(180):
+		game.update_camera(0.016)
+	game.update_world_transform()
+	check(absf(game.world_to_screen(hero.position).x - game.CAMERA_LEFT_ANCHOR_X) < 0.1, "stopping preserves left-facing camera margin")
+	hero.moving = true
+	hero.velocity.x = 170
+	for i in range(120):
+		hero.position.x += 170 * 0.016
+		game.update_camera(0.016)
+	game.update_world_transform()
+	check(game.world_to_screen(hero.position).x < 420, "walking right restores forward camera margin")
+	hero.moving = false
+	hero.velocity = Vector2.ZERO
+	hero.position.x = 30
+	for i in range(180):
+		game.update_camera(0.016)
+	check(absf(game.camera_x) < 0.01, "camera respects the left end of the world")
 	print("ALL ", checks, " FRAMING CHECKS PASSED")
 	game.queue_free()
 	await process_frame

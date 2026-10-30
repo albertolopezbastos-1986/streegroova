@@ -11,10 +11,13 @@ const WALK_SPEED := 170.0
 const RUN_SPEED := 300.0
 const DOUBLE_TAP_TIME := 0.28
 const SLIDE_SPEED := 360.0
-const SLIDE_BRAKE := 1000.0
+const SLIDE_BRAKE := 450.0
+const THROW_SPEED := 380.0
+const THROW_GROUND_BRAKE := 800.0
 
 var running := false
 var run_attack := false
+var slide_animation_duration := 0.0
 var tap_time := 0.0
 var tap_direction := 0.0
 var previous_horizontal := 0.0
@@ -25,6 +28,9 @@ var is_boss := false
 var grapple: RefCounted
 var grabbed_by: Node2D
 var thrown_time := 0.0
+var flight_can_hit := false
+var flight_hits: Array = []
+const FLIGHT_IMPACT_DAMAGE := 20.0
 var getup_time := 0.0
 var victory_time := -1.0
 const GETUP_DURATION := 0.4
@@ -102,6 +108,8 @@ func tick(dt: float) -> void:
 	ai_jump_cooldown = maxf(0, ai_jump_cooldown - dt)
 	ai_special_cooldown = maxf(0, ai_special_cooldown - dt)
 	if is_instance_valid(grabbed_by) and not dead:
+		if kind == -1:
+			grabbed_by.grapple.try_escape(dt)
 		update_visual(0)
 		queue_redraw()
 		return
@@ -111,11 +119,16 @@ func tick(dt: float) -> void:
 		queue_redraw()
 		return
 	if dead:
+		var from := position
 		death_time += dt
-		jump_speed -= 950 * dt
 		height = maxf(0, height + jump_speed * dt)
+		jump_speed -= 950 * dt
 		position.x = clampf(position.x + velocity.x * dt, game.left_bound, game.right_bound)
-		velocity = velocity.move_toward(Vector2.ZERO, dt * 650)
+		if height == 0:
+			velocity = velocity.move_toward(Vector2.ZERO, dt * (THROW_GROUND_BRAKE if thrown_time > 0 else 650.0))
+		update_flight_impacts(from)
+		if height == 0:
+			flight_can_hit = false
 		update_visual(dt)
 		queue_redraw()
 		return
@@ -131,11 +144,14 @@ func tick(dt: float) -> void:
 			air_attack = false
 			game.dust(position)
 	if thrown_time > 0:
+		var from := position
 		thrown_time = maxf(0, thrown_time - dt)
 		position.x = clampf(position.x + velocity.x * dt, game.left_bound, game.right_bound)
+		update_flight_impacts(from)
 		if height == 0:
-			velocity = velocity.move_toward(Vector2.ZERO, dt * 650)
-		if thrown_time == 0 and height > 0:
+			flight_can_hit = false
+			velocity = velocity.move_toward(Vector2.ZERO, dt * THROW_GROUND_BRAKE)
+		if thrown_time == 0 and (height > 0 or not velocity.is_zero_approx()):
 			thrown_time = dt
 		stun = maxf(stun, thrown_time)
 		if thrown_time == 0 and height == 0:
@@ -346,6 +362,9 @@ func begin_attack() -> void:
 	attack_duration = visual.duration(attack_motion())
 	if kind >= 0:
 		attack_duration *= [1.0, 0.9, 1.22][kind]
+	if run_attack:
+		slide_animation_duration = attack_duration
+		attack_duration = maxf(attack_duration, SLIDE_SPEED / SLIDE_BRAKE + 0.08)
 	combo_window = attack_duration + (1.1 if kind >= 0 else 0.45)
 	attack_time = attack_duration
 	cooldown = attack_duration + (0.12 if kind >= 0 else 0.015)
@@ -358,11 +377,16 @@ func begin_attack() -> void:
 func attack_motion() -> String:
 	return "jump_attack" if air_attack else "attack_%02d" % (combo + 1)
 
+func attack_progress() -> float:
+	# The punch keeps its contact timing while the slide continues through recovery.
+	var duration := slide_animation_duration if run_attack else attack_duration
+	return clampf((attack_duration - attack_time) / duration, 0, 1)
+
 func attack_is_active() -> bool:
 	if attack_time <= 0:
 		return false
 	var name := attack_motion()
-	var frame: int = visual.frame_at(name, 1.0 - attack_time / attack_duration)
+	var frame: int = visual.frame_at(name, attack_progress())
 	for active_frame in visual.definition(name)["active_hit_frames"]:
 		# JSON numbers are floats; Array.has would compare their Variant types.
 		if frame == int(active_frame):
@@ -397,7 +421,7 @@ func update_visual(dt: float) -> void:
 		progress = 1.0 - stun / maxf(hurt_duration, 0.01)
 	elif attack_time > 0:
 		motion = attack_motion()
-		progress = 1.0 - attack_time / attack_duration
+		progress = attack_progress()
 	elif height > 0:
 		motion = "jump"
 		progress = jump_elapsed / jump_duration
@@ -445,14 +469,16 @@ func strike() -> void:
 			else:
 				target.hurt(damage, facing, combo == 2 or air_attack or kind == 2)
 
-func launch_away(damage: float, direction: float) -> bool:
+func launch_away(damage: float, direction: float, can_hit_others := true) -> bool:
 	if dead or invincible > 0 or thrown_time > 0 or getup_time > 0:
 		return false
 	hurt(damage, direction, true)
-	velocity = Vector2(direction * 310, 0)
+	velocity = Vector2(direction * THROW_SPEED, 0)
 	height = 25
 	jump_speed = 330
 	thrown_time = 1.1
+	flight_can_hit = can_hit_others
+	flight_hits.clear()
 	getup_time = 0
 	stun = 1.1
 	hurt_duration = 1.1
@@ -460,6 +486,23 @@ func launch_away(damage: float, direction: float) -> bool:
 	moving = false
 	update_visual(0)
 	return true
+
+func update_flight_impacts(from: Vector2) -> void:
+	if not flight_can_hit or thrown_time <= 0 or height <= 0:
+		return
+	var direction := signf(velocity.x)
+	if direction == 0:
+		return
+	for target in game.enemies:
+		if target == self or target.dead or target in flight_hits:
+			continue
+		# Sweep the body along this frame's path so fast throws cannot skip rivals.
+		if target.position.x < minf(from.x, position.x) - 22 or target.position.x > maxf(from.x, position.x) + 22:
+			continue
+		if absf(target.position.y - position.y) >= game.MELEE_DEPTH or absf(target.height - height) > 90:
+			continue
+		if target.launch_away(FLIGHT_IMPACT_DAMAGE, direction, false):
+			flight_hits.append(target)
 
 func hurt(damage: float, direction: float, heavy := false, from_grab := false) -> void:
 	if dead or invincible > 0 or thrown_time > 0 or getup_time > 0:

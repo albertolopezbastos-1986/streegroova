@@ -28,7 +28,7 @@ Después de **Press Start** se abre la selección con tres portraits. Cambiá co
 | Pausa | Esc / P | Start |
 | Ayuda / sonido | H / M | — |
 
-La carrera requiere dos toques hacia el mismo lado dentro de 0,28 segundos y mantener el segundo. Usa la animación de caminar y aumenta la velocidad de 170 a 300 unidades/s. Soltar o invertir la dirección termina la carrera. Atacar corriendo ejecuta un golpe deslizante con puño 1: avanza unas 65 unidades, frena progresivamente y causa 29 de daño una vez por rival y lo lanza por el aire como un agarre y lanzamiento. No activa el agarre automático durante la carrera. Por ahora todos los personajes usan esta misma animación; barridas y codazos propios quedan pendientes de sus sprites. Saltar corriendo conserva el impulso; recibir daño o usar la ulti cancela el deslizamiento.
+La carrera requiere dos toques hacia el mismo lado dentro de 0,28 segundos y mantener el segundo. Usa la animación de caminar y aumenta la velocidad de 170 a 300 unidades/s. Soltar o invertir la dirección termina la carrera. Atacar corriendo ejecuta un golpe deslizante con puño 1: avanza unas 145 unidades, frena progresivamente durante unos 0,8 segundos y causa 29 de daño una vez por rival y lo lanza por el aire como un agarre y lanzamiento. No activa el agarre automático durante la carrera. Por ahora todos los personajes usan esta misma animación; barridas y codazos propios quedan pendientes de sus sprites. Saltar corriendo conserva el impulso; recibir daño o usar la ulti cancela el deslizamiento.
 
 Sin dirección, el salto es vertical. Con dirección, conserva el impulso hasta aterrizar. Los controles táctiles aparecen sólo en móviles; la vista usa una resolución de 960 × 720 (4:3) y la ventana mantiene esa proporción.
 
@@ -53,7 +53,7 @@ Una campaña de **3 niveles de 5 oleadas cada uno** (15 en total), cada uno de *
 
 Cada sección tiene una caja de madera y un barril que se rompen a golpes y dejan un pollo rostizado. Al acercarse por el suelo, el pollo recupera **50 de energía**; si la barra está llena, queda disponible. La comida es la única curación durante una vida: avanzar de oleada ya no cura. Una vida nueva empieza con energía completa.
 
-El movimiento en profundidad cubre 80 unidades (cuatro veces el recorrido anterior), abarca vereda y calle y es más lento que el horizontal. El piso visible se reparte entre baldosas y asfalto, separados por el cordón, con latas de cerveza vacías y diarios como decoración. La vista de 960 × 720 muestra más altura de las fachadas sin reducir a los personajes. La cámara conserva espacio por delante del jugador y acompaña verticalmente los saltos para mantener a Beto debajo del HUD sin cambiar su física. Los límites del nivel y los efectos se calculan con el zoom. [Ver encuadre](docs/primer-nivel.png).
+El movimiento en profundidad cubre 80 unidades (cuatro veces el recorrido anterior), abarca vereda y calle y es más lento que el horizontal. El piso visible se reparte entre baldosas y asfalto, separados por el cordón, con latas de cerveza vacías y diarios como decoración. La vista de 960 × 720 muestra más altura de las fachadas sin reducir a los personajes. La cámara deja margen hacia la dirección de movimiento (izquierda o derecha), cambia de encuadre suavemente y conserva ese margen al detenerse. También conserva espacio por delante del jugador y acompaña verticalmente los saltos para mantener a Beto debajo del HUD sin cambiar su física. Los límites del nivel y los efectos se calculan con el zoom. [Ver encuadre](docs/primer-nivel.png).
 
 - **Beto:** personaje pixel art animado con sus nueve hojas originales; 100 de energía, tres vidas, dos puños y remate con guitarra, salto y patada aérea.
 - **Clon rosa:** luchador equilibrado con los sprites de Beto.
@@ -130,3 +130,17 @@ Los tres niveles repiten por ahora el escenario, las cinco oleadas y el jefe del
 Al superar el nivel 3 aparece **CONGRATULATIONS!** con confeti y una celebración de cinco segundos. El personaje usa `jump` como animación provisional de victoria; agregar una animación opcional `victory` al manifiesto la reemplaza automáticamente. Después se abre el ranking con el puntaje acumulado de los tres niveles. El debug room no participa de la progresión de campaña.
 
 Validación de las 15 oleadas, intermedios, continuidad y victoria final: `godot --headless --path . --script tests/test_campaign.gd`.
+
+## Impactos en vuelo y opciones de agarre
+
+Un cuerpo lanzado por grab-and-throw o golpe deslizante puede golpear a varios enemigos durante su vuelo. Cada impacto causa 20 de daño y lanza al enemigo alcanzado, pero estos lanzamientos secundarios no golpean a terceros. También ocurre si el jugador sale volando y choca contra enemigos. Se respetan la profundidad del escenario, las alturas y la protección de recuperación; un KO puede seguir golpeando mientras su cuerpo está en el aire.
+
+Durante un agarre, **golpe** permite pegar hasta tres veces, usando `attack_01` por ahora. Los primeros dos golpes vuelven al cuadro de agarre; el tercero lanza hacia adelante, **sin efecto cadena**. Cada golpe causa 19 de daño. **Atrás + golpe** sigue siendo el lanzamiento normal. **Salto** abandona el agarre y salta, sin golpear ni lanzar al rival.
+
+Si un enemigo te agarra, cinco pulsaciones nuevas de **golpe, salto o direcciones** permiten zafarte. Se pueden combinar; mantener un botón o dirección no suma más pulsaciones. Dejar de pulsar durante 0,8 segundos reinicia el progreso. Al escapar recibís una protección breve y el captor queda momentáneamente aturdido. El indicador **ZAFATE!** muestra el progreso. Funciona con teclado, mando y controles mobile.
+
+Validación: `godot --headless --path . --script tests/test_flight_grapple.gd`.
+
+Los cuerpos lanzados conservan el impulso horizontal durante toda la caída, incluso si el impacto fue letal. El lanzamiento sale a 380 unidades/s y la fricción del piso los frena al aterrizar; los sobrevivientes esperan a detenerse antes de levantarse. El puñetazo deslizante conserva sus cuadros de contacto originales y sostiene su último cuadro durante la frenada extendida.
+
+El agarre del jugador llega al cuadro de sujeción al doble de velocidad y la fase de lanzamiento se reproduce al doble de velocidad, manteniendo el cuadro real de liberación. Pulsar atrás + golpe durante la captura guarda la orden para lanzar en cuanto termine de agarrar; los tiempos del agarre enemigo se conservan para permitir zafarse.

@@ -79,10 +79,13 @@ func run() -> void:
 		hero.tick(0.016)
 	check(enemy.hp == 971, "slide hits each enemy once for heavy damage")
 	Input.action_release("right")
+	for i in range(15):
+		hero.tick(0.016)
+	check(hero.run_attack and absf(hero.velocity.x) > 100 and hero.visual.source_frame == 39, "slide keeps braking after punch animation ends")
 	while hero.attack_time > 0:
 		hero.tick(0.016)
 	check(not hero.run_attack and hero.velocity == Vector2.ZERO, "slide ends at rest")
-	check(start - hero.position.x > 45 and start - hero.position.x < 80, "slide has a short controlled travel distance")
+	check(start - hero.position.x > 130 and start - hero.position.x < 165, "slide travels over twice its previous distance")
 	hero.cooldown = 0
 	hero.begin_attack()
 	check(hero.combo == 0 and not hero.run_attack, "normal combo restarts after slide")

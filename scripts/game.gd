@@ -25,6 +25,7 @@ const SECTION_WIDTH := 850.0
 const BACKTRACK_DISTANCE := 700.0
 const LEVEL_WIDTH := SECTION_WIDTH * WAVE_COUNT
 const CAMERA_ANCHOR_X := 300.0
+const CAMERA_LEFT_ANCHOR_X := 660.0
 const VIEW_HEIGHT := 720.0
 const FLOOR_BACK_Y := 339.0
 const CURB_TOP_Y := 393.0
@@ -49,6 +50,8 @@ var presentation_time := 0.0
 var left_bound := 30.0
 var right_bound := 850.0
 var camera_x := 0.0
+var camera_anchor_x := CAMERA_ANCHOR_X
+var camera_direction := 1.0
 var shake := 0.0
 var freeze := 0.0
 var ult_time := 0.0
@@ -171,6 +174,8 @@ func load_level(remaining_health := 100.0) -> void:
 	presentation_time = 0
 	stage = 0
 	camera_x = 0
+	camera_anchor_x = CAMERA_ANCHOR_X
+	camera_direction = 1
 	left_bound = 30
 	right_bound = 850
 	ult_time = 0
@@ -488,6 +493,8 @@ func update_game(dt: float) -> void:
 				player.dead = false
 				player.death_time = 0
 				player.thrown_time = 0
+				player.flight_can_hit = false
+				player.flight_hits.clear()
 				player.getup_time = 0
 				player.reset_running()
 				player.hp = player.max_hp
@@ -516,7 +523,18 @@ func update_game(dt: float) -> void:
 				left_bound = maxf(30, stage * SECTION_WIDTH - BACKTRACK_DISTANCE)
 				transition = 0
 				spawn_wave()
-	camera_x = lerpf(camera_x, clampf(player.position.x - CAMERA_ANCHOR_X / WORLD_ZOOM, 0, LEVEL_WIDTH - 960.0 / WORLD_ZOOM), minf(1, dt * 6))
+	update_camera(dt)
+
+func update_camera(dt: float) -> void:
+	# Follow travel direction, keeping the last view when stopping or attacking.
+	if player.stun <= 0 and player.thrown_time <= 0 and not is_instance_valid(player.grabbed_by) and player.attack_time <= 0:
+		if absf(player.velocity.x) > 5 and (player.moving or player.height > 0):
+			camera_direction = signf(player.velocity.x)
+	var target_anchor := CAMERA_LEFT_ANCHOR_X if camera_direction < 0 else CAMERA_ANCHOR_X
+	camera_anchor_x = move_toward(camera_anchor_x, target_anchor, dt * 720)
+	var max_camera := LEVEL_WIDTH - 960.0 / WORLD_ZOOM
+	var target_x := clampf(player.position.x - camera_anchor_x / WORLD_ZOOM, 0, max_camera)
+	camera_x = lerpf(camera_x, target_x, 1.0 - exp(-dt * 8))
 
 func complete_level() -> void:
 	mobile_controls.release_all()
@@ -694,6 +712,11 @@ func draw_overlay() -> void:
 			overlay_text(canvas, ("%02d / EL JEFE DEL BARRIO" % WAVE_COUNT if stage == WAVE_COUNT - 1 else "%02d / EL DISTRITO NEON" % (stage + 1)), Vector2(300, 127), 21, CREAM)
 		if transition > 0 and stage < WAVE_COUNT - 1:
 			overlay_text(canvas, "AVANZA  >>", Vector2(740, 267), 22, MINT)
+		if is_instance_valid(player.grabbed_by):
+			var grip: RefCounted = player.grabbed_by.grapple
+			overlay_centered(canvas, "ZAFATE! PULSA GOLPE, SALTO O DIRECCIONES", 163, 17, Color("f7c47e"))
+			canvas.draw_rect(Rect2(330, 176, 300, 8), Color("30344c"))
+			canvas.draw_rect(Rect2(330, 176, 300.0 * grip.escape_presses / grip.ESCAPE_REQUIRED, 8), MINT)
 		if combo_hits > 1:
 			overlay_text(canvas, "%02d HITS" % combo_hits, Vector2(779, 164), 27, Color("ffc785"))
 		if respawn_time > 0:
@@ -759,11 +782,11 @@ func overlay_centered(canvas: Node2D, value: String, y: float, size: int, color:
 
 func draw_controls(canvas: Node2D, y: float) -> void:
 	if touch_visible:
-		var mobile_lines := ["PALANCA IZQUIERDA: MOVER EN TODAS LAS DIRECCIONES", "DOBLE TOQUE Y MANTENER: CORRER", "PEGAR / SALTAR / ULTI: BOTONES A LA DERECHA", "CORRER + PEGAR: DESLIZANTE | SALTAR + PEGAR: PATADA", "AGARRE: PEGAR O PALANCA ATRAS + PEGAR PARA LANZAR", "PAUSA / SEGUIR: BOTON CENTRAL"]
+		var mobile_lines := ["PALANCA IZQUIERDA: MOVER EN TODAS LAS DIRECCIONES", "DOBLE TOQUE Y MANTENER: CORRER", "PEGAR / SALTAR / ULTI: BOTONES A LA DERECHA", "CORRER + PEGAR: DESLIZANTE | SALTAR + PEGAR: PATADA", "AGARRE: 3 GOLPES | ATRAS + PEGAR LANZA | SALTAR SALE", "ATRAPADO: PULSA PEGAR / SALTAR / MOVER PARA ESCAPAR"]
 		for i in range(mobile_lines.size()):
 			overlay_text(canvas, mobile_lines[i], Vector2(190, y + i * 23), 14, CREAM)
 		return
-	var lines := ["WASD / FLECHAS mover | doble toque + mantener: correr", "J / Z combo | corriendo + J / Z: golpe deslizante", "ESPACIO / K salto | aire + J patada | L / X ulti", "Pegado al rival: agarre   |   J golpe   |   atras + J lanzar", "MANDO: stick / cruceta   |   X golpe   A salto   Y ulti", "ESC pausa    H ayuda    M sonido   |   Busca pollo en cajas y barriles"]
+	var lines := ["WASD / FLECHAS mover | doble toque + mantener: correr", "J / Z combo | corriendo + J / Z: golpe deslizante", "ESPACIO / K salto | aire + J patada | L / X ulti", "AGARRE: J x3 | atras + J lanza | salto suelta", "MANDO: stick / cruceta   |   X golpe   A salto   Y ulti", "Atrapado: pulsa golpe, salto o direcciones para escapar"]
 	for i in range(lines.size()):
 		overlay_text(canvas, lines[i], Vector2(219 if i < 4 else 190, y + i * 23), 16 if i < 4 else 14, CREAM if i < 3 else Color("98a3b9"))
 

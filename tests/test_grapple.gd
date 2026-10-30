@@ -58,7 +58,7 @@ func run() -> void:
 	hero.tick(0.016)
 	Input.action_release("attack")
 	await process_frame
-	check(grab.state == "punch" and hero.visual.motion == "grab_punch_01", "attack alone chooses first grab punch with placeholder art")
+	check(grab.state == "punch" and hero.visual.motion == "attack_01", "attack alone chooses first grab punch with placeholder art")
 	for i in range(40):
 		hero.tick(0.016)
 		enemy.tick(0.016)
@@ -76,9 +76,11 @@ func run() -> void:
 		enemy.tick(0.016)
 	check(not is_instance_valid(enemy.grabbed_by) and enemy.velocity.x < 0 and enemy.height > 0, "throw launches rival backwards into an arc")
 	check(enemy.hp == before - 59, "throw applies forty damage once")
-	for i in range(90):
+	for i in range(130):
 		hero.tick(0.016)
 		enemy.tick(0.016)
+		if not grab.active() and enemy.thrown_time == 0 and enemy.getup_time == 0:
+			break
 	check(not grab.active() and enemy.height == 0 and enemy.thrown_time == 0, "throw completes and surviving enemy lands and recovers")
 	# Mirror controls and verify that a second enemy can interrupt the hold.
 	hero.facing = -1
@@ -127,6 +129,34 @@ func run() -> void:
 	await process_frame
 	check(grab.active() and enemy.grabbed_by == hero, "walking into close contact automatically begins the grab")
 	grab.release()
+	# Early throw input is buffered through the shortened catch animation.
+	hero.stun = 0
+	hero.cooldown = 0
+	hero.attack_time = 0
+	hero.grapple.retry = 0
+	hero.facing = 1
+	enemy.getup_time = 0
+	enemy.thrown_time = 0
+	enemy.height = 0
+	enemy.hp = 130
+	enemy.invincible = 0
+	enemy.position = hero.position + Vector2(20, 0)
+	check(grab.try_start(), "can start grab for early throw input")
+	Input.action_press("left")
+	Input.action_press("attack")
+	hero.tick(0.016)
+	Input.action_release("left")
+	Input.action_release("attack")
+	await process_frame
+	check(grab.buffered_action == "throw", "back plus attack during catch buffers a throw")
+	var throw_delay := 0.016
+	for i in range(30):
+		hero.tick(0.016)
+		throw_delay += 0.016
+		if enemy.thrown_time > 0:
+			break
+	check(enemy.thrown_time > 0 and throw_delay < 0.42, "early throw launches within four tenths of a second from capture")
+	check(hero.visual.source_frame >= 15 and enemy.hp == 90, "faster throw keeps release synchronized to the animation and damage")
 	print("ALL ", checks, " GRAPPLE CHECKS PASSED")
 	game.queue_free()
 	await process_frame

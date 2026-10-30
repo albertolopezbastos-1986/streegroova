@@ -29,13 +29,15 @@ func run() -> void:
 	hero.running = true
 	hero.begin_attack()
 	hero.strike()
-	check(enemy.thrown_time > 0 and enemy.height == 25 and enemy.velocity.x == 310, "player slide launches enemy with throw physics")
+	check(enemy.thrown_time > 0 and enemy.height == 25 and enemy.velocity.x == enemy.THROW_SPEED, "player slide launches enemy with throw physics")
 	check(enemy.visual.motion == "death" and not enemy.dead, "living enemy uses falling animation")
 	var hp: float = enemy.hp
 	hero.strike()
 	check(enemy.hp == hp, "slide cannot damage its victim twice")
-	for i in range(69):
+	for i in range(120):
 		enemy.tick(0.016)
+		if enemy.getup_time > 0:
+			break
 	check(enemy.height == 0 and enemy.getup_time > 0 and enemy.visual.motion == "jump", "survivor lands then uses jump as get-up placeholder")
 	check(not enemy.takeoff(Vector2.ZERO), "get-up cannot be interrupted by jumping")
 	var at: Vector2 = enemy.position
@@ -75,8 +77,10 @@ func run() -> void:
 	var player_hp: float = hero.hp
 	hero.hurt(5, 1)
 	check(hero.hp == player_hp, "grounded recovery cannot be stun-locked by more hits")
-	for i in range(69):
+	for i in range(120):
 		hero.tick(0.016)
+		if hero.getup_time > 0:
+			break
 	check(hero.getup_time > 0 and hero.visual.motion == "jump" and hero.height == 0, "player also uses grounded get-up animation")
 	for i in range(30):
 		hero.tick(0.016)
