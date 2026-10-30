@@ -14,10 +14,13 @@
       "format": "sheet",
       "fps": 20,
       "loop": true,
-      "frame_size": null,
+      "frame_size": [
+        200,
+        200
+      ],
       "frame_count": 20,
-      "sheet_columns": null,
-      "sheet_rows": null,
+      "sheet_columns": 5,
+      "sheet_rows": 5,
       "frame_order": "row_major",
       "frame_indices": [
         0,
@@ -49,10 +52,13 @@
       "format": "sheet",
       "fps": 20,
       "loop": true,
-      "frame_size": null,
+      "frame_size": [
+        102,
+        231
+      ],
       "frame_count": 20,
-      "sheet_columns": null,
-      "sheet_rows": null,
+      "sheet_columns": 5,
+      "sheet_rows": 5,
       "frame_order": "row_major",
       "frame_indices": [
         0,
@@ -71,12 +77,14 @@
         13,
         14,
         15,
-        16,
-        17,
-        18,
-        19
+        16
       ],
-      "active_hit_frames": null
+      "active_hit_frames": null,
+      "pivot_pixels": [
+        51,
+        226
+      ],
+      "scale": 0.48
     },
     "attack_01": {
       "path": "animations/attack_01",
@@ -403,11 +411,18 @@
     },
     "grab_punch_02": {
       "path": "animations/grab_punch_02",
-      "file": "grab_punch_02.png",
+      "file": "grabpunch2.png",
       "format": "sheet",
-      "fps": 20,
+      "fps": 50,
       "loop": false,
+      "frame_size": [
+        183,
+        227
+      ],
       "frame_count": 20,
+      "sheet_columns": 5,
+      "sheet_rows": 5,
+      "frame_order": "row_major",
       "frame_indices": [
         0,
         1,
@@ -430,10 +445,21 @@
         18,
         19
       ],
-      "frame_size": null,
-      "sheet_columns": null,
-      "sheet_rows": null,
-      "active_hit_frames": null
+      "active_hit_frames": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "pivot_pixels": [
+        91.5,
+        217
+      ],
+      "scale": 0.52
     },
     "grab_punch_03": {
       "path": "animations/grab_punch_03",
@@ -475,9 +501,15 @@
       "format": "sheet",
       "fps": 20,
       "loop": true,
+      "frame_size": [
+        200,
+        200
+      ],
       "frame_count": 20,
+      "sheet_columns": 5,
+      "sheet_rows": 5,
+      "frame_order": "row_major",
       "frame_indices": [
-        0,
         1,
         2,
         3,
@@ -498,9 +530,6 @@
         18,
         19
       ],
-      "frame_size": null,
-      "sheet_columns": null,
-      "sheet_rows": null,
       "active_hit_frames": null
     }
   }

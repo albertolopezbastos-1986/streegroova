@@ -467,9 +467,15 @@ func update_game(dt: float) -> void:
 			for enemy in enemies:
 				if not enemy.dead:
 					enemy.invincible = 0
-					enemy.hurt(65, signf(enemy.position.x - player.position.x), true)
+					enemy.thrown_time = 0
+					enemy.getup_time = 0
+					var direction := signf(enemy.position.x - player.position.x)
+					enemy.launch_away(65, direction if direction != 0 else player.facing, false, player)
 			shake = 15
 			sound("ultimate")
+		for enemy in enemies:
+			if enemy.thrown_time > 0:
+				enemy.tick(dt)
 		if ult_time <= 0:
 			player.ultimate_pose = 0
 			player.update_visual(0)

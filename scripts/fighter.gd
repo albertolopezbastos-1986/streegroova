@@ -375,10 +375,12 @@ func begin_attack() -> void:
 	update_visual(0)
 
 func attack_motion() -> String:
+	if run_attack and visual.sheets.has("runslide"):
+		return "runslide"
 	return "jump_attack" if air_attack else "attack_%02d" % (combo + 1)
 
 func attack_progress() -> float:
-	# The punch keeps its contact timing while the slide continues through recovery.
+	# Keep contact timing while the slide continues through recovery.
 	var duration := slide_animation_duration if run_attack else attack_duration
 	return clampf((attack_duration - attack_time) / duration, 0, 1)
 
@@ -426,7 +428,7 @@ func update_visual(dt: float) -> void:
 		motion = "jump"
 		progress = jump_elapsed / jump_duration
 	elif moving:
-		motion = "walk"
+		motion = "run" if running and visual.sheets.has("run") else "walk"
 	var celebration_hop := 0.0
 	if victory_time >= 0 and not visual.sheets.has("victory"):
 		celebration_hop = sin(progress * PI) * 24
@@ -469,7 +471,7 @@ func strike() -> void:
 			else:
 				target.hurt(damage, facing, combo == 2 or air_attack or kind == 2)
 
-func launch_away(damage: float, direction: float, can_hit_others := true) -> bool:
+func launch_away(damage: float, direction: float, can_hit_others := true, thrower: Node2D = null) -> bool:
 	if dead or invincible > 0 or thrown_time > 0 or getup_time > 0:
 		return false
 	hurt(damage, direction, true)
@@ -479,6 +481,8 @@ func launch_away(damage: float, direction: float, can_hit_others := true) -> boo
 	thrown_time = 1.1
 	flight_can_hit = can_hit_others
 	flight_hits.clear()
+	if is_instance_valid(thrower):
+		flight_hits.append(thrower)
 	getup_time = 0
 	stun = 1.1
 	hurt_duration = 1.1

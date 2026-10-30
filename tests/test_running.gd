@@ -36,7 +36,7 @@ func run() -> void:
 	hero.tick(0.016)
 	Input.action_press("right")
 	hero.tick(0.016)
-	check(hero.running and hero.velocity.x == 300 and hero.visual.motion == "walk", "double tap and hold runs using walking art")
+	check(hero.running and hero.velocity.x == 300 and hero.visual.motion == "run", "double tap and hold uses the dedicated run animation")
 	for i in range(8):
 		hero.tick(0.016)
 	check(hero.running, "second press sustains running")
@@ -63,7 +63,8 @@ func run() -> void:
 	Input.action_release("attack")
 	await process_frame
 	check(hero.run_attack and not hero.grapple.active(), "running attack takes priority over grabbing")
-	check(hero.attack_motion() == "attack_01" and hero.combo == 0, "slide always uses first punch even after a combo")
+	check(hero.attack_motion() == "runslide" and hero.combo == 0, "running attack uses dedicated slide art even after a combo")
+	check(hero.visual.definition("runslide")["frame_indices"].size() == 8 and hero.visual.source_frame == 1, "slide uses eight attack frames without the idle pose")
 	var start: float = hero.position.x
 	var speed: float = absf(hero.velocity.x)
 	# Opposite direction and jumping cannot steer or cancel an active slide.
@@ -81,7 +82,7 @@ func run() -> void:
 	Input.action_release("right")
 	for i in range(15):
 		hero.tick(0.016)
-	check(hero.run_attack and absf(hero.velocity.x) > 100 and hero.visual.source_frame == 39, "slide keeps braking after punch animation ends")
+	check(hero.run_attack and absf(hero.velocity.x) > 100 and hero.visual.source_frame == 8, "slide keeps braking after kick animation ends")
 	while hero.attack_time > 0:
 		hero.tick(0.016)
 	check(not hero.run_attack and hero.velocity == Vector2.ZERO, "slide ends at rest")

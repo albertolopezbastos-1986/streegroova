@@ -4,4 +4,3 @@
 
 [node name="StreetGroova" type="Node2D" unique_id=133147420]
 script = ExtResource("1")
-simulate_mobile = true

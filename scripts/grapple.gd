@@ -8,6 +8,7 @@ var locked_facing := 1.0
 var did_hit := false
 var retry := 0.0
 var punch_count := 0
+var punch_animation := "grab_punch_01"
 var escape_presses := 0
 var escape_idle := 0.0
 var escape_down: Dictionary = {}
@@ -114,6 +115,7 @@ func tick(dt: float) -> void:
 				state = "hold" if buffered_action.is_empty() else buffered_action
 				elapsed = 0
 				if not buffered_action.is_empty():
+					select_punch_animation()
 					did_hit = false
 					hero.game.sound("swing")
 					buffered_action = ""
@@ -130,14 +132,15 @@ func tick(dt: float) -> void:
 			if Input.is_action_just_pressed("attack"):
 				var horizontal := Input.get_axis("left", "right")
 				state = "throw" if horizontal * locked_facing < -0.35 else "punch"
+				select_punch_animation()
 				elapsed = 0
 				did_hit = false
 				hero.game.sound("swing")
 		"punch", "punch_recover":
-			var duration: float = hero.visual.duration("attack_01")
+			var duration: float = hero.visual.duration(punch_animation)
 			var progress := elapsed / duration
-			var frame: int = hero.visual.frame_at("attack_01", progress)
-			for contact in hero.visual.definition("attack_01")["active_hit_frames"]:
+			var frame: int = hero.visual.frame_at(punch_animation, progress)
+			for contact in hero.visual.definition(punch_animation)["active_hit_frames"]:
 				if state == "punch" and not did_hit and (frame == int(contact) or progress >= 0.75):
 					did_hit = true
 					punch_count += 1
@@ -146,7 +149,7 @@ func tick(dt: float) -> void:
 						var target := victim
 						victim = null
 						target.grabbed_by = null
-						target.launch_away(19, locked_facing, false)
+						target.launch_away(19, locked_facing, false, hero)
 						state = "punch_recover"
 					else:
 						victim.hurt(19, locked_facing, false, true)
@@ -179,7 +182,7 @@ func launch() -> void:
 	target.invincible = 0
 	target.position = hero.position + Vector2(-locked_facing * 36, 0)
 	target.position.x = clampf(target.position.x, hero.game.left_bound, hero.game.right_bound)
-	target.launch_away(40, -locked_facing)
+	target.launch_away(40, -locked_facing, true, hero)
 
 func release() -> void:
 	if is_instance_valid(victim):
@@ -228,10 +231,14 @@ func try_escape(dt: float) -> void:
 	escaped.update_visual(0)
 	captor.update_visual(0)
 
+func select_punch_animation() -> void:
+	var name := "grab_punch_%02d" % (punch_count + 1)
+	punch_animation = name if owner_fighter.visual.sheets.has(name) else "grab_punch_01"
+
 func pose() -> void:
 	var hero := owner_fighter
 	if state in ["punch", "punch_recover"]:
-		hero.visual.update_pose("attack_01", 0, locked_facing, elapsed / hero.visual.duration("attack_01"))
+		hero.visual.update_pose(punch_animation, 0, locked_facing, elapsed / hero.visual.duration(punch_animation))
 		return
 	var data: Dictionary = hero.visual.definition("grab_throw")
 	var hold_frame := int(data.get("hold_frame", 8))

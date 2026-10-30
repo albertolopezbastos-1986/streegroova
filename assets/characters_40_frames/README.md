@@ -58,3 +58,5 @@ Carpetas preparadas para Beto, Alito y Cami dentro de `animations/`:
 | `run/` | Correr. |
 
 Colocá una hoja PNG por movimiento en su carpeta, conservando el tamaño original y la transparencia. Estas carpetas también existen en la otra estructura de personajes (originales / 40 cuadros). Son espacios para recibir los sprites: los movimientos y sus metadatos se integrarán cuando estén las imágenes.
+
+La carpeta `animations/runslide/` de Beto, Alito y Cami está preparada para la hoja del golpe durante la carrera. Colocá allí los sprites; su animación se conectará cuando esté disponible la hoja.

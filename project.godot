@@ -30,10 +30,6 @@ window/stretch/mode="canvas_items"
 
 theme/custom="res://assets/ui/arcade_theme.tres"
 
-[input_devices]
-
-pointing/emulate_touch_from_mouse=true
-
 [physics]
 
 3d/physics_engine="Jolt Physics"

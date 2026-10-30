@@ -58,12 +58,21 @@ func run() -> void:
 	hero.tick(0.016)
 	Input.action_release("attack")
 	await process_frame
-	check(grab.state == "punch" and hero.visual.motion == "attack_01", "attack alone chooses first grab punch with placeholder art")
+	check(grab.state == "punch" and hero.visual.motion == "grab_punch_01", "attack alone chooses first grab punch with placeholder art")
 	for i in range(40):
 		hero.tick(0.016)
 		enemy.tick(0.016)
 	check(enemy.hp == before - 19 and enemy.grabbed_by == hero, "grab punch deals damage once without releasing enemy")
 	check(grab.state == "hold" and hero.visual.source_frame == 8, "grab punch returns to frozen hold")
+	Input.action_press("attack")
+	hero.tick(0.016)
+	Input.action_release("attack")
+	await process_frame
+	check(hero.visual.motion == "grab_punch_02", "second grab punch uses the dedicated knee animation")
+	for i in range(70):
+		hero.tick(0.016)
+		enemy.tick(0.016)
+	check(enemy.hp == before - 38 and enemy.grabbed_by == hero and grab.state == "hold", "knee damages once and returns to hold without releasing captive")
 	Input.action_press("left")
 	Input.action_press("attack")
 	hero.tick(0.016)
@@ -75,7 +84,7 @@ func run() -> void:
 		hero.tick(0.016)
 		enemy.tick(0.016)
 	check(not is_instance_valid(enemy.grabbed_by) and enemy.velocity.x < 0 and enemy.height > 0, "throw launches rival backwards into an arc")
-	check(enemy.hp == before - 59, "throw applies forty damage once")
+	check(enemy.hp == before - 78, "throw applies forty damage once after two grab punches")
 	for i in range(130):
 		hero.tick(0.016)
 		enemy.tick(0.016)

@@ -77,7 +77,7 @@ func _draw() -> void:
 	var cell := Vector2(data["frame_size"][0], data["frame_size"][1])
 	var columns := int(data["sheet_columns"])
 	var region := Rect2(Vector2(source_frame % columns, floori(float(source_frame) / columns)) * cell, cell)
-	var anchor: Array = character_data["pivot_pixels"]
-	var pixel_scale := float(character_data["scale"])
+	var anchor: Array = data.get("pivot_pixels", character_data["pivot_pixels"])
+	var pixel_scale := float(data.get("scale", character_data["scale"]))
 	draw_set_transform(Vector2.ZERO, 0, Vector2(facing * (-1 if character_data.get("default_facing", "right") == "left" else 1), 1))
 	draw_texture_rect_region(sheets[name], Rect2(-Vector2(anchor[0], anchor[1]) * pixel_scale, cell * pixel_scale), region)

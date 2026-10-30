@@ -5,20 +5,20 @@
   "default_facing": "right",
   "scale": 0.6,
   "pivot": "feet_center",
-  "notes": "Beto integrado al jugador. Primer golpe: hoja de 40 cuadros (7x6, ultimas dos celdas vacias); resto de movimientos: hojas originales 3x3. Cuadros de 200x200, pivote fijo y contactos sincronizados. La ulti reutiliza el golpe con guitarra.",
+  "notes": "Beto integrado al jugador. Idle y walk: hojas de 20 cuadros (5x5, pose extra omitida). Primer golpe: 40 cuadros. Walk usa escala y pivote propios para conservar altura y apoyo. La ulti reutiliza el golpe con guitarra.",
   "animations": {
     "idle": {
-      "path": "animations/idle",
+      "path": "../../characters_20_frames/beto/animations/idle",
       "format": "sheet",
-      "fps": 8,
+      "fps": 20,
       "loop": true,
       "frame_size": [
         200,
         200
       ],
-      "frame_count": 9,
-      "sheet_columns": 3,
-      "sheet_rows": 3,
+      "frame_count": 20,
+      "sheet_columns": 5,
+      "sheet_rows": 5,
       "active_hit_frames": null,
       "file": "idle.png",
       "frame_order": "row_major",
@@ -31,25 +31,37 @@
         5,
         6,
         7,
-        8
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
       ]
     },
     "walk": {
-      "path": "animations/walk",
+      "path": "../../characters_20_frames/beto/animations/walk",
       "format": "sheet",
-      "fps": 12,
+      "fps": 20,
       "loop": true,
       "frame_size": [
-        200,
-        200
+        102,
+        231
       ],
-      "frame_count": 9,
-      "sheet_columns": 3,
-      "sheet_rows": 3,
+      "frame_count": 20,
+      "sheet_columns": 5,
+      "sheet_rows": 5,
       "active_hit_frames": null,
       "file": "walk.png",
       "frame_order": "row_major",
       "frame_indices": [
+        0,
         1,
         2,
         3,
@@ -57,13 +69,26 @@
         5,
         6,
         7,
-        8
-      ]
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "pivot_pixels": [
+        51,
+        226
+      ],
+      "scale": 0.48
     },
     "attack_01": {
       "path": "../../characters_40_frames/beto/animations/attack_01",
       "format": "sheet",
-      "fps": 97.77777777777777,
+      "fps": 112.44444444444444,
       "loop": false,
       "frame_size": [
         200,
@@ -132,7 +157,7 @@
     "attack_02": {
       "path": "animations/attack_02",
       "format": "sheet",
-      "fps": 22,
+      "fps": 25.3,
       "loop": false,
       "frame_size": [
         200,
@@ -162,7 +187,7 @@
     "attack_03": {
       "path": "animations/attack_03",
       "format": "sheet",
-      "fps": 18,
+      "fps": 20.7,
       "loop": false,
       "frame_size": [
         200,
@@ -368,6 +393,127 @@
     "grab_punch_01": {
       "source_animation": "attack_01",
       "placeholder": true
+    },
+    "run": {
+      "path": "../../characters_20_frames/beto/animations/run",
+      "file": "run.png",
+      "format": "sheet",
+      "fps": 20,
+      "loop": true,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 20,
+      "sheet_columns": 5,
+      "sheet_rows": 5,
+      "frame_order": "row_major",
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "active_hit_frames": null
+    },
+    "grab_punch_02": {
+      "path": "../../characters_20_frames/beto/animations/grab_punch_02",
+      "file": "grabpunch2.png",
+      "format": "sheet",
+      "fps": 50,
+      "loop": false,
+      "frame_size": [
+        183,
+        227
+      ],
+      "frame_count": 20,
+      "sheet_columns": 5,
+      "sheet_rows": 5,
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "active_hit_frames": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "pivot_pixels": [
+        91.5,
+        217
+      ],
+      "scale": 0.52
+    },
+    "runslide": {
+      "path": "animations/runslide",
+      "file": "runslide.png",
+      "format": "sheet",
+      "fps": 24,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 8,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_order": "row_major",
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "active_hit_frames": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
     }
   },
   "reference": "source/betopixel.png",

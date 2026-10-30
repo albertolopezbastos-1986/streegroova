@@ -43,7 +43,7 @@ func run() -> void:
 	var hp: float = secondary.hp
 	source.update_flight_impacts(Vector2(230, 420))
 	check(secondary.hp == hp, "flight hits each victim only once")
-	# A thrown player can hit enemies too, including the enemy that threw them.
+	# A thrown player can hit other enemies, but never the captor.
 	game.new_run(true)
 	await process_frame
 	hero = game.player
@@ -55,6 +55,48 @@ func run() -> void:
 	hero.launch_away(10, -1)
 	hero.tick(0.04)
 	check(secondary.thrown_time > 0 and secondary.velocity.x < 0 and not secondary.flight_can_hit, "thrown player knocks enemies away without further chains")
+	game.new_run(true)
+	await process_frame
+	hero = game.player
+	for i in range(2):
+		game.debug_spawn_enemy(0)
+	source = game.enemies[0]
+	secondary = game.enemies[1]
+	source.position = Vector2(400, 420)
+	source.facing = 1
+	hero.position = Vector2(420, 420)
+	hero.invincible = 0
+	game.combat_director.turns[source] = 999
+	check(source.grapple.try_start(), "enemy captures player for throw collision test")
+	source.grapple.launch()
+	source.position = hero.position + Vector2(-15, 0)
+	secondary.position = hero.position + Vector2(-30, 0)
+	var captor_hp: float = source.hp
+	hero.tick(0.04)
+	check(source.hp == captor_hp and source.thrown_time == 0, "flying player cannot hit the enemy who threw them")
+	check(secondary.thrown_time > 0 and secondary.hp == 110, "same flight still hits another enemy")
+	# Ultimate launches both surviving and KO enemies immediately.
+	game.new_run(true)
+	await process_frame
+	hero = game.player
+	for i in range(2):
+		game.debug_spawn_enemy(0)
+	source = game.enemies[0]
+	secondary = game.enemies[1]
+	source.position = hero.position + Vector2(-60, 0)
+	secondary.position = hero.position + Vector2(60, 0)
+	secondary.hp = 30
+	game.charge = 100
+	game.use_ultimate()
+	game.ult_time = 0.64
+	game.freeze = 0
+	game.update_game(0.016)
+	check(source.hp == 65 and source.height > 0 and source.velocity.x < 0 and source.visual.motion == "death", "ultimate launches survivor outward with falling animation")
+	check(secondary.dead and secondary.height > 0 and secondary.velocity.x > 0 and secondary.visual.motion == "death", "ultimate also launches KO enemy with falling animation")
+	var launch_x: float = source.position.x
+	game.freeze = 0
+	game.update_game(0.016)
+	check(source.position.x < launch_x, "ultimate flight moves while ultimate pose is still active")
 	# Lethal initial launches retain body collisions while the body is airborne.
 	game.new_run(true)
 	await process_frame
@@ -84,8 +126,9 @@ func run() -> void:
 		hero.tick(0.016)
 		Input.action_release("attack")
 		await process_frame
-		check(hero.visual.motion == "attack_01", "grab punch %d uses punch one art" % (punch + 1))
-		for i in range(30):
+		var expected_motion := "grab_punch_02" if punch == 1 else "grab_punch_01"
+		check(hero.visual.motion == expected_motion, "grab punch %d uses its assigned animation" % (punch + 1))
+		for i in range(ceili(hero.visual.duration(expected_motion) / 0.016) + 2):
 			hero.tick(0.016)
 		if punch < 2:
 			check(hero.grapple.state == "hold" and hero.visual.source_frame == 8 and secondary.grabbed_by == hero, "punch %d returns to held frame" % (punch + 1))

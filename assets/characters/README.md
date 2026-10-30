@@ -55,9 +55,9 @@ Las nueve hojas originales son **PNG de 600 × 600, con 3 columnas y 3 filas**. 
 6  7  8
 ```
 
-Los cuadros y sus dimensiones están anotados en `beto/character.json`. **Beto ya está integrado al jugador:** usa estas hojas para quieto, caminar, tres ataques, salto, patada voladora, daño y KO. La ulti reutiliza el barrido con guitarra. La secuencia de caminar omite el primer cuadro de guardia para evitar una pausa al repetir el ciclo. El salto visual sigue la altura real del personaje.
+Los cuadros y sus dimensiones están anotados en `beto/character.json`. **Beto ya está integrado al jugador:** usa estas hojas para quieto, caminar, tres ataques, salto, patada voladora, daño y KO. La ulti reutiliza el barrido con guitarra. Idle y walk usan las hojas de 20 cuadros de `characters_20_frames`, con índices 0–19 a 20 FPS; omiten la pose extra 20. Idle usa celdas de 200 × 200 y walk de 102 × 231, ambas en cuadrícula 5 × 5. Walk define escala `0.48` y pivote `[51, 226]` para mantener el tamaño y apoyo de Beto. El salto visual sigue la altura real del personaje.
 
-**El primer golpe ahora usa la versión de 40 cuadros** en `../characters_40_frames/beto/animations/attack_01/firstpunch.png`, mediante una referencia desde su manifiesto. La hoja de 9 cuadros se conserva como original. Las otras animaciones siguen usando sus hojas anteriores.
+**El primer golpe ahora usa la versión de 40 cuadros** en `../characters_40_frames/beto/animations/attack_01/firstpunch.png`, mediante una referencia desde su manifiesto. La hoja de 9 cuadros se conserva como original. Idle y walk usan las nuevas hojas de 20 cuadros; las demás animaciones conservan sus hojas anteriores.
 
 El manifiesto define la escala `0.6`, el pivote `[100, 190]`, las secuencias y los cuadros de impacto. Los ataques usan FPS para su duración; salto, daño, KO y ulti se sincronizan con los tiempos de sus estados. La ulti coloca el barrido cuando se aplica el daño global. Se conservan los PNG originales completos y se espejan al mirar a la izquierda.
 
@@ -116,3 +116,13 @@ Al caminar hacia un enemigo por la misma franja y acercarse a menos de 25 unidad
 Un golpe de otro rival interrumpe el agarre y libera a ambos. La ulti también lo cancela. El enemigo agarrado no recibe turnos de ataque mientras esté inmovilizado. El rival arrojado usa la animación de caída, vuela, aterriza y se recupera si conserva energía.
 
 La hoja activa es `assets/characters_20_frames/beto/animations/grab_throw/grabthrow.png`: 5 × 5 celdas de 200 × 200, índices 0–19. No se usa la celda adicional 20. Los campos `hold_frame: 8` y `release_frame: 15` del manifiesto sincronizan la mecánica. Para conectar el futuro golpe de agarre, reemplazá su alias `source_animation` por los datos de la hoja (`path`, `file`, cuadrícula, tamaño, secuencia, FPS y `active_hit_frames`), igual que cualquier ataque. El cargador también ofrece este reemplazo provisional cuando un personaje tiene `grab_throw` pero todavía no tiene su primer golpe de agarre.
+
+El ciclo de `walk` reproduce solo los cuadros 0–16: omite los últimos tres cuadros de la secuencia (17, 18 y 19), además de la pose extra 20, para cerrar el loop. La hoja conserva sus 20 cuadros declarados.
+
+Los tres ataques del combo se reproducen un 15% más rápido: `attack_01` a 112.444444 FPS, `attack_02` a 25.3 FPS y `attack_03` a 20.7 FPS. La duración y el contacto se calculan desde las animaciones, reduciendo la espera entre golpes.
+
+Beto usa `characters_20_frames/beto/animations/run/run.png` al correr: cuadrícula 5 × 5, celdas 200 × 200, cuadros 1–19 a 20 FPS (se excluye permanentemente el cuadro 0 de idle). El segundo golpe del agarre usa `grab_punch_02/grabpunch2.png`: cuadrícula 5 × 5, celdas 183 × 227, cuadros 0–19 a 50 FPS (0.4 segundos), escala 0.52 y pivote [91.5, 217]. La rodilla aplica daño en los cuadros 6–13 y regresa al agarre; primer y tercer golpe conservan el reemplazo de `grab_punch_01`.
+
+La carpeta `animations/runslide/` de Beto, Alito y Cami está preparada para la hoja del golpe durante la carrera. Colocá allí los sprites; su animación se conectará cuando esté disponible la hoja.
+
+El golpe de carrera de Beto usa `animations/runslide/runslide.png` (600 × 600, celdas 200 × 200): cuadros 1–8 a 24 FPS, sin el idle inicial. La patada aplica daño en los cuadros 2–6 y conserva la distancia y el frenado del deslizamiento.
