@@ -34,7 +34,6 @@ func _ready() -> void:
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	screen.add_child(background)
 	add_label("ELIGE TU PERSONAJE", Rect2(70, 44, 820, 40), 26, Color("62efd4"))
-	add_label("LA NOCHE TE ESPERA   /   TAB: DEBUG ROOM", Rect2(70, 92, 820, 24), 11, Color("98a3b9"))
 	for i in range(Catalog.slots().size()):
 		var pack: Dictionary = Catalog.character_for_slot(i)
 		var card := Button.new()
@@ -81,7 +80,6 @@ func _ready() -> void:
 	confirm.add_theme_font_size_override("font_size", 12)
 	confirm.pressed.connect(func(): confirmed.emit(selected))
 	screen.add_child(confirm)
-	add_label("A / D O FLECHAS PARA CAMBIAR   -   ESC PARA VOLVER", Rect2(50, 491, 860, 22), 10, Color("98a3b9"))
 	for child in screen.get_children():
 		if child != background:
 			child.position.y += 50

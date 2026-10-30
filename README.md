@@ -181,4 +181,8 @@ Los enemigos pueden recoger armas cercanas: evalúan la oportunidad cada 12–20
 
 Los enemigos armados también pueden lanzar hacia el jugador: comprueban la oportunidad cada 6–12 segundos, con 35% de probabilidad, desde 100–260 unidades y en la misma franja. Cualquier arma lanzada puede alcanzar al jugador o a otro enemigo, excluyendo a quien la lanzó. Al primer impacto deja de avanzar y cae; si llega al borde visible de la pantalla también se detiene y queda en el piso, sin gastar durabilidad por ese choque.
 
-El retroceso se limita continuamente a 80 unidades desde el mayor avance de cámara, también en debug; el avance de debug sigue siendo indefinido. Los enemigos se mantienen entre los bordes visibles y dentro de los límites caminables, incluso durante lanzamientos y la ulti. Prueba: tests/test_weapon_edges_bounds.gd.
+El retroceso se limita continuamente a 240 unidades desde el mayor avance de cámara, también en debug; el avance de debug sigue siendo indefinido. Los enemigos permanecen dentro de la profundidad caminable y los límites físicos del nivel. La cámara no los desplaza: si quedan detrás del área visible vuelven corriendo a 360 unidades/s, sin convertir esa carrera en un ataque slide. Prueba: tests/test_weapon_edges_bounds.gd.
+
+El tablón lanzado consume 50 puntos de durabilidad al impactar contra cualquier personaje. Con 100 puntos resiste dos impactos lanzados; el segundo lo rompe. Sus golpes en la mano conservan el desgaste por tier.
+
+Los jefes no pueden ser agarrados. Reciben daño de patadas, slides, armas lanzadas y cuerpos en vuelo, pero esos impactos no los lanzan; sólo la ulti puede hacerlos salir volando. Un arma lanzada que golpea a un jefe igualmente se detiene y consume durabilidad. Prueba: tests/test_boss_launch_immunity.gd.

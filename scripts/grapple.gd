@@ -38,7 +38,7 @@ func try_start() -> bool:
 	if hero.kind >= 0 and not hero.game.combat_director.allowed(hero):
 		return false
 	for enemy in candidates:
-		if enemy.dead or enemy.height > 0 or enemy.thrown_time > 0 or enemy.getup_time > 0 or enemy.grapple.active() or is_instance_valid(enemy.grabbed_by):
+		if enemy.is_boss or enemy.dead or enemy.height > 0 or enemy.thrown_time > 0 or enemy.getup_time > 0 or enemy.grapple.active() or is_instance_valid(enemy.grabbed_by):
 			continue
 		if hero.kind >= 0 and enemy.invincible > 0:
 			continue
@@ -83,7 +83,7 @@ func align_victim() -> void:
 		return
 	var hero := owner_fighter
 	# Keep the hands and the captive on the same lane, even at a stage edge.
-	hero.position.x = clampf(hero.position.x, hero.game.left_bound + 32, hero.game.right_bound - 32)
+	hero.position.x = clampf(hero.position.x, hero.movement_left_bound() + 32, hero.game.right_bound - 32)
 	victim.position = hero.position + Vector2(locked_facing * 32, 0)
 	victim.facing = -locked_facing
 	victim.velocity = Vector2.ZERO
@@ -185,7 +185,7 @@ func launch() -> void:
 	target.grabbed_by = null
 	target.invincible = 0
 	target.position = hero.position + Vector2(-locked_facing * 36, 0)
-	target.position.x = clampf(target.position.x, hero.game.left_bound, hero.game.right_bound)
+	target.position.x = clampf(target.position.x, target.movement_left_bound(), hero.game.right_bound)
 	target.launch_away(55 if hero.is_boss else 40, -locked_facing, true, hero)
 
 func release() -> void:
@@ -239,7 +239,7 @@ func try_escape(dt: float) -> void:
 	escaped.stun = 0
 	escaped.invincible = maxf(escaped.invincible, 1.0)
 	escaped.attack_buffer = 0
-	escaped.position.x = clampf(escaped.position.x + locked_facing * 18, captor.game.left_bound, captor.game.right_bound)
+	escaped.position.x = clampf(escaped.position.x + locked_facing * 18, escaped.movement_left_bound(), captor.game.right_bound)
 	captor.stun = 0.6
 	captor.hurt_duration = 0.6
 	captor.cooldown = 0.8

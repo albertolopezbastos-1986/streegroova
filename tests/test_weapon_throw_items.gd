@@ -144,6 +144,26 @@ func run() -> void:
 	Input.action_release("attack")
 	assert(hero.weapon.is_empty() and game.weapons[-1].weapon_projectile)
 	print("PASS: throw chord tolerates attack just before jump")
+	for remaining in [100, 50]:
+		game.new_run(true)
+		await process_frame
+		game.camera_x = 250
+		hero = game.player
+		hero.position = Vector2(400, 420)
+		hero.weapon = "wood"
+		hero.weapon_durability = remaining
+		hero.facing = 1
+		hero.update_visual(0)
+		game.debug_spawn_enemy(0)
+		var victim = game.enemies[-1]
+		victim.position = Vector2(500, 420)
+		victim.invincible = 0
+		hero.throw_weapon()
+		var plank = game.weapons[-1]
+		plank.tick(0.25)
+		assert(victim.thrown_time > 0 and plank.weapon_durability == remaining - 50)
+		assert(plank.weapon_broken == (remaining == 50))
+	print("PASS: thrown plank impact costs 50 durability and breaks at zero")
 	print("ALL WEAPON THROW AND DEBUG ITEM CHECKS PASSED")
 	game.queue_free()
 	await process_frame

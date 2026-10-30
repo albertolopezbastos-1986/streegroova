@@ -29,6 +29,7 @@ var ai_weapon_cooldown := randf_range(8, 16)
 var ai_weapon_target: Node2D
 var ai_weapon_seek_time := 0.0
 var ai_weapon_throw_cooldown := randf_range(6, 12)
+var ai_returning := false
 var pickup_target: Node2D
 var pickup_elapsed := 0.0
 var pickup_applied := false
@@ -153,7 +154,7 @@ func tick(dt: float) -> void:
 		death_time += dt
 		height = maxf(0, height + jump_speed * dt)
 		jump_speed -= 950 * dt
-		position.x = clampf(position.x + velocity.x * dt, game.left_bound, game.right_bound)
+		position.x = clampf(position.x + velocity.x * dt, movement_left_bound(), game.right_bound)
 		if height == 0:
 			velocity = velocity.move_toward(Vector2.ZERO, dt * (THROW_GROUND_BRAKE if thrown_time > 0 else 650.0))
 		update_flight_impacts(from)
@@ -176,7 +177,7 @@ func tick(dt: float) -> void:
 	if thrown_time > 0:
 		var from := position
 		thrown_time = maxf(0, thrown_time - dt)
-		position.x = clampf(position.x + velocity.x * dt, game.left_bound, game.right_bound)
+		position.x = clampf(position.x + velocity.x * dt, movement_left_bound(), game.right_bound)
 		update_flight_impacts(from)
 		if height == 0:
 			flight_can_hit = false
@@ -200,7 +201,7 @@ func tick(dt: float) -> void:
 		queue_redraw()
 		return
 	if run_attack and attack_time > 0 and stun <= 0:
-		position.x = clampf(position.x + velocity.x * dt, game.left_bound, game.right_bound)
+		position.x = clampf(position.x + velocity.x * dt, movement_left_bound(), game.right_bound)
 		velocity.x = move_toward(velocity.x, 0, SLIDE_BRAKE * dt)
 	if attack_time > 0:
 		attack_time = maxf(0, attack_time - dt)
@@ -220,7 +221,7 @@ func tick(dt: float) -> void:
 		else:
 			enemy_control(dt)
 	position.y = clampf(position.y, game.WALK_MIN_Y, game.WALK_MAX_Y)
-	position.x = clampf(position.x, game.left_bound, game.right_bound)
+	position.x = clampf(position.x, movement_left_bound(), game.right_bound)
 	z_index = int(position.y)
 	update_visual(dt)
 	queue_redraw()
@@ -305,6 +306,7 @@ func can_use_ultimate() -> bool:
 	return kind == -1 and not dead and thrown_time <= 0 and getup_time <= 0 and not is_instance_valid(grabbed_by)
 
 func enemy_control(dt: float) -> void:
+	ai_returning = false
 	ai_weapon_cooldown = maxf(0, ai_weapon_cooldown - dt)
 	if run_attack:
 		return
@@ -315,6 +317,14 @@ func enemy_control(dt: float) -> void:
 		reset_running()
 		return
 	var delta: Vector2 = target.position - position
+	if position.x < game.camera_x + 24 and height == 0 and attack_time <= 0:
+		reset_running()
+		ai_returning = true
+		moving = true
+		facing = 1
+		position.x = move_toward(position.x, game.camera_x + 48, RUN_SPEED * 1.2 * dt)
+		position.y = move_toward(position.y, target.position.y, game.DEPTH_SPEED * dt)
+		return
 	if is_boss and boss_dodge_time > 0:
 		boss_dodge_time = maxf(0, boss_dodge_time - dt)
 		position += velocity * dt
@@ -558,7 +568,7 @@ func update_visual(dt: float) -> void:
 		motion = "jump"
 		progress = jump_elapsed / jump_duration
 	elif moving:
-		motion = "run" if running and visual.sheets.has("run") else "walk"
+		motion = "run" if (running or ai_returning) and visual.sheets.has("run") else "walk"
 	var celebration_hop := 0.0
 	if victory_time >= 0 and not visual.sheets.has("victory"):
 		celebration_hop = sin(progress * PI) * 24
@@ -699,9 +709,13 @@ func launches_on_special() -> bool:
 		return run_attack or air_attack
 	return (air_attack and kind >= 1) or (run_attack and kind == 2)
 
-func launch_away(damage: float, direction: float, can_hit_others := true, thrower: Node2D = null) -> bool:
+func launch_away(damage: float, direction: float, can_hit_others := true, thrower: Node2D = null, from_ultimate := false) -> bool:
 	if dead or invincible > 0 or thrown_time > 0 or (getup_time > 0 and kind == -1):
 		return false
+	if is_boss and not from_ultimate:
+		var before := hp
+		hurt(damage, direction, true)
+		return hp < before
 	release_weapon(direction)
 	hurt(damage, direction, true)
 	velocity = Vector2(direction * THROW_SPEED, 0)
@@ -796,3 +810,6 @@ func draw_ellipse_shadow() -> void:
 	var shade := Color(0.015, 0.02, 0.06, 0.5)
 	draw_rect(Rect2(-15, -3, 30, 6), shade)
 	draw_rect(Rect2(-20, -1, 40, 3), shade)
+
+func movement_left_bound() -> float:
+	return game.left_bound if kind == -1 else 30.0

@@ -100,7 +100,8 @@ func projectile_hit(from: float) -> void:
 		return
 	position.x = nearest.position.x - direction * 20
 	stop_projectile()
-	weapon_durability = maxi(0, weapon_durability - weapon_thrower.weapon_hit_cost(nearest))
+	var wear: int = 50 if weapon == "wood" else weapon_thrower.weapon_hit_cost(nearest)
+	weapon_durability = maxi(0, weapon_durability - wear)
 	if weapon_durability == 0:
 		weapon_broken = true
 		weapon_airborne = false

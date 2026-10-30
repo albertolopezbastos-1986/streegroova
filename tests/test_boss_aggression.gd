@@ -19,7 +19,7 @@ func run() -> void:
 		await process_frame
 		game.debug_spawn_enemy(mini(tier, 2), tier == 3)
 		var enemy = game.enemies[0]
-		enemy.launch_away(1, 1, false)
+		enemy.launch_away(1, 1, false, null, true)
 		for i in range(180):
 			enemy.tick(0.016)
 			if enemy.getup_time > 0:
@@ -30,7 +30,7 @@ func run() -> void:
 		check(enemy.hp == hp - 1 and enemy.getup_time == 0 and enemy.visual.motion == "hurt", "hit interrupts get-up immediately")
 		enemy.getup_time = 0.2
 		enemy.invincible = 0
-		check(enemy.launch_away(1, -1), "enemy can be relaunched during get-up")
+		check(enemy.launch_away(1, -1, true, null, true), "ultimate can relaunch an enemy during get-up")
 	var attack_counts: Array[int] = []
 	for boss_mode in [false, true]:
 		game.new_run(true)

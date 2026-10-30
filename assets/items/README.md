@@ -12,4 +12,6 @@ Daño: tablón 36, caño 42; golpes comunes 19/29. Hay una o dos apariciones nat
 
 Durabilidad inicial 100. Cada enemigo dañado consume 10/20/30 según tier, o 50 para el jefe. Al llegar a cero el arma se rompe. Los lanzamientos la sueltan desde la mano y la hacen girar hasta aterrizar. Recogerla conserva su desgaste.
 
+Excepción: un impacto del tablón lanzado consume siempre 50 puntos, independientemente del objetivo. Fallar o chocar con el borde de pantalla no lo desgasta.
+
 Pruebas: tests/test_pickups_weapons.gd, tests/test_weapon_durability.gd y tests/test_weapon_spawns.gd.

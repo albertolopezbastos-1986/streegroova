@@ -68,6 +68,7 @@ func run() -> void:
 	print("PASS: both screen edges stop the weapon and leave it intact on the floor")
 	game.new_run(true)
 	await process_frame
+	assert(game.BACKTRACK_DISTANCE == 240)
 	game.debug_spawn_enemy(2)
 	for distance in [1000, 3000, 10000]:
 		game.player.position.x = distance
@@ -82,10 +83,20 @@ func run() -> void:
 		assert(game.camera_x >= peak - game.BACKTRACK_DISTANCE)
 		assert(game.player.position.x >= game.left_bound - 0.01)
 		var enemy = game.enemies[0]
-		assert(enemy.position.x >= game.camera_x + 24 - 0.01 and enemy.position.x <= game.camera_x + 960.0 / game.WORLD_ZOOM - 24 + 0.01)
+		assert(enemy.position.x == 30)
 		assert(enemy.position.y >= game.WALK_MIN_Y and enemy.position.y <= game.WALK_MAX_Y)
+		enemy.position.x = game.camera_x - 120
+		var before: float = enemy.position.x
+		game.keep_enemies_in_play_area()
+		assert(enemy.position.x == before)
+		enemy.tick(0.1)
+		assert(enemy.position.x > before and enemy.position.x <= before + 36.01)
+		assert(enemy.ai_returning and enemy.moving and not enemy.run_attack and enemy.visual.motion == "run")
+		for i in range(8):
+			enemy.tick(0.1)
+		assert(enemy.position.x >= game.camera_x + 24 - 0.01)
 	assert(game.camera_x > game.LEVEL_WIDTH)
-	print("PASS: continuous limited backtracking, infinite debug advance, enemies remain inside the visible walking area")
+	print("PASS: 240-unit backtracking, infinite debug advance, enemies return on foot without camera dragging")
 	print("ALL WEAPON EDGE AND BOUNDARY CHECKS PASSED")
 	game.queue_free()
 	await process_frame

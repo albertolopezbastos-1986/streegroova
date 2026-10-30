@@ -36,7 +36,7 @@ const LEVEL_COUNT := 3
 const STAGE_CLEAR_DURATION := 3.5
 const VICTORY_DURATION := 5.0
 const SECTION_WIDTH := 850.0
-const BACKTRACK_DISTANCE := 80.0
+const BACKTRACK_DISTANCE := 240.0
 const LEVEL_WIDTH := SECTION_WIDTH * WAVE_COUNT
 const CAMERA_ANCHOR_X := 300.0
 const CAMERA_LEFT_ANCHOR_X := 660.0
@@ -137,6 +137,7 @@ func _ready() -> void:
 	add_child(world)
 	var overlay := Node2D.new()
 	overlay.name = "Overlay"
+	overlay.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	overlay.z_index = 1000
 	overlay.draw.connect(draw_overlay)
 	add_child(overlay)
@@ -795,7 +796,7 @@ func update_game(dt: float) -> void:
 					enemy.thrown_time = 0
 					enemy.getup_time = 0
 					var direction := signf(enemy.position.x - player.position.x)
-					enemy.launch_away(65, direction if direction != 0 else player.facing, false, player)
+					enemy.launch_away(65, direction if direction != 0 else player.facing, false, player, true)
 			shake = 15
 			sound("ultimate")
 		for enemy in enemies:
@@ -876,10 +877,9 @@ func update_camera(dt: float) -> void:
 	keep_enemies_in_play_area()
 
 func keep_enemies_in_play_area() -> void:
-	var min_x := maxf(left_bound + 12, camera_x + 24)
-	var max_x := maxf(min_x, minf(right_bound - 24, camera_x + 960.0 / WORLD_ZOOM - 24))
 	for enemy in enemies:
-		enemy.position.x = clampf(enemy.position.x, min_x, max_x)
+		# Camera progress never moves an enemy; only physical stage/depth limits apply.
+		enemy.position.x = clampf(enemy.position.x, 30, right_bound)
 		enemy.position.y = clampf(enemy.position.y, WALK_MIN_Y, WALK_MAX_Y)
 		enemy.z_index = int(enemy.position.y)
 
@@ -1075,8 +1075,13 @@ func draw_overlay() -> void:
 	if state == "play":
 		if not debug_room and banner_time > 0 and player.height < 10 and not enemies.any(func(e): return not e.dead and e.height > 10):
 			overlay_text(canvas, ("%02d / EL JEFE DEL BARRIO" % WAVE_COUNT if stage == WAVE_COUNT - 1 else "%02d / EL DISTRITO NEON" % (stage + 1)), Vector2(300, 127), 21, CREAM)
-		if transition > 0 and stage < WAVE_COUNT - 1:
-			overlay_text(canvas, "AVANZA  >>", Vector2(740, 267), 22, MINT)
+		if transition > 0 and stage < WAVE_COUNT - 1 and int(transition / 0.5) % 2 == 0:
+			var go_size := 72
+			var go_width := font.get_string_size("GO", HORIZONTAL_ALIGNMENT_LEFT, -1, ArcadeUI.font_size(go_size)).x
+			var arrow_x := 940.0 - 160.0
+			overlay_text(canvas, "GO", Vector2(arrow_x - 10 - go_width, 196), go_size, Color.WHITE)
+			canvas.draw_rect(Rect2(arrow_x, 160, 124, 18), Color.WHITE)
+			canvas.draw_colored_polygon(PackedVector2Array([Vector2(arrow_x + 118, 138), Vector2(940, 169), Vector2(arrow_x + 118, 200)]), Color.WHITE)
 		if is_instance_valid(player.grabbed_by):
 			var grip: RefCounted = player.grabbed_by.grapple
 			overlay_centered(canvas, "ZAFATE! PULSA GOLPE, SALTO O DIRECCIONES", 163, 17, Color("f7c47e"))
@@ -1097,11 +1102,8 @@ func draw_overlay() -> void:
 			var logo_scale := minf(360.0 / START_LOGO.get_width(), 190.0 / START_LOGO.get_height())
 			var logo_size := START_LOGO.get_size() * logo_scale
 			canvas.draw_texture_rect(START_LOGO, Rect2(Vector2((960 - logo_size.x) / 2, 8), logo_size), false)
-			overlay_centered(canvas, "TRES NIVELES. QUINCE OLEADAS. UNA NOCHE.", 199, 16, MINT)
 			overlay_centered(canvas, "STREET GROOVA", 258, 60, Color("f187a5"))
-			overlay_centered(canvas, "EPISODIO 01 / LA ULTIMA NOCHE", 292, 16, MINT)
-			draw_controls(canvas, 340)
-			overlay_text(canvas, "TOCA PARA JUGAR" if touch_visible else "ENTER / A / CLIC PARA JUGAR", Vector2(320, 483), 21, CREAM if sin(time * 4) > -0.4 else Color("818799"))
+			overlay_centered(canvas, "PRESS START", 390, 30, CREAM if sin(time * 4) > -0.4 else Color("818799"))
 		elif state == "pause" or show_help:
 			overlay_text(canvas, "PAUSA" if not show_help else "COMO JUGAR", Vector2(335, 173), 48, MINT)
 			draw_controls(canvas, 240)
@@ -1164,27 +1166,41 @@ func draw_hud(canvas: Node2D) -> void:
 	canvas.draw_rect(Rect2(0, 0, 960, 92), Color(0.04, 0.06, 0.12, 0.95))
 	canvas.draw_line(Vector2(24, 91), Vector2(936, 91), Color("3b4059"), 1)
 	canvas.draw_rect(Rect2(24, 19, 47, 51), Color("2c4b58"))
-	overlay_text(canvas, "G", Vector2(34, 58), 34, MINT)
-	overlay_text(canvas, str(character_pack["display_name"]).to_upper() + " / 1P", Vector2(85, 28), 16, CREAM)
+	var portrait: Texture2D = character_pack["portrait"]
+	var portrait_size := portrait.get_size()
+	var portrait_scale := minf(43.0 / portrait_size.x, 47.0 / portrait_size.y)
+	var portrait_rect := Rect2(Vector2(47.5, 44.5) - portrait_size * portrait_scale / 2, portrait_size * portrait_scale)
+	canvas.draw_texture_rect(portrait, portrait_rect, false)
+	canvas.draw_rect(Rect2(24, 19, 47, 51), Color("527684"), false, 1)
+	overlay_text(canvas, str(character_pack["display_name"]).to_upper(), Vector2(85, 28), 16, CREAM)
 	canvas.draw_rect(Rect2(85, 36, 264, 16), Color("393044"))
 	canvas.draw_rect(Rect2(87, 38, 260 * player.hp / player.max_hp, 12), MINT if player.hp > 30 else Color("f187a5"))
-	overlay_text(canvas, "%03d / 100" % int(player.hp), Vector2(360, 50), 14, CREAM)
 	for i in range(3):
 		var life_color := Color("f187a5") if i < lives else Color("34374c")
 		for row in range(LIFE_PIXELS.size()):
 			for col in range(LIFE_PIXELS[row].length()):
 				if LIFE_PIXELS[row][col] == "1":
 					canvas.draw_rect(Rect2(85 + i * 20 + col * 2, 62 + row * 2, 2, 2), life_color)
-	overlay_text(canvas, "VIDAS", Vector2(151, 74), 11, Color("98a3b9"))
 	if not player.weapon.is_empty():
 		overlay_text(canvas, "%s %d/100" % ["CANO" if player.weapon == "pipe" else "PALO", player.weapon_durability], Vector2(245, 74), 11, Color("f7c47e"))
-	overlay_text(canvas, "GROOVA BREAK", Vector2(474, 28), 14, MINT)
-	canvas.draw_rect(Rect2(474, 36, 192, 14), Color("30344c"))
-	canvas.draw_rect(Rect2(476, 38, 188 * charge / 100, 10), Color("f7c47e") if charge < 100 else MINT)
-	overlay_text(canvas, "L / Y  LISTA!" if charge >= 100 else "SE CARGA AL PEGAR Y RECIBIR", Vector2(474, 70), 11, MINT if charge >= 100 else Color("98a3b9"))
+	var ready := charge >= 100
+	var gold := Color("ffd15c")
+	var charge_color := MINT
+	var charge_rect := Rect2(474, 36, 192, 14)
+	if ready:
+		var flash_colors := [gold, Color("ff303b"), gold, Color.WHITE]
+		charge_color = flash_colors[int(time / 0.075) % flash_colors.size()]
+		var pulse := (sin(time * 18) + 1) * 0.5
+		for glow in range(4, 0, -1):
+			canvas.draw_rect(charge_rect.grow(glow * 2), Color(charge_color, (0.04 + pulse * 0.035) * (5 - glow)))
+		for i in range(8):
+			var phase := fposmod(time * 1.8 + i * 0.137, 1.0)
+			var spark := Vector2(477 + fposmod(i * 29.0 + time * 25, 184), 37 - phase * 12)
+			canvas.draw_rect(Rect2(spark.floor(), Vector2(2, 2)), Color(charge_color, 1.0 - phase))
+	overlay_text(canvas, "GROOVA BREAK", Vector2(474, 28), 14, gold if ready else MINT)
+	canvas.draw_rect(charge_rect, gold if ready else Color("30344c"))
+	canvas.draw_rect(Rect2(476, 38, 188 * clampf(charge / 100, 0, 1), 10), charge_color)
 	overlay_text(canvas, "%06d" % score, Vector2(778, 38), 29, CREAM)
-	var remaining := enemies.filter(func(e): return not e.dead).size()
-	overlay_text(canvas, ("DEBUG / %d RIVALES" % remaining) if debug_room else ("N%d/%d OLEADA %d/%d  %d RIVALES" % [level_index + 1, LEVEL_COUNT, stage + 1, WAVE_COUNT, remaining]), Vector2(743, 69), 12, Color("98a3b9"))
 	for enemy in enemies:
 		if enemy.is_boss and not enemy.dead and state == "play":
 			canvas.draw_rect(Rect2(270, 102, 420, 20), Color("241b2c"))
