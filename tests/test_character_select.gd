@@ -51,6 +51,10 @@ func run() -> void:
 	await process_frame
 	var run_id: String = game.run_id
 	game._input(key(KEY_ENTER))
+	check(game.state == "title" and game.screen_transition_phase == "out", "title fades before selection appears")
+	game.update_screen_transition(game.FADE_DURATION)
+	game.update_screen_transition(game.BLACK_HOLD_DURATION)
+	game.update_screen_transition(game.FADE_DURATION)
 	check(game.state == "select" and game.character_select.open, "press start opens character select")
 	check(game.run_id == run_id, "opening select does not start a run")
 	check(game.character_select.cards.size() == 3, "selection has three portrait cards")
@@ -79,6 +83,9 @@ func run() -> void:
 		check(game.active_character_id == "beto" and game.player.visual.motion == "idle", "each placeholder is playable as Beto")
 	game.show_character_selection()
 	game._input(key(KEY_ESCAPE))
+	game.update_screen_transition(game.FADE_DURATION)
+	game.update_screen_transition(game.BLACK_HOLD_DURATION)
+	game.update_screen_transition(game.FADE_DURATION)
 	check(game.state == "title" and not game.character_select.open, "escape returns to title")
 	game.show_character_selection()
 	game.character_select.select(0)

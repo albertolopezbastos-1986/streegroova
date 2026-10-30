@@ -20,7 +20,7 @@ func run() -> void:
 	game.new_run(true)
 	await process_frame
 	var hero = game.player
-	game.debug_spawn_enemy(0)
+	game.debug_spawn_enemy(2)
 	var enemy = game.enemies[0]
 	hero.position = Vector2(350, 420)
 	hero.invincible = 0

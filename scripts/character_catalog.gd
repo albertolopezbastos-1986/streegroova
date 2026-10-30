@@ -79,6 +79,10 @@ static func load_pack(path: String) -> Dictionary:
 	if animations.has("grab_throw") and not animations.has("grab_punch_01"):
 		animations["grab_punch_01"] = {"source_animation": "attack_01", "placeholder": true}
 	# An optional dedicated ultimate sheet can replace this alias later.
+	if not animations.has("punch_weapon"):
+		animations["punch_weapon"] = {"source_animation": "attack_01", "placeholder": true}
+	if not animations.has("pickup"):
+		animations["pickup"] = {"source_animation": "runslide" if sheets.has("runslide") else "attack_01", "placeholder": true}
 	if not animations.has("ultimate"):
 		animations["ultimate"] = {"source_animation": "attack_03"}
 	for name in animations:

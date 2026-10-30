@@ -13,3 +13,5 @@ El ciclo de `walk` reproduce solo los cuadros 0–16: omite los últimos tres cu
 Beto usa `characters_20_frames/beto/animations/run/run.png` al correr: cuadrícula 5 × 5, celdas 200 × 200, cuadros 1–19 a 20 FPS (se excluye permanentemente el cuadro 0 de idle). El segundo golpe del agarre usa `grab_punch_02/grabpunch2.png`: cuadrícula 5 × 5, celdas 183 × 227, cuadros 0–19 a 50 FPS (0.4 segundos), escala 0.52 y pivote [91.5, 217]. La rodilla aplica daño en los cuadros 6–13 y regresa al agarre; primer y tercer golpe conservan el reemplazo de `grab_punch_01`.
 
 La carpeta `animations/runslide/` de Beto, Alito y Cami está preparada para la hoja del golpe durante la carrera. Colocá allí los sprites; su animación se conectará cuando esté disponible la hoja.
+
+Las carpetas `animations/punch_weapon/` de Beto, Alito y Cami están preparadas para el golpe con palo o caño. El juego usa un alias provisional del primer golpe hasta recibir las hojas.

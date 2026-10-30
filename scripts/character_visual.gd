@@ -1,7 +1,12 @@
 extends Node2D
 
+const WeaponArt = preload("res://scripts/weapon_art.gd")
+
 var character_data: Dictionary = {}
 var sheets: Dictionary = {}
+var weapon := ""
+static var hand_cache: Dictionary = {}
+static var image_cache: Dictionary = {}
 
 func configure(pack: Dictionary) -> void:
 	character_data = pack["definition"]
@@ -80,4 +85,43 @@ func _draw() -> void:
 	var anchor: Array = data.get("pivot_pixels", character_data["pivot_pixels"])
 	var pixel_scale := float(data.get("scale", character_data["scale"]))
 	draw_set_transform(Vector2.ZERO, 0, Vector2(facing * (-1 if character_data.get("default_facing", "right") == "left" else 1), 1))
+	if not weapon.is_empty():
+		var hand := (weapon_hand_position(name, source_frame) - Vector2(anchor[0], anchor[1])) * pixel_scale
+		var direction := Vector2(1, -0.18) if motion == "punch_weapon" else Vector2(0.2, -1)
+		WeaponArt.draw_weapon(self, weapon, hand, direction.angle())
 	draw_texture_rect_region(sheets[name], Rect2(-Vector2(anchor[0], anchor[1]) * pixel_scale, cell * pixel_scale), region)
+
+func weapon_hand_position(name: String, frame: int) -> Vector2:
+	var data := definition(name)
+	var overrides: Array = data.get("weapon_hand_frames", [])
+	if frame < overrides.size():
+		return Vector2(overrides[frame][0], overrides[frame][1])
+	var texture: Texture2D = sheets[name]
+	var cell := Vector2i(data["frame_size"][0], data["frame_size"][1])
+	var key := "%s:%s:%d" % [texture.resource_path, cell, frame]
+	if hand_cache.has(key):
+		return hand_cache[key]
+	if not image_cache.has(texture.resource_path):
+		image_cache[texture.resource_path] = texture.get_image()
+	var image: Image = image_cache[texture.resource_path]
+	var columns := int(data["sheet_columns"])
+	var origin := Vector2i(frame % columns, frame / columns) * cell
+	var hand := Vector2(cell.x * 0.63, cell.y * 0.36)
+	# Skin at the leading fist supplies a per-frame grip; metadata can override it.
+	if image != null:
+		var found := false
+		for x in range(cell.x - 1, 0, -1):
+			var sum_y := 0.0
+			var count := 0
+			for y in range(int(cell.y * 0.24), cell.y):
+				var color := image.get_pixel(origin.x + x, origin.y + y)
+				if color.a > 0.5 and color.r > 0.38 and color.r > color.g * 1.2 and color.g > color.b * 1.15:
+					sum_y += y
+					count += 1
+			if count > 1:
+				hand = Vector2(x - 2, sum_y / count)
+				found = true
+			if found:
+				break
+	hand_cache[key] = hand
+	return hand

@@ -7,13 +7,27 @@ const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const START_LOGO: Texture2D = preload("res://assets/branding/groovaipa-logo.png")
 const CharacterCatalog = preload("res://scripts/character_catalog.gd")
 const PIXEL_STREET = preload("res://assets/environment/neighborhood-pixel.png")
+const ENVIRONMENT_TILE_COUNT := 5
+const FINAL_BACKGROUND_INDEX := 2 # Neon bar: the campaign always ends here.
+const ENVIRONMENT_SOURCE_SIZE := Vector2(1536, 1024)
+const ENVIRONMENT_TILE_WIDTH := 492.0
+const ENVIRONMENT_OVERLAP := 128.0
+const ENVIRONMENT_TILE_STEP := ENVIRONMENT_TILE_WIDTH * (1536.0 - ENVIRONMENT_OVERLAP) / 1536.0
+const ENVIRONMENTS = [
+	{"id": "neighborhood", "name": "Calle original", "tiles": ["res://assets/environment/neighborhood-pixel.png"]},
+	{"id": "docks-night", "name": "Docks", "tiles": ["res://assets/environment/tiles/docks-night/01.png", "res://assets/environment/tiles/docks-night/02.png", "res://assets/environment/tiles/docks-night/03.png", "res://assets/environment/tiles/docks-night/04.png", "res://assets/environment/tiles/docks-night/05.png"]},
+	{"id": "neon-bar", "name": "Bar neon", "tiles": ["res://assets/environment/tiles/neon-bar/01.png", "res://assets/environment/tiles/neon-bar/02.png", "res://assets/environment/tiles/neon-bar/03.png", "res://assets/environment/tiles/neon-bar/04.png", "res://assets/environment/tiles/neon-bar/05.png"]},
+	{"id": "train-interior", "name": "Tren", "tiles": ["res://assets/environment/tiles/train-interior/01.png", "res://assets/environment/tiles/train-interior/02.png", "res://assets/environment/tiles/train-interior/03.png", "res://assets/environment/tiles/train-interior/04.png", "res://assets/environment/tiles/train-interior/05.png"]},
+	{"id": "forest-golden-hour", "name": "Bosque dorado", "tiles": ["res://assets/environment/tiles/forest-golden-hour/01.png", "res://assets/environment/tiles/forest-golden-hour/02.png", "res://assets/environment/tiles/forest-golden-hour/03.png", "res://assets/environment/tiles/forest-golden-hour/04.png", "res://assets/environment/tiles/forest-golden-hour/05.png"]},
+	{"id": "shopping-mall", "name": "Shopping", "tiles": ["res://assets/environment/tiles/shopping-mall/01.png", "res://assets/environment/tiles/shopping-mall/02.png", "res://assets/environment/tiles/shopping-mall/03.png", "res://assets/environment/tiles/shopping-mall/04.png", "res://assets/environment/tiles/shopping-mall/05.png"]}
+]
 const LIFE_PIXELS = ["0110110", "1111111", "1111111", "0111110", "0011100", "0001000"]
 const INK = Color("101322")
 const CREAM = Color("f5e9d0")
 const MINT = Color("62efd4")
 const WORLD_ZOOM := 1.96875
 const WALK_MIN_Y := 350.0
-const WALK_MAX_Y := 430.0
+const WALK_MAX_Y := 427.0
 const START_Y := 420.0
 const MELEE_DEPTH := 10.0
 const DEPTH_SPEED := 46.6667
@@ -22,21 +36,26 @@ const LEVEL_COUNT := 3
 const STAGE_CLEAR_DURATION := 3.5
 const VICTORY_DURATION := 5.0
 const SECTION_WIDTH := 850.0
-const BACKTRACK_DISTANCE := 700.0
+const BACKTRACK_DISTANCE := 80.0
 const LEVEL_WIDTH := SECTION_WIDTH * WAVE_COUNT
 const CAMERA_ANCHOR_X := 300.0
 const CAMERA_LEFT_ANCHOR_X := 660.0
-const VIEW_HEIGHT := 720.0
-const FLOOR_BACK_Y := 339.0
-const CURB_TOP_Y := 393.0
-const CURB_BOTTOM_Y := 399.0
-const WORLD_OFFSET_Y := 630.0 - START_Y * WORLD_ZOOM
+const VIEW_HEIGHT := 640.0
+const FLOOR_BACK_Y := 99.0 + 748.0 * ENVIRONMENT_TILE_WIDTH / ENVIRONMENT_SOURCE_SIZE.x
+const CURB_TOP_Y := 99.0 + 930.0 * ENVIRONMENT_TILE_WIDTH / ENVIRONMENT_SOURCE_SIZE.x
+const CURB_BOTTOM_Y := 99.0 + 964.0 * ENVIRONMENT_TILE_WIDTH / ENVIRONMENT_SOURCE_SIZE.x
+const WORLD_OFFSET_Y := VIEW_HEIGHT - 26.0 - WALK_MAX_Y * WORLD_ZOOM
 var combat_director: RefCounted
 var player: Node2D
 var enemies: Array = []
 var particles: Array = []
 var props: Array = []
 var food: Array = []
+var weapons: Array = []
+var debug_items_menu: CanvasLayer
+var weapon_spawn_waves: Array[int] = []
+var weapon_spawned_waves: Array[int] = []
+var supply_timer := 25.0
 var state := "title"
 var previous_state := "play"
 var score := 0
@@ -46,10 +65,15 @@ var combo_hits := 0
 var combo_timer := 0.0
 var stage := 0
 var level_index := 0
+var campaign_backgrounds: Array = [0, 1, 2]
+var background_index := 0
+var cached_environment_index := -1
+var cached_environment_tiles: Array[Texture2D] = []
 var presentation_time := 0.0
 var left_bound := 30.0
 var right_bound := 850.0
 var camera_x := 0.0
+var camera_peak_x := 0.0
 var camera_anchor_x := CAMERA_ANCHOR_X
 var camera_direction := 1.0
 var shake := 0.0
@@ -74,6 +98,8 @@ var online_scores: Node
 var ranking_panel: CanvasLayer
 var character_select: CanvasLayer
 var debug_room := false
+var debug_background_index := 0
+var debug_environment_select: CanvasLayer
 var debug_panel: CanvasLayer
 var debug_status: Label
 var active_character_id := "beto"
@@ -87,6 +113,13 @@ var fade_screen: ColorRect
 var cinematic_time := 0.0
 var starting_campaign := false
 var entrance_target := 0.0
+const CONCERT_DURATION := 10.0
+const CONCERT_SKIP_AFTER := 4.0
+var screen_transition_phase := ""
+var screen_transition_target := ""
+var screen_transition_time := 0.0
+var concert_time := 0.0
+var concert_layer: CanvasLayer
 
 
 func _ready() -> void:
@@ -112,17 +145,25 @@ func _ready() -> void:
 	ranking_panel = preload("res://scripts/ranking_panel.gd").new()
 	add_child(ranking_panel)
 	ranking_panel.setup(online_scores)
-	ranking_panel.replay_requested.connect(show_character_selection)
+	ranking_panel.replay_requested.connect(request_title)
 	character_select = preload("res://scripts/character_select.gd").new()
 	add_child(character_select)
 	character_select.confirmed.connect(confirm_character)
 	character_select.cancelled.connect(cancel_character_selection)
+	character_select.selection_changed.connect(func(): sound("select"))
 	setup_debug_panel()
+	debug_items_menu = preload("res://scripts/debug_items_menu.gd").new()
+	add_child(debug_items_menu)
+	debug_items_menu.spawn_requested.connect(debug_spawn_item)
 	mobile_controls = preload("res://scripts/mobile_controls.gd").new()
 	add_child(mobile_controls)
 	touch_visible = simulate_mobile or mobile_controls.is_mobile()
 	mobile_controls.setup(self, touch_visible)
-	character_select.debug_requested.connect(func(): new_run(true))
+	debug_environment_select = preload("res://scripts/debug_environment_select.gd").new()
+	add_child(debug_environment_select)
+	debug_environment_select.chosen.connect(start_debug_environment)
+	debug_environment_select.cancelled.connect(show_character_selection)
+	character_select.debug_requested.connect(open_debug_environment_selection)
 	if touch_visible:
 		character_select.setup_mobile()
 	var fade_layer := CanvasLayer.new()
@@ -133,6 +174,11 @@ func _ready() -> void:
 	fade_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	fade_screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fade_screen.color = Color(0, 0, 0, 0)
+	concert_layer = CanvasLayer.new()
+	concert_layer.layer = 12
+	add_child(concert_layer)
+	concert_layer.add_child(preload("res://scenes/concert_stage.tscn").instantiate())
+	concert_layer.hide()
 	new_run()
 	state = "title"
 
@@ -158,10 +204,17 @@ func setup_inputs() -> void:
 		InputMap.action_add_event(entry[0], event)
 
 func new_run(as_debug := false) -> void:
+	debug_environment_select.hide_panel()
+	screen_transition_phase = ""
+	if is_instance_valid(concert_layer):
+		concert_layer.hide()
+	world.show()
 	if is_instance_valid(fade_screen):
 		fade_screen.color.a = 0
+		fade_screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	mobile_controls.release_all()
 	debug_room = as_debug
+	debug_items_menu.close()
 	debug_panel.get_child(0).visible = as_debug
 	character_select.hide_panel()
 	character_pack = CharacterCatalog.character(active_character_id)
@@ -173,9 +226,19 @@ func new_run(as_debug := false) -> void:
 	lives = 3
 	charge = 0
 	level_index = 0
+	campaign_backgrounds = [debug_background_index, 1, 2] if as_debug else choose_backgrounds()
 	load_level()
 
+func choose_backgrounds() -> Array:
+	var pool: Array = range(ENVIRONMENTS.size())
+	pool.erase(FINAL_BACKGROUND_INDEX)
+	pool.shuffle()
+	var chosen := pool.slice(0, LEVEL_COUNT - 1)
+	chosen.append(FINAL_BACKGROUND_INDEX)
+	return chosen
+
 func load_level(remaining_health := 100.0) -> void:
+	background_index = int(campaign_backgrounds[level_index])
 	mobile_controls.release_all()
 	if is_instance_valid(player):
 		player.grapple.release()
@@ -186,15 +249,25 @@ func load_level(remaining_health := 100.0) -> void:
 	enemies.clear()
 	props.clear()
 	food.clear()
+	weapons.clear()
+	weapon_spawned_waves.clear()
+	weapon_spawn_waves.assign([randi_range(0, WAVE_COUNT - 1)])
+	if randf() < 0.5:
+		var second_wave := randi_range(0, WAVE_COUNT - 2)
+		if second_wave >= weapon_spawn_waves[0]:
+			second_wave += 1
+		weapon_spawn_waves.append(second_wave)
+	supply_timer = 25.0
 	combat_director = CombatDirector.new(self)
 	particles.clear()
 	presentation_time = 0
 	stage = 0
 	camera_x = 0
+	camera_peak_x = 0
 	camera_anchor_x = CAMERA_ANCHOR_X
 	camera_direction = 1
 	left_bound = 30
-	right_bound = 850
+	right_bound = INF if debug_room else 850
 	ult_time = 0
 	respawn_time = 0
 	transition = 0
@@ -214,6 +287,7 @@ func load_level(remaining_health := 100.0) -> void:
 	state = "play"
 
 func show_character_selection() -> void:
+	debug_environment_select.hide_panel()
 	debug_room = false
 	debug_panel.get_child(0).hide()
 	ranking_panel.reset_run()
@@ -223,9 +297,82 @@ func show_character_selection() -> void:
 	mobile_controls.release_all()
 	character_select.show_panel()
 
-func confirm_character(slot: int) -> void:
-	if state != "select":
+func open_debug_environment_selection() -> void:
+	mobile_controls.release_all()
+	character_select.hide_panel()
+	debug_panel.get_child(0).hide()
+	debug_room = false
+	state = "debug_select"
+	debug_environment_select.show_panel(ENVIRONMENTS, debug_background_index)
+
+func start_debug_environment(index: int) -> void:
+	if state != "debug_select" or index < 0 or index >= ENVIRONMENTS.size():
 		return
+	debug_background_index = index
+	sound("select")
+	new_run(true)
+
+func request_character_selection() -> void:
+	begin_screen_transition("select")
+
+func request_title() -> void:
+	begin_screen_transition("title")
+
+func begin_screen_transition(target: String) -> void:
+	if not screen_transition_phase.is_empty():
+		return
+	screen_transition_target = target
+	screen_transition_phase = "out"
+	screen_transition_time = 0
+	fade_screen.mouse_filter = Control.MOUSE_FILTER_STOP
+	mobile_controls.release_all()
+
+func update_screen_transition(dt: float) -> void:
+	screen_transition_time += dt
+	match screen_transition_phase:
+		"out":
+			fade_screen.color.a = clampf(screen_transition_time / FADE_DURATION, 0, 1)
+			if screen_transition_time >= FADE_DURATION:
+				activate_screen(screen_transition_target)
+				screen_transition_phase = "hold"
+				screen_transition_time = 0
+		"hold":
+			if screen_transition_time >= BLACK_HOLD_DURATION:
+				screen_transition_phase = "in"
+				screen_transition_time = 0
+		"in":
+			fade_screen.color.a = 1 - clampf(screen_transition_time / FADE_DURATION, 0, 1)
+			if screen_transition_time >= FADE_DURATION:
+				screen_transition_phase = ""
+				fade_screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+func activate_screen(target: String) -> void:
+	match target:
+		"select":
+			show_character_selection()
+		"title":
+			ranking_panel.reset_run()
+			character_select.hide_panel()
+			concert_layer.hide()
+			world.show()
+			state = "title"
+			show_help = false
+		"concert":
+			state = "concert"
+			concert_time = 0
+			world.hide()
+			concert_layer.show()
+			concert_layer.get_child(0).restart()
+		"results":
+			concert_layer.hide()
+			world.show()
+			finish("won")
+
+func confirm_character(slot: int) -> void:
+	if state != "select" or not screen_transition_phase.is_empty():
+		return
+	character_select.locked = true
+	sound("select")
 	active_character_id = CharacterCatalog.character_for_slot(slot)["id"]
 	mobile_controls.release_all()
 	begin_level_transition(true)
@@ -234,6 +381,7 @@ func begin_level_transition(new_campaign := false) -> void:
 	starting_campaign = new_campaign
 	cinematic_time = 0
 	state = "fade_out"
+	fade_screen.mouse_filter = Control.MOUSE_FILTER_STOP
 	mobile_controls.release_all()
 
 func update_level_transition(dt: float) -> void:
@@ -278,12 +426,12 @@ func update_level_transition(dt: float) -> void:
 				player.attack_buffer = 0
 				player.invincible = 1.5
 				state = "play"
+				fade_screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func cancel_character_selection() -> void:
 	if state != "select":
 		return
-	character_select.hide_panel()
-	state = "title"
+	request_title()
 
 func setup_debug_panel() -> void:
 	debug_panel = CanvasLayer.new()
@@ -296,10 +444,10 @@ func setup_debug_panel() -> void:
 	var rows := VBoxContainer.new()
 	panel.add_child(rows)
 	debug_status = Label.new()
-	debug_status.text = "DEBUG ROOM / TAB: volver a seleccion / vidas infinitas"
+	debug_status.text = "DEBUG / O: objetos / TAB: seleccion / vidas infinitas"
 	debug_status.add_theme_font_size_override("font_size", 10)
 	rows.add_child(debug_status)
-	var actions := ["1 Beto", "2 Cami*", "3 Alito*", "4 Rosa", "5 Amarillo", "6 Violeta", "7 Jefe", "8 Ulti MAX", "9 Oleada random", "0 Matar todos"]
+	var actions := ["1 Beto", "2 Cami*", "3 Alito*", "4 Amarillo", "5 Rosa", "6 Rojo", "7 Jefe", "8 Ulti MAX", "9 Oleada random", "0 Matar todos"]
 	for row_index in range(2):
 		var row := HBoxContainer.new()
 		rows.add_child(row)
@@ -318,8 +466,53 @@ func setup_debug_panel() -> void:
 	back.add_theme_font_size_override("font_size", 10)
 	back.focus_mode = Control.FOCUS_NONE
 	back.pressed.connect(show_character_selection)
-	rows.add_child(back)
+	var room_options := HBoxContainer.new()
+	rows.add_child(room_options)
+	room_options.add_child(back)
+	var scenery := Button.new()
+	scenery.text = "CAMBIAR ESCENARIO"
+	scenery.custom_minimum_size = Vector2(220, 28)
+	scenery.add_theme_font_size_override("font_size", 10)
+	scenery.focus_mode = Control.FOCUS_NONE
+	scenery.pressed.connect(open_debug_environment_selection)
+	room_options.add_child(scenery)
+	for kind in ["wood", "pipe"]:
+		var item_button := Button.new()
+		item_button.text = "PALO" if kind == "wood" else "CAÑO"
+		item_button.custom_minimum_size = Vector2(130, 28)
+		item_button.add_theme_font_size_override("font_size", 10)
+		item_button.focus_mode = Control.FOCUS_NONE
+		item_button.pressed.connect(func(): spawn_weapon(player.position + Vector2(28, 0), kind))
+		room_options.add_child(item_button)
+	for kind in ["barrel", "crate", "menu"]:
+		var item_button := Button.new()
+		item_button.text = {"barrel": "BARRIL", "crate": "CAJA", "menu": "O OBJETOS"}[kind]
+		item_button.add_theme_font_size_override("font_size", 10)
+		item_button.focus_mode = Control.FOCUS_NONE
+		item_button.pressed.connect(func():
+			if kind == "menu":
+				open_debug_items()
+			else:
+				debug_spawn_item(kind))
+		room_options.add_child(item_button)
 	panel.hide()
+
+func open_debug_items() -> void:
+	if debug_room and state == "play":
+		mobile_controls.release_all()
+		debug_items_menu.show_menu()
+
+func debug_spawn_item(kind: String) -> void:
+	if not debug_room or state != "play":
+		return
+	var at := Vector2(clampf(player.position.x + player.facing * 55, left_bound + 20, right_bound - 20), player.position.y)
+	if kind in ["wood", "pipe"]:
+		spawn_weapon(at, kind)
+	elif kind in ["barrel", "crate"]:
+		var item = Breakable.new()
+		world.add_child(item)
+		item.setup(self, at, kind == "barrel")
+		props.append(item)
 
 func debug_action(number: int) -> void:
 	if not debug_room or state != "play":
@@ -380,6 +573,7 @@ func debug_spawn_enemy(kind: int, boss := false) -> void:
 	if boss:
 		enemy.make_boss()
 	enemies.append(enemy)
+	keep_enemies_in_play_area()
 
 func spawn_wave() -> void:
 	combat_director.reset()
@@ -392,50 +586,103 @@ func spawn_wave() -> void:
 		if stage == WAVE_COUNT - 1:
 			enemy.make_boss()
 		enemies.append(enemy)
-	# Supplies persist when backtracking; they spawn only once per section.
-	for i in range(2):
-		var prop = Breakable.new()
-		world.add_child(prop)
-		prop.setup(self, Vector2(stage * SECTION_WIDTH + 380 + i * 290, START_Y + (6 if i == 0 else -6)), i == 1)
-		props.append(prop)
+	try_spawn_supply()
+	keep_enemies_in_play_area()
+	if stage in weapon_spawn_waves and stage not in weapon_spawned_waves:
+		spawn_weapon(Vector2(minf(right_bound - 45, player.position.x + 320), START_Y), "wood" if randf() < 0.5 else "pipe")
+		weapon_spawned_waves.append(stage)
 	banner_time = 3
 
-func drop_chicken(at: Vector2) -> void:
+func try_spawn_supply() -> bool:
+	if debug_room or player.dead or player.hp >= player.max_hp:
+		return false
+	if props.any(func(prop): return not prop.dead) or food.any(func(pickup): return not pickup.dead):
+		return false
+	if randf() >= 0.4:
+		return false
+	var prop = Breakable.new()
+	world.add_child(prop)
+	var x := clampf(player.position.x + 230, left_bound + 40, right_bound - 40)
+	prop.setup(self, Vector2(x, START_Y), randf() < 0.5)
+	props.append(prop)
+	return true
+
+func drop_food(at: Vector2) -> void:
 	var pickup = Breakable.new()
 	world.add_child(pickup)
 	pickup.setup(self, at, false)
 	pickup.as_food = true
+	pickup.beer = randf() < 0.5
 	food.append(pickup)
 
 func update_supplies(dt: float) -> void:
+	supply_timer -= dt
+	if supply_timer <= 0:
+		supply_timer = randf_range(25, 40)
+		try_spawn_supply()
 	for prop in props:
 		prop.tick(dt)
 	for pickup in food:
 		pickup.tick(dt)
-		if pickup.dead or player.dead or player.height > 8 or player.hp >= player.max_hp:
+	for item in weapons:
+		item.tick(dt)
+
+func spawn_weapon(at: Vector2, kind: String) -> Node2D:
+	var item = Breakable.new()
+	world.add_child(item)
+	item.setup(self, at, false)
+	item.weapon = kind
+	weapons.append(item)
+	return item
+
+func nearby_pickup(fighter: Node2D) -> Node2D:
+	var closest: Node2D
+	var distance := 32.0
+	for item in food + weapons:
+		if item.dead or item.weapon_airborne or item.weapon_broken or (item.weapon.is_empty() and fighter.hp >= fighter.max_hp):
 			continue
-		if absf(player.position.x - pickup.position.x) < 23 and absf(player.position.y - pickup.position.y) < MELEE_DEPTH:
-			player.hp = minf(player.max_hp, player.hp + 50)
-			pickup.dead = true
-			pickup.hide()
-			sound("power")
+		var offset: Vector2 = item.position - fighter.position
+		if absf(offset.y) >= MELEE_DEPTH or absf(offset.x) >= distance:
+			continue
+		distance = absf(offset.x)
+		closest = item
+	return closest
 
 func _input(event: InputEvent) -> void:
+	if debug_items_menu.open:
+		debug_items_menu.handle_input(event)
+		return
+	if not screen_transition_phase.is_empty():
+		get_viewport().set_input_as_handled()
+		return
+	if state == "concert":
+		var button_press := event is InputEventKey or event is InputEventJoypadButton or event is InputEventMouseButton or event is InputEventScreenTouch
+		if concert_time >= CONCERT_SKIP_AFTER and button_press and event.is_pressed() and not event.is_echo():
+			begin_screen_transition("results")
+		get_viewport().set_input_as_handled()
+		return
 	if mobile_controls.handle_input(event):
 		get_viewport().set_input_as_handled()
 		return
 	if ranking_panel.open:
 		return
+	if state == "debug_select":
+		debug_environment_select.handle_input(event)
+		return
 	if state in ["stage_clear", "victory", "fade_out", "black_hold", "fade_in", "entrance", "start"]:
 		return
 	if state == "select":
 		if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_TAB:
-			new_run(true)
+			open_debug_environment_selection()
 			get_viewport().set_input_as_handled()
 			return
 		character_select.handle_input(event)
 		return
 	if debug_room and event is InputEventKey and event.pressed and not event.echo:
+		if state == "play" and event.physical_keycode == KEY_O:
+			open_debug_items()
+			get_viewport().set_input_as_handled()
+			return
 		if event.physical_keycode == KEY_TAB:
 			show_character_selection()
 			get_viewport().set_input_as_handled()
@@ -452,11 +699,11 @@ func _input(event: InputEvent) -> void:
 			if ranking_panel.entry_button.get_global_rect().has_point(event.position):
 				return
 	if event is InputEventScreenTouch and event.pressed and state in ["title", "over", "won"]:
-		show_character_selection()
+		request_character_selection()
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if state in ["title", "over", "won"]:
-			show_character_selection()
+			request_character_selection()
 			return
 	if event.is_action_pressed("mute"):
 		muted = not muted
@@ -467,7 +714,7 @@ func _input(event: InputEvent) -> void:
 		mobile_controls.release_all()
 	if event.is_action_pressed("start") or event.is_action_pressed("attack") or event.is_action_pressed("jump"):
 		if state in ["title", "over", "won"]:
-			show_character_selection()
+			request_character_selection()
 			return
 	if event.is_action_pressed("pause_game"):
 		if state == "pause":
@@ -488,7 +735,13 @@ func _notification(what: int) -> void:
 func _process(dt: float) -> void:
 	time += dt
 	ranking_panel.entry_button.visible = state == "title" and not ranking_panel.open
-	if state == "play" and not show_help:
+	if not screen_transition_phase.is_empty():
+		update_screen_transition(dt)
+	elif state == "concert":
+		concert_time += dt
+		if concert_time >= CONCERT_DURATION:
+			begin_screen_transition("results")
+	elif state == "play" and not show_help:
 		update_game(minf(dt, 0.04))
 	elif state in ["stage_clear", "victory"]:
 		update_presentation(dt)
@@ -520,7 +773,7 @@ func world_to_screen(point: Vector2) -> Vector2:
 	return world.position + point * WORLD_ZOOM
 
 func update_game(dt: float) -> void:
-	if state != "play":
+	if state != "play" or debug_items_menu.open:
 		return
 	banner_time = maxf(0, banner_time - dt)
 	combo_timer = maxf(0, combo_timer - dt)
@@ -548,6 +801,7 @@ func update_game(dt: float) -> void:
 		for enemy in enemies:
 			if enemy.thrown_time > 0:
 				enemy.tick(dt)
+		keep_enemies_in_play_area()
 		if ult_time <= 0:
 			player.ultimate_pose = 0
 			player.update_visual(0)
@@ -556,6 +810,7 @@ func update_game(dt: float) -> void:
 	combat_director.update(dt)
 	for enemy in enemies:
 		enemy.tick(dt)
+	keep_enemies_in_play_area()
 	update_supplies(dt)
 	if player.dead:
 		respawn_time += dt
@@ -598,7 +853,7 @@ func update_game(dt: float) -> void:
 			right_bound = (stage + 2) * SECTION_WIDTH
 			if player.position.x > (stage + 1) * SECTION_WIDTH + 80:
 				stage += 1
-				left_bound = maxf(30, stage * SECTION_WIDTH - BACKTRACK_DISTANCE)
+				left_bound = maxf(left_bound, maxf(30, camera_peak_x - BACKTRACK_DISTANCE + 12))
 				transition = 0
 				spawn_wave()
 	update_camera(dt)
@@ -610,9 +865,23 @@ func update_camera(dt: float) -> void:
 			camera_direction = signf(player.velocity.x)
 	var target_anchor := CAMERA_LEFT_ANCHOR_X if camera_direction < 0 else CAMERA_ANCHOR_X
 	camera_anchor_x = move_toward(camera_anchor_x, target_anchor, dt * 720)
-	var max_camera := LEVEL_WIDTH - 960.0 / WORLD_ZOOM
-	var target_x := clampf(player.position.x - camera_anchor_x / WORLD_ZOOM, 0, max_camera)
-	camera_x = lerpf(camera_x, target_x, 1.0 - exp(-dt * 8))
+	var view_width := 960.0 / WORLD_ZOOM
+	var max_camera := INF if debug_room else maxf(0, minf(LEVEL_WIDTH, right_bound) - view_width)
+	var min_camera := minf(max_camera, maxf(0, camera_peak_x - BACKTRACK_DISTANCE))
+	var target_x := clampf(player.position.x - camera_anchor_x / WORLD_ZOOM, min_camera, max_camera)
+	camera_x = clampf(lerpf(camera_x, target_x, 1.0 - exp(-dt * 8)), min_camera, max_camera)
+	camera_peak_x = maxf(camera_peak_x, camera_x)
+	left_bound = maxf(left_bound, maxf(30, camera_peak_x - BACKTRACK_DISTANCE + 12))
+	player.position.x = clampf(player.position.x, left_bound, right_bound)
+	keep_enemies_in_play_area()
+
+func keep_enemies_in_play_area() -> void:
+	var min_x := maxf(left_bound + 12, camera_x + 24)
+	var max_x := maxf(min_x, minf(right_bound - 24, camera_x + 960.0 / WORLD_ZOOM - 24))
+	for enemy in enemies:
+		enemy.position.x = clampf(enemy.position.x, min_x, max_x)
+		enemy.position.y = clampf(enemy.position.y, WALK_MIN_Y, WALK_MAX_Y)
+		enemy.z_index = int(enemy.position.y)
 
 func complete_level() -> void:
 	mobile_controls.release_all()
@@ -635,6 +904,7 @@ func complete_level() -> void:
 	show_help = false
 	if level_index < LEVEL_COUNT - 1:
 		state = "stage_clear"
+		player.victory_time = 0
 		player.update_visual(0)
 	else:
 		state = "victory"
@@ -648,14 +918,15 @@ func complete_level() -> void:
 
 func update_presentation(dt: float) -> void:
 	presentation_time += dt
-	if state == "stage_clear" and presentation_time >= STAGE_CLEAR_DURATION:
-		begin_level_transition()
-	elif state == "victory":
+	if state in ["stage_clear", "victory"]:
 		player.victory_time = presentation_time
 		player.update_visual(dt)
 		player.queue_redraw()
+	if state == "stage_clear" and presentation_time >= STAGE_CLEAR_DURATION:
+		begin_level_transition()
+	elif state == "victory":
 		if presentation_time >= VICTORY_DURATION:
-			finish("won")
+			begin_screen_transition("concert")
 
 func finish(result: String) -> void:
 	state = result
@@ -716,25 +987,16 @@ func _draw() -> void:
 func draw_city() -> void:
 	rect(0, 0, 960, VIEW_HEIGHT, Color("151b29"))
 	draw_set_transform(world.position, 0, Vector2.ONE * WORLD_ZOOM)
-	var tile_width := 492.0
-	var first := floori((camera_x + 80) / tile_width) - 1
-	var last := ceili((camera_x + 960.0 / WORLD_ZOOM + 80) / tile_width)
+	var tile_width := ENVIRONMENT_TILE_WIDTH
+	var tile_step := tile_width if background_index == 0 else ENVIRONMENT_TILE_STEP
+	var first := floori((camera_x + 80) / tile_step) - 1
+	var last := ceili((camera_x + 960.0 / WORLD_ZOOM + 80) / tile_step)
 	for i in range(first, last + 1):
-		var x := -80.0 + i * tile_width
-		# Keep facades at their original scale; widen only the paving section.
-		draw_texture_rect_region(PIXEL_STREET, Rect2(x, 99, tile_width, 240), Rect2(0, 0, 1536, 748))
-		draw_texture_rect_region(PIXEL_STREET, Rect2(x, FLOOR_BACK_Y, tile_width, CURB_TOP_Y - FLOOR_BACK_Y), Rect2(0, 748, 1536, 182))
-		draw_texture_rect_region(PIXEL_STREET, Rect2(x, CURB_TOP_Y, tile_width, CURB_BOTTOM_Y - CURB_TOP_Y), Rect2(0, 930, 1536, 34))
-		# Repeat an interior asphalt patch, excluding the curb seam.
-		for strip in range(14):
-			draw_texture_rect_region(PIXEL_STREET, Rect2(x, CURB_BOTTOM_Y + strip * 13, tile_width, 13), Rect2(0, 984, 1536, 40))
-		draw_street_litter(x, i)
-		# Expansion joint hides the material change at horizontal strip seams.
-		rect(x - 2, 99, 5, 240, Color("171d28"))
-		rect(x, 99, 1, 240, Color("4c4d52"))
-		for bracket in range(8):
-			rect(x - 3, 118 + bracket * 28, 7, 2, Color("282c35"))
-		label_at("GROOVA", Vector2(x + 361, 193), 20, Color("dfb179"))
+		var x := -80.0 + i * tile_step
+		if background_index == 0:
+			draw_original_street_tile(x, tile_width, i)
+		else:
+			draw_environment_tile(x, tile_width, i)
 	if enemies.filter(func(e): return not e.dead).size() > 0:
 		var visible_width := 960.0 / WORLD_ZOOM
 		if right_bound >= camera_x and right_bound < camera_x + visible_width:
@@ -742,10 +1004,35 @@ func draw_city() -> void:
 				rect(right_bound, 409 + j * 6, 1, 3, Color("e17e8a"))
 	draw_set_transform(Vector2.ZERO)
 
+func environment_tile_texture(environment_index: int, segment: int) -> Texture2D:
+	if cached_environment_index != environment_index:
+		cached_environment_tiles.clear()
+		for path in ENVIRONMENTS[environment_index]["tiles"]:
+			cached_environment_tiles.append(load(path) as Texture2D)
+		cached_environment_index = environment_index
+	return cached_environment_tiles[posmod(segment, cached_environment_tiles.size())]
+
+func draw_original_street_tile(x: float, tile_width: float, index: int) -> void:
+	draw_background_image(PIXEL_STREET, x, tile_width)
+	draw_street_litter(x, index)
+	rect(x - 2, 99, 5, 240, Color("171d28"))
+	rect(x, 99, 1, 240, Color("4c4d52"))
+	for bracket in range(8):
+		rect(x - 3, 118 + bracket * 28, 7, 2, Color("282c35"))
+	label_at("GROOVA", Vector2(x + 361, 193), 20, Color("dfb179"))
+
+func draw_environment_tile(x: float, tile_width: float, index: int) -> void:
+	draw_background_image(environment_tile_texture(background_index, index), x, tile_width)
+
+func draw_background_image(texture: Texture2D, x: float, tile_width: float) -> void:
+	# One complete image with a uniform scale: no repeated floor strips or stretching.
+	var height := tile_width * ENVIRONMENT_SOURCE_SIZE.y / ENVIRONMENT_SOURCE_SIZE.x
+	draw_texture_rect(texture, Rect2(x, 99, tile_width, height), false)
+
 func draw_street_litter(tile_x: float, tile_index: int) -> void:
 	# Fixed positions keep decoration stable while scrolling and consume no RNG.
 	var shift := float(posmod(tile_index * 37, 61))
-	for at in [Vector2(tile_x + 72 + shift, 363), Vector2(tile_x + 314 - shift, 416), Vector2(tile_x + 441, 444)]:
+	for at in [Vector2(tile_x + 72 + shift, 363), Vector2(tile_x + 314 - shift, 416), Vector2(tile_x + 441, 414)]:
 		# Crushed, empty beer can: shadow, dented body, label and open rim.
 		rect(at.x - 1, at.y + 5, 11, 2, Color("20232b"))
 		draw_colored_polygon(PackedVector2Array([at, at + Vector2(7, -1), at + Vector2(9, 2), at + Vector2(7, 6), at + Vector2(1, 5)]), Color("a8aaa0"))
@@ -753,7 +1040,7 @@ func draw_street_litter(tile_x: float, tile_index: int) -> void:
 		rect(at.x + 3, at.y + 2, 3, 1, Color("d3bf80"))
 		rect(at.x, at.y, 2, 4, Color("d0d1c3"))
 		rect(at.x + 1, at.y + 1, 1, 2, Color("33383c"))
-	for at in [Vector2(tile_x + 198 - shift, 378), Vector2(tile_x + 371 + shift, 430)]:
+	for at in [Vector2(tile_x + 198 - shift, 378), Vector2(tile_x + 371 + shift, 410)]:
 		# Uneven newsprint, folded corner, headline, picture and text columns.
 		draw_colored_polygon(PackedVector2Array([at + Vector2(1, 1), at + Vector2(18, -1), at + Vector2(20, 10), at + Vector2(3, 13)]), Color("27282d"))
 		draw_colored_polygon(PackedVector2Array([at, at + Vector2(17, -2), at + Vector2(19, 9), at + Vector2(2, 12)]), Color("bcb9a0"))
@@ -830,7 +1117,8 @@ func draw_overlay() -> void:
 func draw_stage_presentation(canvas: Node2D) -> void:
 	var final := state == "victory"
 	var top := 155.0 if final else 205.0
-	canvas.draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.025, 0.035, 0.08, 0.42))
+	canvas.draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.025, 0.035, 0.08, 0.20))
+	canvas.draw_set_transform(Vector2(168, 20), 0, Vector2(0.65, 0.65))
 	canvas.draw_rect(Rect2(62, top, 836, 225), Color("101322"))
 	canvas.draw_rect(Rect2(70, top + 8, 820, 209), MINT, false, 3)
 	canvas.draw_line(Vector2(90, top + 49), Vector2(870, top + 49), Color("3b5660"), 2)
@@ -845,6 +1133,7 @@ func draw_stage_presentation(canvas: Node2D) -> void:
 		var glow := MINT if (i + int(presentation_time * 8)) % 3 == 0 else Color("34434e")
 		canvas.draw_rect(Rect2(x, top - 8, 9, 4), glow)
 		canvas.draw_rect(Rect2(x, top + 229, 9, 4), glow)
+	canvas.draw_set_transform(Vector2.ZERO)
 	if final:
 		for i in range(44):
 			var x := fposmod(i * 137.0 + sin(presentation_time * 2 + i) * 18, 940) + 10
@@ -863,11 +1152,11 @@ func overlay_centered(canvas: Node2D, value: String, y: float, size: int, color:
 
 func draw_controls(canvas: Node2D, y: float) -> void:
 	if touch_visible:
-		var mobile_lines := ["PALANCA IZQUIERDA: MOVER EN TODAS LAS DIRECCIONES", "DOBLE TOQUE Y MANTENER: CORRER", "PEGAR / SALTAR / ULTI: BOTONES A LA DERECHA", "CORRER + PEGAR: DESLIZANTE | SALTAR + PEGAR: PATADA", "AGARRE: 3 GOLPES | ATRAS + PEGAR LANZA | SALTAR SALE", "ATRAPADO: PULSA PEGAR / SALTAR / MOVER PARA ESCAPAR"]
+		var mobile_lines := ["PALANCA IZQUIERDA: MOVER EN TODAS LAS DIRECCIONES", "DOBLE TOQUE Y MANTENER: CORRER", "PEGAR CERCA DE COMIDA O ARMA: RECOGER", "CORRER + PEGAR: DESLIZANTE | SALTAR + PEGAR: PATADA", "AGARRE: 3 GOLPES | ATRAS + PEGAR LANZA | SALTAR SALE", "ATRAPADO: PULSA PEGAR / SALTAR / MOVER PARA ESCAPAR"]
 		for i in range(mobile_lines.size()):
 			overlay_text(canvas, mobile_lines[i], Vector2(190, y + i * 23), 14, CREAM)
 		return
-	var lines := ["WASD / FLECHAS mover | doble toque + mantener: correr", "J / Z combo | corriendo + J / Z: golpe deslizante", "ESPACIO / K salto | aire + J patada | L / X ulti", "AGARRE: J x3 | atras + J lanza | salto suelta", "MANDO: stick / cruceta   |   X golpe   A salto   Y ulti", "Atrapado: pulsa golpe, salto o direcciones para escapar"]
+	var lines := ["WASD / FLECHAS mover | doble toque + mantener: correr", "J / Z combo o recoger cerca | corriendo: slide", "ESPACIO / K salto | aire + J patada | L / X ulti", "AGARRE: J x3 | atras + J lanza | salto suelta", "MANDO: stick / cruceta   |   X golpe   A salto   Y ulti", "Atrapado: pulsa golpe, salto o direcciones para escapar"]
 	for i in range(lines.size()):
 		overlay_text(canvas, lines[i], Vector2(219 if i < 4 else 190, y + i * 23), 16 if i < 4 else 14, CREAM if i < 3 else Color("98a3b9"))
 
@@ -887,6 +1176,8 @@ func draw_hud(canvas: Node2D) -> void:
 				if LIFE_PIXELS[row][col] == "1":
 					canvas.draw_rect(Rect2(85 + i * 20 + col * 2, 62 + row * 2, 2, 2), life_color)
 	overlay_text(canvas, "VIDAS", Vector2(151, 74), 11, Color("98a3b9"))
+	if not player.weapon.is_empty():
+		overlay_text(canvas, "%s %d/100" % ["CANO" if player.weapon == "pipe" else "PALO", player.weapon_durability], Vector2(245, 74), 11, Color("f7c47e"))
 	overlay_text(canvas, "GROOVA BREAK", Vector2(474, 28), 14, MINT)
 	canvas.draw_rect(Rect2(474, 36, 192, 14), Color("30344c"))
 	canvas.draw_rect(Rect2(476, 38, 188 * charge / 100, 10), Color("f7c47e") if charge < 100 else MINT)
@@ -901,7 +1192,7 @@ func draw_hud(canvas: Node2D) -> void:
 			overlay_centered(canvas, "JEFE DEL BARRIO  %d / %d" % [enemy.hp, enemy.max_hp], 115, 12, CREAM)
 	if not touch_visible and state == "play":
 		canvas.draw_rect(Rect2(0, VIEW_HEIGHT - 26, 960, 26), Color(0.04, 0.06, 0.12, 0.94))
-		overlay_text(canvas, "J GOLPE / CORRIENDO: DESLIZANTE   ESPACIO SALTO   L ULTI", Vector2(24, VIEW_HEIGHT - 16), 12, CREAM)
+		overlay_text(canvas, "J GOLPE/RECOGER  CORRIENDO: SLIDE   ESPACIO SALTO   L ULTI", Vector2(24, VIEW_HEIGHT - 16), 12, CREAM)
 		overlay_text(canvas, "H AYUDA / ESC PAUSA / M SONIDO", Vector2(669, VIEW_HEIGHT - 16), 11, CREAM)
 
 func setup_audio() -> void:
@@ -910,7 +1201,7 @@ func setup_audio() -> void:
 		audio.volume_db = -15
 		add_child(audio)
 		audio_players.append(audio)
-	for sound_name in ["hit", "swing", "jump", "power", "ultimate"]:
+	for sound_name in ["hit", "swing", "jump", "power", "ultimate", "select"]:
 		sounds[sound_name] = synth_sound(sound_name)
 	music = AudioStreamPlayer.new()
 	music.volume_db = -23
@@ -955,6 +1246,7 @@ func synth_sound(which: String) -> AudioStreamWAV:
 				hz = 180 + t * 1500
 				value = sin(t * hz * TAU) * fade * 0.6
 			"power": value = sin(t * (150 + t * 450) * TAU) * fade * 0.5
+			"select": value = sin(t * (660 if t < 0.065 else 990) * TAU) * fade * 0.55
 			"ultimate": value = (sin(t * 60 * TAU) + randf_range(-0.4, 0.4)) * fade * 0.7
 		samples.encode_s16(i * 2, int(clampf(value, -1, 1) * 26000))
 	var wav := AudioStreamWAV.new()

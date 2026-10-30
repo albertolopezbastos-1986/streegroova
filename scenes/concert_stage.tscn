@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/environment/ending/concert-stage.png" id="1_stage"]
+[ext_resource type="Script" path="res://scripts/concert_stage.gd" id="2_script"]
+
+[node name="ConcertStage" type="Node2D"]
+texture_filter = 1
+script = ExtResource("2_script")
+
+[node name="Background" type="Sprite2D" parent="."]
+z_index = -1
+scale = Vector2(0.6629834, 0.6629834)
+texture = ExtResource("1_stage")
+centered = false
+
+[node name="Performers" type="Node2D" parent="."]
+position = Vector2(0, 560)
+z_index = 1

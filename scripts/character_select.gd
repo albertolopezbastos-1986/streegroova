@@ -3,6 +3,7 @@ extends CanvasLayer
 signal confirmed(slot: int)
 signal cancelled
 signal debug_requested
+signal selection_changed
 
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const Catalog = preload("res://scripts/character_catalog.gd")
@@ -12,6 +13,16 @@ var cards: Array[Button] = []
 var selected := 0
 var open := false
 var stick_latched := false
+var locked := false
+var blink_time := 0.0
+
+func _process(dt: float) -> void:
+	if not open:
+		return
+	blink_time += dt
+	for i in range(cards.size()):
+		var style := cards[i].get_theme_stylebox("pressed") as StyleBoxFlat
+		style.border_color = Color.WHITE if i == selected and int(blink_time * (14 if locked else 6)) % 2 == 0 else Color("62efd4")
 
 func _ready() -> void:
 	layer = 15
@@ -73,7 +84,7 @@ func _ready() -> void:
 	add_label("A / D O FLECHAS PARA CAMBIAR   -   ESC PARA VOLVER", Rect2(50, 491, 860, 22), 10, Color("98a3b9"))
 	for child in screen.get_children():
 		if child != background:
-			child.position.y += 90
+			child.position.y += 50
 	hide_panel()
 
 func add_label(value: String, bounds: Rect2, pixels: int, color: Color) -> void:
@@ -89,6 +100,8 @@ func add_label(value: String, bounds: Rect2, pixels: int, color: Color) -> void:
 
 func show_panel() -> void:
 	open = true
+	locked = false
+	blink_time = 0
 	stick_latched = false
 	screen.show()
 	select(selected)
@@ -101,12 +114,19 @@ func hide_panel() -> void:
 			card.release_focus()
 
 func select(index: int) -> void:
+	if locked:
+		return
+	var previous := selected
 	selected = posmod(index, cards.size())
 	for i in range(cards.size()):
 		cards[i].set_pressed_no_signal(i == selected)
 	cards[selected].grab_focus()
+	if selected != previous:
+		selection_changed.emit()
 
 func handle_input(event: InputEvent) -> void:
+	if locked:
+		return
 	if event.is_echo():
 		get_viewport().set_input_as_handled()
 		return

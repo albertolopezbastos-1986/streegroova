@@ -2,12 +2,12 @@ extends CanvasLayer
 
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const ACTIONS = ["left", "right", "up", "down", "attack", "jump", "ultimate"]
-const CENTER := Vector2(130, 810)
+const CENTER := Vector2(130, 730)
 const STICK_RADIUS := 64.0
 const DEADZONE := 0.18
 const BUTTON_RADIUS := 43.0
-const BUTTONS = {"attack": Vector2(875, 766), "jump": Vector2(766, 810), "ultimate": Vector2(875, 852)}
-const PAUSE_RECT := Rect2(435, 746, 90, 48)
+const BUTTONS = {"attack": Vector2(875, 686), "jump": Vector2(766, 730), "ultimate": Vector2(875, 772)}
+const PAUSE_RECT := Rect2(435, 666, 90, 48)
 const MINT := Color("62efd4")
 
 var game: Node2D
@@ -35,7 +35,7 @@ func setup(owner_game: Node2D, mobile: bool) -> void:
 		add_child(drawer)
 	if enabled:
 		# A separate lower deck keeps fingers away from the playable floor.
-		get_window().content_scale_size = Vector2i(960, 900)
+		get_window().content_scale_size = Vector2i(960, 820)
 	sync_visibility()
 
 func sync_visibility() -> void:
@@ -139,8 +139,8 @@ func text_at(value: String, at: Vector2, size: int, color: Color) -> void:
 	drawer.draw_string(font, at - Vector2(width / 2, 0), value, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
 
 func draw_controls() -> void:
-	drawer.draw_rect(Rect2(0, 720, 960, 180), Color("101827"))
-	drawer.draw_line(Vector2(0, 721), Vector2(960, 721), Color("38505b"), 2)
+	drawer.draw_rect(Rect2(0, 640, 960, 180), Color("101827"))
+	drawer.draw_line(Vector2(0, 641), Vector2(960, 641), Color("38505b"), 2)
 	drawer.draw_circle(CENTER, STICK_RADIUS + 8, Color("0a101d"))
 	drawer.draw_arc(CENTER, STICK_RADIUS, 0, TAU, 64, Color(MINT, 0.45), 3)
 	drawer.draw_line(CENTER - Vector2(45, 0), CENTER + Vector2(45, 0), Color("2a3b4b"), 2)
@@ -150,9 +150,9 @@ func draw_controls() -> void:
 	drawer.draw_circle(knob + Vector2(0, 4), 25, Color("080d17"))
 	drawer.draw_circle(knob, 25, Color("345560") if stick_finger >= 0 else Color("263d4b"))
 	drawer.draw_arc(knob, 25, 0, TAU, 40, MINT, 2)
-	text_at("MOVER", Vector2(265, 807), 10, MINT)
-	text_at("DOBLE TOQUE", Vector2(285, 830), 8, Color("98a3b9"))
-	text_at("PARA CORRER", Vector2(285, 846), 8, Color("98a3b9"))
+	text_at("MOVER", Vector2(265, 727), 10, MINT)
+	text_at("DOBLE TOQUE", Vector2(285, 750), 8, Color("98a3b9"))
+	text_at("PARA CORRER", Vector2(285, 766), 8, Color("98a3b9"))
 	for action in BUTTONS:
 		var point: Vector2 = BUTTONS[action]
 		var color := MINT if action != "ultimate" else Color("f7c47e")

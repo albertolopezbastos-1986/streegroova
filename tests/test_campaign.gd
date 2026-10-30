@@ -23,10 +23,12 @@ func run() -> void:
 	game.new_run()
 	await process_frame
 	var id: String = game.run_id
+	var backgrounds: Array = game.campaign_backgrounds.duplicate()
 	game.player.hp = 63
 	game.lives = 2
 	game.charge = 75
 	for level in range(3):
+		check(game.background_index == backgrounds[level] and game.campaign_backgrounds == backgrounds, "campaign uses its fixed randomized environment order")
 		check(game.level_index == level and game.stage == 0 and game.state == "play", "level %d starts at wave one" % (level + 1))
 		for wave in range(game.WAVE_COUNT):
 			check(game.stage == wave, "level %d wave %d is reachable" % [level + 1, wave + 1])
@@ -61,7 +63,7 @@ func run() -> void:
 			game.update_level_transition(5)
 			check(game.state == "start", "next level also waits for automatic entrance")
 			game.update_level_transition(game.START_DURATION)
-			check(game.state == "play" and game.enemies.size() == 3 and game.props.size() == 2 and game.food.is_empty(), "next level reloads its enemies and supplies")
+			check(game.state == "play" and game.enemies.size() == 3 and game.props.size() <= 1 and game.food.is_empty(), "next level loads enemies with at most one supply for injured player")
 			check(game.player.hp == 63 and game.lives == 2 and game.charge == 75 and game.score == (level + 1) * game.WAVE_COUNT * 100, "next level preserves health lives ultimate and accumulated score")
 			check(game.run_id == id and game.active_character_id == "beto", "all levels share a single run and character")
 			check(game.camera_x == 0 and game.left_bound == 30 and game.right_bound == 850 and game.player.position.y == game.START_Y, "next level resets camera and starting bounds")
@@ -71,6 +73,18 @@ func run() -> void:
 	check(game.player.visual.position.y < 0 and game.player.height == 0, "victory placeholder animates without restarting combat")
 	check(not game.ranking_panel.open, "ranking waits for victory animation")
 	game.update_presentation(game.VICTORY_DURATION)
+	check(not game.ranking_panel.open and game.screen_transition_target == "concert", "victory fades to concert before ranking")
+	game.update_screen_transition(game.FADE_DURATION)
+	check(game.state == "concert" and game.fade_screen.color.a == 1, "concert loads behind black screen")
+	game.update_screen_transition(game.BLACK_HOLD_DURATION)
+	game.update_screen_transition(game.FADE_DURATION)
+	check(game.concert_layer.visible and game.concert_time == 0, "concert timer starts after fade in")
+	game._process(9.9)
+	check(game.state == "concert" and game.screen_transition_phase.is_empty(), "YOU WIN concert stays visible for ten seconds")
+	game._process(0.11)
+	game.update_screen_transition(game.FADE_DURATION)
+	game.update_screen_transition(game.BLACK_HOLD_DURATION)
+	game.update_screen_transition(game.FADE_DURATION)
 	check(game.state == "won" and game.ranking_panel.open, "ranking opens after celebration completes")
 	check(game.ranking_panel.heading.text == "CONGRATULATIONS!" and game.ranking_panel.points == game.LEVEL_COUNT * game.WAVE_COUNT * 100 and game.ranking_panel.pending_id == id, "final ranking contains entire campaign score")
 	game.new_run(true)

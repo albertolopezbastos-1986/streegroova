@@ -28,18 +28,18 @@ Después de **Press Start** se abre la selección con tres portraits. Cambiá co
 | Pausa | Esc / P | Start |
 | Ayuda / sonido | H / M | — |
 
-La carrera requiere dos toques hacia el mismo lado dentro de 0,28 segundos y mantener el segundo. Usa la animación de caminar y aumenta la velocidad de 170 a 300 unidades/s. Soltar o invertir la dirección termina la carrera. Atacar corriendo ejecuta un golpe deslizante con puño 1: avanza unas 145 unidades, frena progresivamente durante unos 0,8 segundos y causa 29 de daño una vez por rival y lo lanza por el aire como un agarre y lanzamiento. No activa el agarre automático durante la carrera. Por ahora todos los personajes usan esta misma animación; barridas y codazos propios quedan pendientes de sus sprites. Saltar corriendo conserva el impulso; recibir daño o usar la ulti cancela el deslizamiento.
+La carrera requiere dos toques hacia el mismo lado dentro de 0,28 segundos y mantener el segundo. Usa su animación de carrera y aumenta la velocidad de 170 a 300 unidades/s. Soltar o invertir la dirección termina la carrera. Atacar corriendo ejecuta una patada deslizante con su animación propia: avanza unas 145 unidades, frena progresivamente durante unos 0,8 segundos y causa 29 de daño una vez por rival y lo lanza por el aire como un agarre y lanzamiento. No activa el agarre automático durante la carrera. Por ahora todos los personajes usan esta misma animación; barridas y codazos propios quedan pendientes de sus sprites. Saltar corriendo conserva el impulso; recibir daño o usar la ulti cancela el deslizamiento.
 
-Sin dirección, el salto es vertical. Con dirección, conserva el impulso hasta aterrizar. Los controles táctiles aparecen sólo en móviles; la vista usa una resolución de 960 × 720 (4:3) y la ventana mantiene esa proporción.
+Sin dirección, el salto es vertical. Con dirección, conserva el impulso hasta aterrizar. Los controles táctiles aparecen sólo en móviles; la vista usa una resolución de 960 × 640 (3:2) y la ventana mantiene esa proporción.
 
 ## Debug room
 
-Desde la selección de personaje, **TAB** abre una sala de pruebas con el fondo actual, sin oleadas automáticas y con vidas infinitas. **TAB** vuelve a la selección. Los botones en pantalla hacen lo mismo que estas teclas; se pueden crear enemigos y jefes repetidamente, sin límite.
+Desde la selección de personaje, **TAB** abre primero una lista de los seis escenarios. Elegí con 1–6, flechas y Enter, o clic/táctil; después entra a la sala con ese fondo, sin oleadas automáticas y con vidas infinitas. CAMBIAR ESCENARIO permite volver a la lista desde la sala. **TAB** vuelve a la selección. Los botones en pantalla hacen lo mismo que estas teclas; se pueden crear enemigos y jefes repetidamente, sin límite.
 
 | Tecla | Acción |
 | --- | --- |
 | 1 / 2 / 3 | Cambiar a Beto / Cami / Alito, recuperando salud |
-| 4 / 5 / 6 | Crear rival rosa / amarillo / violeta |
+| 4 / 5 / 6 | Crear rival amarillo (tier 1) / rosa (tier 2) / rojo (tier 3) |
 | 7 | Crear jefe final |
 | 8 | Cargar ulti al máximo |
 | 9 | Agregar una oleada aleatoria de 3 a 7 rivales |
@@ -49,16 +49,16 @@ Cami y Alito usan temporalmente los gráficos de Beto, indicado en pantalla, has
 
 ## El nivel
 
-Una campaña de **3 niveles de 5 oleadas cada uno** (15 en total), cada uno de **4250 unidades de largo**, con zoom **1,96875×**, un 25% menos que el anterior. Se puede retroceder hasta 700 unidades detrás del inicio de la oleada actual. La quinta oleada presenta al jefe: un clon de Beto un 25% más grande, con 390 de energía (triple del rival común de 130). Los enemigos comunes tienen 130/84/260 de energía, el doble que antes. Los turnos y rodeos del sistema de combate se mantienen.
+Una campaña de **3 niveles de 5 oleadas cada uno** (15 en total), con dos primeros fondos distintos elegidos al azar y el bar neón fijo como tercer nivel. El catálogo de seis fondos incluye: barrio, puerto nocturno, bar neón, interior de tren, bosque al atardecer con komorebi y shopping. La selección se conserva durante la partida y se sortea de nuevo al empezar otra. Cada nivel es de **4250 unidades de largo**, con zoom **1,96875×**, un 25% menos que el anterior. Se puede retroceder hasta 700 unidades detrás del inicio de la oleada actual. La quinta oleada presenta al jefe: un clon de Beto un 25% más grande, con 520 de energía (doble del tier 3) y 36 de daño por golpe (tier 3: 26). Los enemigos comunes tienen 130/84/260 de energía, el doble que antes. Los turnos y rodeos del sistema de combate se mantienen.
 
-Cada sección tiene una caja de madera y un barril que se rompen a golpes y dejan un pollo rostizado. Al acercarse por el suelo, el pollo recupera **50 de energía**; si la barra está llena, queda disponible. La comida es la única curación durante una vida: avanzar de oleada ya no cura. Una vida nueva empieza con energía completa.
+Las cajas de madera y los barriles metálicos se rompen de un solo golpe; atacar uno cercano usa la animación de patada slide. Los suministros se intentan generar al empezar cada oleada y cada 25–40 segundos, con probabilidad del 40%, solo si falta vida y no queda otro objeto sin romper ni comida sin recoger. Dejan al azar sushi (75% de la vida máxima) o una pinta de cerveza (50%). Con vida completa, la comida queda disponible. Sus gráficos pixel art están en `assets/items/supplies.png`. La comida es la única curación durante una vida: avanzar de oleada ya no cura. Una vida nueva empieza con energía completa.
 
-El movimiento en profundidad cubre 80 unidades (cuatro veces el recorrido anterior), abarca vereda y calle y es más lento que el horizontal. El piso visible se reparte entre baldosas y asfalto, separados por el cordón, con latas de cerveza vacías y diarios como decoración. La vista de 960 × 720 muestra más altura de las fachadas sin reducir a los personajes. La cámara deja margen hacia la dirección de movimiento (izquierda o derecha), cambia de encuadre suavemente y conserva ese margen al detenerse. También conserva espacio por delante del jugador y acompaña verticalmente los saltos para mantener a Beto debajo del HUD sin cambiar su física. Los límites del nivel y los efectos se calculan con el zoom. [Ver encuadre](docs/primer-nivel.png).
+El movimiento en profundidad cubre 77 unidades, abarca vereda y calle y es más lento que el horizontal. El piso conserva las proporciones de baldosas, cordón y asfalto del PNG, con latas de cerveza vacías y diarios como decoración. La vista de 960 × 640 coincide con el formato 3:2 de los fondos. Cada imagen se dibuja completa, con una sola escala y sin repetir tiras del piso para llenar la pantalla. La cámara deja margen hacia la dirección de movimiento (izquierda o derecha), cambia de encuadre suavemente y conserva ese margen al detenerse. También conserva espacio por delante del jugador y acompaña verticalmente los saltos para mantener a Beto debajo del HUD sin cambiar su física. El borde derecho de la cámara queda limitado por la línea de la zona bloqueada; avanza cuando se despeja la oleada. Los límites del nivel y los efectos se calculan con el zoom. [Ver encuadre](docs/primer-nivel.png).
 
 - **Beto:** personaje pixel art animado con sus nueve hojas originales; 100 de energía, tres vidas, dos puños y remate con guitarra, salto y patada aérea.
-- **Clon rosa:** luchador equilibrado con los sprites de Beto.
-- **Clon amarillo:** rápido, con menos energía y golpes más débiles.
-- **Clon violeta:** pesado, lento, resistente, con golpes fuertes y anticipación mayor.
+- **Tier 1 amarillo:** 130 de vida, 16 de daño, velocidad 79; voladora y slide no lanzan al jugador. Tamaño estándar; futuro alien punki.
+- **Tier 2 rosa:** 84 de vida, 10 de daño, velocidad 96; la voladora lanza, el slide no. Tamaño 94%; favorece voladoras (intervalo 5.6 s) sobre slides (9 s). Futura mujer alien.
+- **Tier 3 rojo:** 260 de vida, 26 de daño, velocidad 53; ambos especiales lanzan. Escala 1.113 (5% más que su anterior 1.06); salta poco (16 s) y favorece slide (8 s). Futuro grandote.
 - **Groova Break:** se carga al dar y recibir golpes. Con la barra completa, activa una pose invulnerable, oscurece la escena y daña a todos los rivales del encuentro.
 
 Incluye pausa por pérdida de foco, efectos de impacto, breve congelación de golpes, partículas, música sintetizada, efectos de sonido, victoria, derrota, reinicio y récord local en `user://record.cfg`.
@@ -114,7 +114,7 @@ Validación de lanzamientos, derribos, recuperación e IA: `godot --headless --p
 
 ## Controles mobile
 
-En Android, iPhone y iPad se detecta el dispositivo al iniciar (también en la versión Web). La vista mantiene el escenario de 960 × 720 y agrega una franja inferior de 180 unidades para los controles, sin cubrir el piso. En escritorio no se muestra esta franja.
+En Android, iPhone y iPad se detecta el dispositivo al iniciar (también en la versión Web). La vista mantiene el escenario de 960 × 640 y agrega una franja inferior de 180 unidades para los controles, sin cubrir el piso. En escritorio no se muestra esta franja.
 
 - Palanca analógica multidireccional a la izquierda, con diagonales, zona muerta y retorno al centro al soltar. Doble toque hacia el mismo lado y mantener permite correr.
 - Botones **PEGAR**, **SALTAR** y **ULTI** a la derecha, con multitouch para combinar movimiento y acciones. El aro de ulti muestra su carga.
@@ -144,3 +144,41 @@ Validación: `godot --headless --path . --script tests/test_flight_grapple.gd`.
 Los cuerpos lanzados conservan el impulso horizontal durante toda la caída, incluso si el impacto fue letal. El lanzamiento sale a 380 unidades/s y la fricción del piso los frena al aterrizar; los sobrevivientes esperan a detenerse antes de levantarse. El puñetazo deslizante conserva sus cuadros de contacto originales y sostiene su último cuadro durante la frenada extendida.
 
 El agarre del jugador llega al cuadro de sujeción al doble de velocidad y la fase de lanzamiento se reproduce al doble de velocidad, manteniendo el cuadro real de liberación. Pulsar atrás + golpe durante la captura guarda la orden para lanzar en cuanto termine de agarrar; los tiempos del agarre enemigo se conservan para permitir zafarse.
+
+Validación de tiers y bloqueo de cámara: `godot --headless --path . --script tests/test_enemy_tiers.gd`.
+
+## Escape de agarres
+
+Soltarse requiere nuevas pulsaciones: tier 1, 3; tier 2, 6; tier 3, 9; jefe, 18. Mantener una tecla o pulsar varios botones a la vez no multiplica el esfuerzo. El tiempo de espera antes de actuar es 0.6/0.4/0.3 segundos para tiers 1/2/3 y 0.18 para el jefe; el progreso se pierde tras 0.9/0.75/0.6 segundos sin pulsar (jefe: 0.45). El jefe puede dar hasta dos golpes durante un agarre antes de arrojar: golpe de agarre 30 de daño y lanzamiento 55, frente a 19/40 de un rival normal. Sigue siendo posible escapar, pero exige pulsaciones rápidas y continuas.
+
+Validación: `godot --headless --path . --script tests/test_grip_tiers.gd`.
+
+Los enemigos, incluido el jefe, no reciben invulnerabilidad al levantarse: pueden recibir daño o volver a ser lanzados durante esa animación. El jugador conserva su protección de recuperación. El jefe usa ataques un 25% más rápidos que la velocidad base, anticipación de 0.16 s, menos pausa entre golpes y descansos de 0.2–0.35 s entre turnos. Persigue a 105 unidades/s y puede esquivar lateralmente un golpe cercano durante 0.18 s, con 1.6 s entre esquivas; la esquiva no concede invulnerabilidad. Validación: `godot --headless --path . --script tests/test_boss_aggression.gd`.
+
+Los cinco escenarios nuevos tienen cinco imágenes distintas de 1536 × 1024, con el mismo encuadre, escala y división del piso que la calle original. El scroll recorre 1–2–3–4–5 y vuelve al 1 mediante franjas compartidas, sin reflejar ni comprimir panoramas. Archivos y geometría: [assets/environment](assets/environment/README.md).
+
+El cierre del tercer nivel conserva los cinco segundos de celebración y luego hace fade al concierto frontal con YOU WIN! y luces animadas durante diez segundos. Después hace fade al puntaje; VOLVER AL INICIO regresa al título. Estas transiciones y título→selección usan 0.65 s de fade out, 1 s en negro y 0.65 s de fade in. La selección tiene sonido al cambiar/confirmar personaje y borde alternando blanco/menta (más rápido al confirmar). Validación: `godot --headless --path . --script tests/test_screen_flow.gd`.
+
+El concierto YOU WIN! ignora botones durante sus primeros 4 segundos visibles. Después admite una pulsación nueva de teclado, mando, ratón o pantalla táctil para pasar al puntaje con los fades habituales. Mantener una tecla, soltarla o mover el stick no omite la secuencia. Sin pulsaciones, continúa automáticamente al completar 10 segundos.
+
+El escenario Calle original vuelve a usar `neighborhood-pixel.png`, su ancho de repetición de 492 unidades, fachadas, vereda, cordón, asfalto, juntas y decoración; el PNG se dibuja completo con escala uniforme. Los otros cinco escenarios conservan sus recorridos conectados.
+
+La comida y las armas del suelo se recogen pulsando golpe a menos de 32 unidades y en la misma franja. No se recogen al tocarlas. `pickup` usa temporalmente slide sin desplazamiento ni daño; el objeto se obtiene al 55% de la secuencia y un golpe recibido puede interrumpir la recogida. La comida queda si la vida está completa. Palos y caños aparecen en el suelo y también se pueden crear desde los botones PALO/CAÑO de debug; quedan equipados en la mano derecha durante las animaciones hasta recibir un lanzamiento. El agarre visual sigue anclajes por cuadro detectados desde el sprite; `weapon_hand_frames` en la animación permite indicar coordenadas [x,y] exactas para futuros sprites.
+
+El ataque armado usa `punch_weapon`, provisionalmente el primer golpe, con alcance 105 y daño 36 (tablón) / 42 (caño), superior a los golpes comunes de 19/29. Las carpetas `animations/punch_weapon/` existen para Beto, Alito y Cami en los conjuntos original, 20 y 40 cuadros. Reemplazar el alias por la futura hoja permite conectar su animación propia. La recogida tiene un alias separado `pickup` para sustituir su placeholder después.
+
+STAGE CLEAR usa un panel al 65% del tamaño anterior, desplazado hacia arriba y con menos oscurecimiento; el personaje también festeja entre niveles. Validación de recogidas y armas: `godot --headless --path . --script tests/test_pickups_weapons.gd`.
+
+Cada arma empieza con 100 puntos de durabilidad. Cada enemigo efectivamente dañado consume 10/20/30 puntos según su tier, o 50 si es el jefe. Fallar o golpear un blanco protegido no consume durabilidad. A cero se rompe en dos fragmentos animados y deja de causar daño. Un golpe que lanza al jugador hace caer el arma desde su mano, con varios giros antes de aterrizar; entonces puede recogerse con su durabilidad restante. Los golpes comunes no la sueltan. El HUD muestra la durabilidad equipada. Validación: `godot --headless --path . --script tests/test_weapon_durability.gd`.
+
+Las armas naturales aparecen en una o dos oleadas distintas elegidas al iniciar cada nivel, con un máximo total de dos por nivel. Recogerlas, romperlas o soltarlas no repone ese cupo. Los botones de debug permiten crear armas para pruebas. Los sprites transparentes de tablón y caño gris curvado se comparten entre el suelo, la mano, el vuelo y la rotura. Arte creado con image_gen integrado; archivos y prompts: assets/items/weapon-wood.png, weapon-pipe.png y weapon-prompts.json. Validación del cupo: tests/test_weapon_spawns.gd.
+
+En debug, O abre el menú de objetos: barril, caja, tablón y caño. Se elige con clic/touch, flechas y Enter, o 1–4; O/Esc cierra. El combate se detiene mientras está abierto. También hay botones directos de caja y barril en la barra debug. Cada caja o barril destruido entrega al azar sushi o cerveza.
+
+Con un arma equipada, pulsar salto y golpe juntos la lanza hacia adelante. Tolera pulsar salto apenas después del golpe, antes de la ventana de impacto. El arma gira, respeta la franja de profundidad y detecta impactos entre frames; el primer enemigo golpeado sale volando, el arma deja de avanzar y cae al piso. Conserva el desgaste y puede romperse en ese impacto. Un lanzamiento fallido aterriza sin consumir durabilidad.
+
+Los enemigos pueden recoger armas cercanas: evalúan la oportunidad cada 12–20 segundos, con 20% de probabilidad, cuando el jugador está a más de 90 unidades. Buscan durante un máximo de tres segundos y usan la misma animación de recogida. Armados hacen 50% más de daño, gastan 10 puntos por impacto al jugador y sueltan el arma si salen volando o mueren. Las recogidas no generan armas adicionales. Prueba: tests/test_weapon_throw_items.gd.
+
+Los enemigos armados también pueden lanzar hacia el jugador: comprueban la oportunidad cada 6–12 segundos, con 35% de probabilidad, desde 100–260 unidades y en la misma franja. Cualquier arma lanzada puede alcanzar al jugador o a otro enemigo, excluyendo a quien la lanzó. Al primer impacto deja de avanzar y cae; si llega al borde visible de la pantalla también se detiene y queda en el piso, sin gastar durabilidad por ese choque.
+
+El retroceso se limita continuamente a 80 unidades desde el mayor avance de cámara, también en debug; el avance de debug sigue siendo indefinido. Los enemigos se mantienen entre los bordes visibles y dentro de los límites caminables, incluso durante lanzamientos y la ulti. Prueba: tests/test_weapon_edges_bounds.gd.

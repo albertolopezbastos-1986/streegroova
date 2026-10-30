@@ -39,7 +39,7 @@ func run() -> void:
 	check(not controls.drawer.visible and not Input.is_action_pressed("left"), "desktop touch does not enable mobile overlay")
 	controls.setup(game, true)
 	game.touch_visible = true
-	check(get_root().content_scale_size == Vector2i(960, 900), "mobile reserves a separate lower control deck")
+	check(get_root().content_scale_size == Vector2i(960, 820), "mobile reserves a separate lower control deck")
 	check(controls.drawer.visible, "mobile gameplay shows controls")
 	check(not controls.handle_input(touch(8, Vector2(480, 250), false)), "unclaimed touches remain available to debug UI buttons")
 	var center: Vector2 = controls.CENTER
@@ -82,6 +82,11 @@ func run() -> void:
 	controls.sync_visibility()
 	check(not controls.drawer.visible and not Input.is_action_pressed("right"), "selection hides deck and clears joystick")
 	game.confirm_character(0)
+	game.update_level_transition(game.FADE_DURATION)
+	game.update_level_transition(game.BLACK_HOLD_DURATION)
+	game.update_level_transition(game.FADE_DURATION)
+	game.update_level_transition(5)
+	game.update_level_transition(game.START_DURATION)
 	controls.sync_visibility()
 	game._input(touch(1, controls.BUTTONS.ultimate))
 	check(Input.is_action_pressed("ultimate"), "ultimate has its own touch button")

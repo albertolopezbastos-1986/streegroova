@@ -1,97 +1,142 @@
 extends Node2D
 
+const SUPPLIES = preload("res://assets/items/supplies.png")
+const WeaponArt = preload("res://scripts/weapon_art.gd")
+
 var game: Node2D
-var hp := 38.0
+var hp := 1.0
 var dead := false
 var height := 0.0
 var barrel := false
 var as_food := false
-var flash := 0.0
+var beer := false
+var weapon := ""
+var weapon_durability := 100
+var weapon_airborne := false
+var weapon_broken := false
+var weapon_projectile := false
+var weapon_thrower: Node2D
+var weapon_velocity := Vector2.ZERO
+var weapon_lift_speed := 0.0
+var weapon_rotation := 0.0
+var break_elapsed := 0.0
 var age := 0.0
 
 func setup(owner_game: Node2D, at: Vector2, is_barrel: bool) -> void:
 	game = owner_game
 	position = at
 	barrel = is_barrel
-	hp = 57.0 if barrel else 38.0
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	z_index = int(position.y)
 
 func hurt(damage: float, direction: float, _heavy := false) -> void:
-	if dead or as_food:
+	if dead or as_food or not weapon.is_empty() or damage <= 0:
 		return
-	hp -= damage
-	flash = 0.12
+	hp = 0
+	dead = true
+	hide()
 	game.sound("hit")
 	game.impact(position - Vector2(0, 16), direction, false)
-	if hp <= 0:
-		dead = true
-		hide()
-		game.score += 50
-		game.drop_chicken(position)
-		for i in range(8):
-			game.particles.append({"pos": position - Vector2(0, 16), "vel": Vector2(randf_range(-100, 100), randf_range(-130, -30)), "life": 0.45, "color": Color("be8846"), "size": 3.0})
+	game.score += 50
+	game.drop_food(position)
+	for i in range(8):
+		game.particles.append({"pos": position - Vector2(0, 16), "vel": Vector2(randf_range(-100, 100), randf_range(-130, -30)), "life": 0.45, "color": Color("8899a6" if barrel else "be8846"), "size": 3.0})
 
 func tick(dt: float) -> void:
-	flash = maxf(0, flash - dt)
 	age += dt
+	if weapon_broken:
+		break_elapsed += dt
+		if break_elapsed >= 0.65:
+			dead = true
+			hide()
+	elif weapon_airborne:
+		var from := position.x
+		var min_x: float = game.left_bound + 12
+		var max_x: float = game.right_bound - 12
+		if weapon_projectile:
+			min_x = maxf(min_x, game.camera_x + 42)
+			max_x = minf(max_x, game.camera_x + 960.0 / game.WORLD_ZOOM - 42)
+		var next_x := position.x + weapon_velocity.x * dt
+		position.x = clampf(next_x, min_x, max_x)
+		height += weapon_lift_speed * dt
+		weapon_lift_speed -= 850 * dt
+		weapon_rotation += 24 * dt * signf(weapon_velocity.x)
+		if weapon_projectile:
+			projectile_hit(from)
+			if weapon_projectile and not is_equal_approx(next_x, position.x):
+				stop_projectile()
+				game.sound("hit")
+		if height <= 0:
+			height = 0
+			weapon_airborne = false
+			weapon_rotation = 0
+			weapon_projectile = false
 	queue_redraw()
 
-func pixel(x: float, y: float, w: float, h: float, color: String) -> void:
-	draw_rect(Rect2(x, y, w, h), Color(color))
+func projectile_hit(from: float) -> void:
+	if not is_instance_valid(weapon_thrower):
+		weapon_projectile = false
+		return
+	var targets: Array = game.enemies + [game.player]
+	var nearest: Node2D
+	var nearest_distance := INF
+	for target in targets:
+		if target.dead or target == weapon_thrower or absf(target.position.y - position.y) >= game.MELEE_DEPTH:
+			continue
+		if height < target.height or height > target.height + 105:
+			continue
+		if target.invincible > 0 or target.thrown_time > 0 or (target.kind == -1 and target.getup_time > 0):
+			continue
+		if target.position.x < minf(from, position.x) - 22 or target.position.x > maxf(from, position.x) + 22:
+			continue
+		var distance: float = absf(target.position.x - from)
+		if distance < nearest_distance:
+			nearest = target
+			nearest_distance = distance
+	if nearest == null:
+		return
+	var direction := signf(weapon_velocity.x)
+	if not nearest.launch_away(42 if weapon == "pipe" else 36, direction, false, weapon_thrower):
+		return
+	position.x = nearest.position.x - direction * 20
+	stop_projectile()
+	weapon_durability = maxi(0, weapon_durability - weapon_thrower.weapon_hit_cost(nearest))
+	if weapon_durability == 0:
+		weapon_broken = true
+		weapon_airborne = false
+	game.sound("hit")
+
+func stop_projectile() -> void:
+	weapon_projectile = false
+	weapon_velocity.x = 0
+	weapon_lift_speed = minf(0, weapon_lift_speed)
 
 func _draw() -> void:
 	if dead:
 		return
-	pixel(-19, -2, 38, 5, "1b1b27")
-	if as_food:
-		draw_chicken()
+	draw_set_transform(Vector2(0, -1), 0, Vector2(1, 0.22))
+	draw_circle(Vector2.ZERO, 19, Color(0, 0, 0, 0.35))
+	draw_set_transform(Vector2.ZERO)
+	if not weapon.is_empty():
+		if weapon_broken:
+			for side in [-1, 1]:
+				var offset := Vector2(side * break_elapsed * 80, -height + break_elapsed * break_elapsed * 180)
+				WeaponArt.draw_weapon(self, weapon, offset, side * break_elapsed * 12, 48, 0 if side == -1 else 1)
+			return
+		WeaponArt.draw_weapon(self, weapon, Vector2(0, -height - 4), weapon_rotation if weapon_airborne else -0.16)
 		return
-	modulate = Color(1.8, 1.8, 1.8) if flash > 0 else Color.WHITE
-	if barrel:
-		pixel(-16, -39, 32, 38, "251a19")
-		pixel(-19, -34, 38, 29, "543321")
-		pixel(-16, -37, 32, 36, "8b552d")
-		for x in [-12, -4, 4, 12]:
-			pixel(x, -36, 2, 34, "4a2e24")
-			pixel(x + 2, -34, 2, 31, "b47c3c")
-		for y in [-32, -13]:
-			pixel(-18, y, 36, 5, "252e39")
-			pixel(-18, y, 36, 1, "92958d")
-			pixel(-14, y + 2, 2, 2, "c0b9a0")
-		pixel(-14, -39, 28, 3, "c18a4b")
-	else:
-		pixel(-21, -40, 42, 40, "2c201d")
-		pixel(-19, -38, 38, 36, "9d632f")
-		for y in [-35, -26, -17, -8]:
-			pixel(-17, y, 34, 6, "be8542")
-			pixel(-16, y + 2, 16, 1, "d49e58")
-		pixel(-20, -39, 4, 38, "e0ab60")
-		pixel(16, -39, 4, 38, "70462a")
-		for i in range(8):
-			pixel(-16 + i * 4, -8 - i * 4, 5, 5, "67432b")
-			pixel(-16 + i * 4, -10 - i * 4, 4, 3, "dba05a")
-		for x in [-18, 17]:
-			for y in [-36, -5]:
-				pixel(x, y, 2, 2, "37333a")
-	if hp < (57 if barrel else 38):
-		pixel(-3, -30, 2, 13, "34221e")
-		pixel(-1, -19, 6, 2, "34221e")
-
-func draw_chicken() -> void:
-	# Hand-drawn pixel silhouette: roast body, highlights, leg and white bone.
-	pixel(-20, -5, 40, 5, "9b97a1")
-	pixel(-17, -6, 34, 3, "e5dcc7")
-	pixel(-14, -15, 25, 10, "60341d")
-	pixel(-11, -22, 20, 17, "9a4824")
-	pixel(-8, -25, 14, 18, "cb702d")
-	pixel(-11, -19, 20, 10, "d98435")
-	pixel(-5, -23, 9, 3, "f4b550")
-	pixel(-8, -17, 5, 3, "f6be62")
-	pixel(4, -12, 11, 7, "8d3e20")
-	pixel(6, -14, 10, 6, "d58234")
-	pixel(14, -12, 6, 3, "eee3bd")
-	pixel(18, -14, 4, 7, "fff1cf")
-	pixel(-15, -12, 7, 5, "ba612c")
-	if int(age * 3) % 2 == 0:
-		pixel(-23, -25, 2, 6, "ffe6a0")
-		pixel(-25, -23, 6, 2, "ffe6a0")
+	# The wide sushi platter extends beyond a quarter of the atlas.
+	var region := Rect2(0, 0, 0.52, 0.50)
+	var size := Vector2(46, 46)
+	if as_food:
+		region = Rect2(0.62, 0.50, 0.31, 0.47) if beer else Rect2(0, 0.53, 0.61, 0.45)
+		size = Vector2(24, 42) if beer else Vector2(52, 34)
+	elif barrel:
+		region = Rect2(0.60, 0, 0.38, 0.50)
+		size = Vector2(39, 52)
+	var atlas_size := SUPPLIES.get_size()
+	region = Rect2((region.position * atlas_size).floor(), (region.size * atlas_size).floor())
+	draw_texture_rect_region(SUPPLIES, Rect2(Vector2(-size.x / 2, -size.y), size), region)
+	if as_food and int(age * 3) % 2 == 0:
+		draw_rect(Rect2(-size.x / 2 - 4, -size.y + 3, 2, 6), Color("ffe6a0"))
+		draw_rect(Rect2(-size.x / 2 - 6, -size.y + 5, 6, 2), Color("ffe6a0"))

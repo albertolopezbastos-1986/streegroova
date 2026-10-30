@@ -41,7 +41,7 @@ func setup(online_service: Node) -> void:
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	screen.add_child(backdrop)
 	var panel := VBoxContainer.new()
-	panel.position = Vector2(100, 114)
+	panel.position = Vector2(100, 74)
 	panel.size = Vector2(760, 490)
 	panel.add_theme_constant_override("separation", 8)
 	screen.add_child(panel)
@@ -81,7 +81,7 @@ func setup(online_service: Node) -> void:
 	panel.add_child(buttons)
 	refresh_button = make_button("ACTUALIZAR TOP 10", refresh)
 	buttons.add_child(refresh_button)
-	replay_button = make_button("VOLVER A JUGAR", func(): replay_requested.emit())
+	replay_button = make_button("VOLVER AL INICIO", func(): replay_requested.emit())
 	buttons.add_child(replay_button)
 	close_button = make_button("VOLVER", hide_panel)
 	buttons.add_child(close_button)
@@ -236,7 +236,8 @@ func _process(_dt: float) -> void:
 		return
 	var area := name_input.get_global_rect()
 	var shown := open and is_result and name_input.editable
-	var data := {"session": pending_id, "value": name_input.text, "visible": shown, "x": area.position.x, "y": area.position.y, "w": area.size.x, "h": area.size.y, "width": 960, "height": 720}
+	var viewport_size := get_viewport().get_visible_rect().size
+	var data := {"session": pending_id, "value": name_input.text, "visible": shown, "x": area.position.x, "y": area.position.y, "w": area.size.x, "h": area.size.y, "width": viewport_size.x, "height": viewport_size.y}
 	var response: Variant = JavaScriptBridge.eval("window.GroovaNameInput ? JSON.stringify(window.GroovaNameInput.update(%s)) : null" % JSON.stringify(data))
 	if response is String:
 		var parsed: Variant = JSON.parse_string(response)

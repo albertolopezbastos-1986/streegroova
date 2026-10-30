@@ -13,7 +13,9 @@ var escape_presses := 0
 var escape_idle := 0.0
 var escape_down: Dictionary = {}
 const ESCAPE_ACTIONS = ["attack", "jump", "left", "right", "up", "down"]
-const ESCAPE_REQUIRED := 5
+const ESCAPE_REQUIRED = [3, 6, 9]
+const ESCAPE_IDLE_LIMITS = [0.9, 0.75, 0.6]
+const ENEMY_HOLD_DELAYS = [0.6, 0.4, 0.3]
 const PLAYER_THROW_SPEED := 2.0
 const PLAYER_CATCH_SPEED := 2.0
 var buffered_action := ""
@@ -121,8 +123,10 @@ func tick(dt: float) -> void:
 					buffered_action = ""
 		"hold":
 			if hero.kind >= 0:
-				if elapsed >= 0.3:
-					state = "throw"
+				if elapsed >= hold_delay():
+					state = "punch" if hero.is_boss and punch_count < 2 and randf() < 0.45 else "throw"
+					select_punch_animation()
+					did_hit = false
 					elapsed = 0
 					hero.game.sound("swing")
 				return
@@ -149,10 +153,10 @@ func tick(dt: float) -> void:
 						var target := victim
 						victim = null
 						target.grabbed_by = null
-						target.launch_away(19, locked_facing, false, hero)
+						target.launch_away(30 if hero.is_boss else 19, locked_facing, false, hero)
 						state = "punch_recover"
 					else:
-						victim.hurt(19, locked_facing, false, true)
+						victim.hurt(30 if hero.is_boss else 19, locked_facing, false, true)
 						if victim.dead:
 							release()
 							return
@@ -182,7 +186,7 @@ func launch() -> void:
 	target.invincible = 0
 	target.position = hero.position + Vector2(-locked_facing * 36, 0)
 	target.position.x = clampf(target.position.x, hero.game.left_bound, hero.game.right_bound)
-	target.launch_away(40, -locked_facing, true, hero)
+	target.launch_away(55 if hero.is_boss else 40, -locked_facing, true, hero)
 
 func release() -> void:
 	if is_instance_valid(victim):
@@ -202,19 +206,32 @@ func release() -> void:
 	escape_down.clear()
 	retry = 0.65
 
+func escape_required() -> int:
+	return 18 if owner_fighter.is_boss else ESCAPE_REQUIRED[clampi(owner_fighter.kind, 0, 2)]
+
+func escape_idle_limit() -> float:
+	return 0.45 if owner_fighter.is_boss else ESCAPE_IDLE_LIMITS[clampi(owner_fighter.kind, 0, 2)]
+
+func hold_delay() -> float:
+	return 0.18 if owner_fighter.is_boss else ENEMY_HOLD_DELAYS[clampi(owner_fighter.kind, 0, 2)]
+
 func try_escape(dt: float) -> void:
 	if owner_fighter.kind < 0 or not is_instance_valid(victim) or victim.kind != -1:
 		return
 	escape_idle += dt
-	if escape_idle > 0.8:
+	if escape_idle > escape_idle_limit():
 		escape_presses = 0
+	var fresh_press := false
 	for action in ESCAPE_ACTIONS:
 		var down := Input.is_action_pressed(action)
 		if down and not escape_down.get(action, false):
-			escape_presses += 1
-			escape_idle = 0
+			fresh_press = true
 		escape_down[action] = down
-	if escape_presses < ESCAPE_REQUIRED:
+	# Simultaneous buttons count as one effort, not an instant multi-press escape.
+	if fresh_press:
+		escape_presses += 1
+		escape_idle = 0
+	if escape_presses < escape_required():
 		return
 	var escaped := victim
 	var captor := owner_fighter

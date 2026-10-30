@@ -5,7 +5,10 @@ const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const CharacterVisual = preload("res://scripts/character_visual.gd")
 const Catalog = preload("res://scripts/character_catalog.gd")
 const ENEMY_PALETTE = preload("res://assets/characters/enemy_palette.gdshader")
-const ENEMY_COLORS = [Color("d45c79"), Color("d6aa51"), Color("9980d2")]
+const ENEMY_COLORS = [Color("d6aa51"), Color("d45c79"), Color("c94742")]
+const ENEMY_SPEEDS = [79.0, 96.0, 53.0]
+const ENEMY_JUMP_INTERVALS = [7.6, 5.6, 16.0]
+const ENEMY_SLIDE_INTERVALS = [12.0, 9.0, 8.0]
 
 const WALK_SPEED := 170.0
 const RUN_SPEED := 300.0
@@ -17,6 +20,18 @@ const THROW_GROUND_BRAKE := 800.0
 
 var running := false
 var run_attack := false
+var prop_attack := false
+var weapon := ""
+var weapon_durability := 100
+var weapon_attack := false
+var throw_chord_latched := false
+var ai_weapon_cooldown := randf_range(8, 16)
+var ai_weapon_target: Node2D
+var ai_weapon_seek_time := 0.0
+var ai_weapon_throw_cooldown := randf_range(6, 12)
+var pickup_target: Node2D
+var pickup_elapsed := 0.0
+var pickup_applied := false
 var slide_animation_duration := 0.0
 var tap_time := 0.0
 var tap_direction := 0.0
@@ -36,6 +51,8 @@ var victory_time := -1.0
 const GETUP_DURATION := 0.4
 var ai_special_cooldown := 4.0
 var ai_slide_cooldown := 8.0
+var boss_dodge_time := 0.0
+var boss_dodge_cooldown := 0.0
 var rush_windup := 0.0
 var rush_time := 0.0
 var hp := 100.0
@@ -81,22 +98,26 @@ func setup(owner_game: Node2D, type: int, at: Vector2, character_pack: Dictionar
 		max_hp = [130.0, 84.0, 260.0][kind]
 		hp = max_hp
 		ai_wait = randf_range(0.2, 0.8)
-		ai_jump_cooldown = randf_range(4.0, 7.0)
-		ai_slide_cooldown = randf_range(7.0, 11.0)
+		ai_jump_cooldown = ENEMY_JUMP_INTERVALS[kind] * randf_range(0.75, 1.2)
+		ai_slide_cooldown = ENEMY_SLIDE_INTERVALS[kind] * randf_range(0.75, 1.2)
 		var palette := ShaderMaterial.new()
 		palette.shader = ENEMY_PALETTE
 		palette.set_shader_parameter("outfit_color", ENEMY_COLORS[kind])
 		visual.material = palette
-		visual.scale = Vector2.ONE * [1.0, 0.97, 1.06][kind]
+		visual.scale = Vector2.ONE * [1.0, 0.94, 1.113][kind]
 	update_visual(0)
 	queue_redraw()
 
 func make_boss() -> void:
 	is_boss = true
-	max_hp = 130.0 * 3.0
+	max_hp = 520.0
 	hp = max_hp
 	visual.scale = Vector2.ONE * 1.25
 	visual.material.set_shader_parameter("outfit_color", Color("a347ce"))
+	ai_wait = 0.08
+	ai_special_cooldown = 1.0
+	ai_slide_cooldown = 2.0
+	ai_jump_cooldown = 2.5
 	queue_redraw()
 
 func tick(dt: float) -> void:
@@ -111,6 +132,8 @@ func tick(dt: float) -> void:
 	ai_jump_cooldown = maxf(0, ai_jump_cooldown - dt)
 	ai_special_cooldown = maxf(0, ai_special_cooldown - dt)
 	ai_slide_cooldown = maxf(0, ai_slide_cooldown - dt)
+	boss_dodge_cooldown = maxf(0, boss_dodge_cooldown - dt)
+	ai_weapon_throw_cooldown = maxf(0, ai_weapon_throw_cooldown - dt)
 	if is_instance_valid(grabbed_by) and not dead:
 		if kind == -1:
 			grabbed_by.grapple.try_escape(dt)
@@ -121,6 +144,9 @@ func tick(dt: float) -> void:
 		grapple.tick(dt)
 		update_visual(0)
 		queue_redraw()
+		return
+	if is_instance_valid(pickup_target) and not dead and stun <= 0:
+		tick_pickup(dt)
 		return
 	if dead:
 		var from := position
@@ -162,7 +188,7 @@ func tick(dt: float) -> void:
 			getup_time = GETUP_DURATION
 			velocity = Vector2.ZERO
 			stun = 0
-			invincible = maxf(invincible, GETUP_DURATION + 0.65)
+			invincible = maxf(invincible, GETUP_DURATION + 0.65) if kind == -1 else 0.0
 		update_visual(dt)
 		queue_redraw()
 		return
@@ -200,6 +226,14 @@ func tick(dt: float) -> void:
 	queue_redraw()
 
 func player_control(dt: float) -> void:
+	var chord := Input.is_action_pressed("jump") and Input.is_action_pressed("attack")
+	if not chord:
+		throw_chord_latched = false
+	var early_weapon_attack := weapon_attack and attack_time > 0 and attack_progress() < 0.2
+	if chord and not throw_chord_latched and not weapon.is_empty() and (attack_time <= 0 or early_weapon_attack) and (cooldown <= 0 or early_weapon_attack) and (Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("attack")):
+		throw_chord_latched = true
+		throw_weapon()
+		return
 	var direction: Vector2 = Input.get_vector("left", "right", "up", "down")
 	if run_attack:
 		if Input.is_action_just_pressed("ultimate"):
@@ -241,8 +275,12 @@ func update_running(horizontal: float, dt: float) -> void:
 	previous_horizontal = pressed
 
 func reset_running() -> void:
+	cancel_pickup()
+	weapon_attack = false
 	running = false
 	run_attack = false
+	prop_attack = false
+	boss_dodge_time = 0
 	tap_time = 0
 	tap_direction = 0
 	previous_horizontal = 0
@@ -267,6 +305,7 @@ func can_use_ultimate() -> bool:
 	return kind == -1 and not dead and thrown_time <= 0 and getup_time <= 0 and not is_instance_valid(grabbed_by)
 
 func enemy_control(dt: float) -> void:
+	ai_weapon_cooldown = maxf(0, ai_weapon_cooldown - dt)
 	if run_attack:
 		return
 	var target = game.player
@@ -276,6 +315,13 @@ func enemy_control(dt: float) -> void:
 		reset_running()
 		return
 	var delta: Vector2 = target.position - position
+	if is_boss and boss_dodge_time > 0:
+		boss_dodge_time = maxf(0, boss_dodge_time - dt)
+		position += velocity * dt
+		moving = true
+		if boss_dodge_time == 0:
+			velocity = Vector2.ZERO
+		return
 	var committed: bool = game.combat_director.allowed(self)
 	var on_flank: bool = (position.x - target.position.x) * game.combat_director.side_for(self) > 18
 	if (running or rush_windup > 0) and not committed:
@@ -312,17 +358,35 @@ func enemy_control(dt: float) -> void:
 		return
 	if attack_time > 0:
 		return
+	if seek_weapon(dt):
+		return
+	if not weapon.is_empty() and committed and ai_weapon_throw_cooldown <= 0 and cooldown <= 0 and absf(delta.y) < game.MELEE_DEPTH and absf(delta.x) >= 100 and absf(delta.x) <= 260:
+		ai_weapon_throw_cooldown = randf_range(6, 12)
+		if randf() < 0.35:
+			facing = signf(delta.x)
+			throw_weapon()
+			return
 	facing = 1 if delta.x >= 0 else -1
-	var speed: float = [79.0, 125.0, 53.0][kind]
+	var speed: float = 105.0 if is_boss else ENEMY_SPEEDS[kind]
 	var in_lane: bool = absf(delta.y) < game.MELEE_DEPTH
+	if is_boss and boss_dodge_cooldown <= 0 and target.attack_time > 0 and target.height < 20 and absf(delta.x) < 85 and in_lane and delta.x * target.facing < 0:
+		var away_y := -1.0 if position.y > (game.WALK_MIN_Y + game.WALK_MAX_Y) / 2 else 1.0
+		velocity = Vector2(-signf(delta.x) * 45, away_y * 150)
+		boss_dodge_time = 0.18
+		boss_dodge_cooldown = 1.6
+		position += velocity * dt
+		moving = true
+		ai_wait = 0
+		return
 	if committed and on_flank and cooldown <= 0 and ai_wait <= 0 and ai_special_cooldown <= 0 and in_lane and target.invincible <= 0:
 		if absf(delta.x) < 25 and grapple.try_start():
-			ai_special_cooldown = 5.0
+			ai_special_cooldown = 2.2 if is_boss else 5.0
 			return
-		if ai_slide_cooldown <= 0 and absf(delta.x) >= 100 and absf(delta.x) <= 220 and target.height == 0:
-			rush_windup = 0.4
-			ai_slide_cooldown = 12.0
-			ai_special_cooldown = 5.0
+		var prefer_jump := kind == 1 and ai_jump_cooldown <= 0 and absf(delta.x) <= 175
+		if ai_slide_cooldown <= 0 and not prefer_jump and absf(delta.x) >= 100 and absf(delta.x) <= 220 and target.height == 0:
+			rush_windup = 0.22 if is_boss else 0.4
+			ai_slide_cooldown = 4.0 if is_boss else ENEMY_SLIDE_INTERVALS[kind]
+			ai_special_cooldown = 2.2 if is_boss else 5.0
 			velocity = Vector2.ZERO
 			return
 	if committed and on_flank and ai_jump_cooldown <= 0 and cooldown <= 0 and ai_wait <= 0 and in_lane:
@@ -331,12 +395,12 @@ func enemy_control(dt: float) -> void:
 		if chase_jump or dodge_jump:
 			var momentum := Vector2(facing * speed * 1.25, clampf(delta.y * 2, -16, 16)) if chase_jump else Vector2.ZERO
 			takeoff(momentum, [250.0, 260.0, 240.0][kind])
-			ai_jump_cooldown = [7.6, 5.6, 10.0][kind]
+			ai_jump_cooldown = 4.5 if is_boss else ENEMY_JUMP_INTERVALS[kind]
 			return
-	var range_x: float = 65 if kind == 2 else 50
+	var range_x: float = 90 if not weapon.is_empty() else (65 if kind == 2 or is_boss else 50)
 	if committed and on_flank and absf(delta.x) < range_x and in_lane:
 		if cooldown <= 0 and ai_wait <= 0:
-			windup = 0.5 if kind == 2 else 0.3
+			windup = 0.16 if is_boss else (0.5 if kind == 2 else 0.3)
 			if combo_window > 0 and combo < 2:
 				windup *= 0.6
 	else:
@@ -355,10 +419,26 @@ func enemy_control(dt: float) -> void:
 func begin_attack() -> void:
 	if dead or getup_time > 0 or is_instance_valid(grabbed_by) or grapple.active() or thrown_time > 0:
 		return
+	if is_instance_valid(pickup_target):
+		return
+	if kind == -1 and height == 0 and attack_time <= 0:
+		var item = game.nearby_pickup(self)
+		if item != null:
+			begin_pickup(item)
+			return
 	run_attack = running and height == 0
+	weapon_attack = false
+	prop_attack = false
+	if kind == -1 and height == 0 and not run_attack:
+		for prop in game.props:
+			var delta: Vector2 = prop.position - position
+			if not prop.dead and delta.x * facing >= 0 and delta.x * facing < 89 and absf(delta.y) < game.MELEE_DEPTH:
+				prop_attack = true
+				break
 	running = false
 	tap_time = 0
 	air_attack = height > 0
+	weapon_attack = not weapon.is_empty() and not air_attack and not run_attack and not prop_attack
 	combo = 0 if run_attack else ((combo + 1) % 3 if combo_window > 0 else 0)
 	if run_attack:
 		velocity = Vector2(facing * SLIDE_SPEED, 0)
@@ -366,23 +446,63 @@ func begin_attack() -> void:
 		game.dust(position)
 	attack_duration = visual.duration(attack_motion())
 	if kind >= 0:
-		attack_duration *= [1.0, 0.9, 1.22][kind]
+		attack_duration *= 0.8 if is_boss else [1.0, 0.9, 1.22][kind]
 	if run_attack:
 		slide_animation_duration = attack_duration
 		attack_duration = maxf(attack_duration, SLIDE_SPEED / SLIDE_BRAKE + 0.08)
 	combo_window = attack_duration + (1.1 if kind >= 0 else 0.45)
 	attack_time = attack_duration
-	cooldown = attack_duration + (0.12 if kind >= 0 else 0.015)
+	cooldown = attack_duration + (0.04 if is_boss else (0.12 if kind >= 0 else 0.015))
 	if kind >= 0:
-		ai_wait = 0.12 if combo < 2 else 0.8
+		ai_wait = (0.04 if combo < 2 else 0.18) if is_boss else (0.12 if combo < 2 else 0.8)
 	hits.clear()
 	game.sound("swing")
 	update_visual(0)
 
 func attack_motion() -> String:
-	if run_attack and visual.sheets.has("runslide"):
+	if (run_attack or prop_attack) and visual.sheets.has("runslide"):
 		return "runslide"
+	if weapon_attack:
+		return "punch_weapon"
 	return "jump_attack" if air_attack else "attack_%02d" % (combo + 1)
+
+func begin_pickup(item: Node2D) -> void:
+	reset_running()
+	pickup_target = item
+	pickup_elapsed = 0
+	pickup_applied = false
+	velocity = Vector2.ZERO
+	moving = false
+	attack_buffer = 0
+	update_visual(0)
+
+func cancel_pickup() -> void:
+	pickup_target = null
+	pickup_elapsed = 0
+	pickup_applied = false
+
+func tick_pickup(dt: float) -> void:
+	pickup_elapsed += dt
+	var duration: float = visual.duration("pickup")
+	if not pickup_applied:
+		if pickup_target.dead or position.distance_to(pickup_target.position) > 38:
+			cancel_pickup()
+			return
+		if pickup_elapsed >= duration * 0.55:
+			if pickup_target.weapon.is_empty():
+				hp = minf(max_hp, hp + max_hp * (0.5 if pickup_target.beer else 0.75))
+			else:
+				weapon = pickup_target.weapon
+				weapon_durability = pickup_target.weapon_durability
+			pickup_target.dead = true
+			pickup_target.hide()
+			pickup_applied = true
+			game.sound("power")
+	update_visual(0)
+	if pickup_elapsed >= duration:
+		cancel_pickup()
+		cooldown = 0.08
+		update_visual(0)
 
 func attack_progress() -> float:
 	# Keep contact timing while the slide continues through recovery.
@@ -390,6 +510,8 @@ func attack_progress() -> float:
 	return clampf((attack_duration - attack_time) / duration, 0, 1)
 
 func attack_is_active() -> bool:
+	if weapon_attack and weapon.is_empty():
+		return false
 	if attack_time <= 0:
 		return false
 	var name := attack_motion()
@@ -408,6 +530,9 @@ func update_visual(dt: float) -> void:
 	if dead:
 		motion = "death"
 		progress = death_time / visual.duration("death")
+	elif is_instance_valid(pickup_target):
+		motion = "pickup"
+		progress = pickup_elapsed / visual.duration("pickup")
 	elif victory_time >= 0:
 		motion = "victory" if visual.sheets.has("victory") else "jump"
 		progress = fposmod(victory_time, visual.duration(motion)) / visual.duration(motion)
@@ -442,6 +567,7 @@ func update_visual(dt: float) -> void:
 	visual.visible = kind == -1 or not dead or death_time < 1.65
 	if dead and kind >= 0:
 		visual.modulate.a = clampf((1.65 - death_time) / 0.35, 0, 1)
+	visual.weapon = weapon
 	visual.update_pose(motion, dt, facing, progress)
 	if not dead and is_instance_valid(grabbed_by):
 		visual.source_frame = 3
@@ -451,34 +577,132 @@ func update_visual(dt: float) -> void:
 		grapple.pose()
 
 func strike() -> void:
+	if weapon_attack and weapon.is_empty():
+		return
 	var targets: Array = (game.enemies + game.props) if kind == -1 else [game.player]
 	for target in targets:
 		if target.dead or target in hits:
 			continue
 		var delta: Vector2 = target.position - position
-		var reach := 89.0 if air_attack or combo == 2 else 70.0
-		if kind == 2:
+		var reach := 105.0 if attack_motion() == "punch_weapon" else (89.0 if air_attack or combo == 2 or prop_attack else 70.0)
+		if kind == 2 and not weapon_attack:
 			reach = 80
 		if delta.x * facing > -12 and delta.x * facing < reach and absf(delta.y) < game.MELEE_DEPTH:
 			var height_difference: float = absf(height - target.height)
 			if height_difference > (112.0 if air_attack else 40.0):
 				continue
 			hits.append(target)
+			var hp_before: float = target.hp
 			var damage := 16.0
 			if kind == -1:
 				damage = 29 if combo == 2 or air_attack or run_attack else 19
+				if attack_motion() == "punch_weapon":
+					damage = 42 if weapon == "pipe" else 36
+			elif is_boss:
+				damage = 36
 			elif kind == 1:
 				damage = 10
-			elif kind == 2 or is_boss:
+			elif kind == 2:
 				damage = 26
-			if (run_attack or air_attack) and target.has_method("launch_away"):
-				target.launch_away(damage, facing)
+			if kind >= 0 and weapon_attack:
+				damage *= 1.5
+			if launches_on_special() and target.has_method("launch_away"):
+				target.launch_away(damage, facing, true, self)
 			else:
 				target.hurt(damage, facing, combo == 2 or air_attack or kind == 2)
+			if weapon_attack and target.has_method("launch_away") and target.hp < hp_before:
+				weapon_durability = maxi(0, weapon_durability - weapon_hit_cost(target))
+				if weapon_durability == 0:
+					break_equipped_weapon()
+					break
+
+static func weapon_hit_cost(target: Node2D) -> int:
+	return 50 if target.is_boss else ([10, 20, 30][target.kind] if target.kind >= 0 else 10)
+
+func seek_weapon(dt: float) -> bool:
+	if not weapon.is_empty() or height > 0 or cooldown > 0:
+		return false
+	if not is_instance_valid(ai_weapon_target):
+		if ai_weapon_cooldown > 0:
+			return false
+		ai_weapon_cooldown = randf_range(12, 20)
+		if randf() >= 0.2 or position.distance_to(game.player.position) < 90:
+			return false
+		for item in game.weapons:
+			if not item.dead and not item.weapon_airborne and not item.weapon_broken and position.distance_to(item.position) < 120:
+				ai_weapon_target = item
+				ai_weapon_seek_time = 3
+				break
+	if not is_instance_valid(ai_weapon_target):
+		return false
+	ai_weapon_seek_time -= dt
+	if ai_weapon_target.dead or ai_weapon_target.weapon_airborne or ai_weapon_target.weapon_broken or ai_weapon_seek_time <= 0:
+		ai_weapon_target = null
+		return false
+	var delta: Vector2 = ai_weapon_target.position - position
+	if absf(delta.x) < 28 and absf(delta.y) < game.MELEE_DEPTH:
+		begin_pickup(ai_weapon_target)
+		ai_weapon_target = null
+	else:
+		facing = 1 if delta.x >= 0 else -1
+		position += delta.normalized() * Vector2(ENEMY_SPEEDS[kind], game.DEPTH_SPEED) * dt
+		moving = true
+	return true
+
+func throw_weapon() -> void:
+	var item := release_weapon(facing)
+	if item == null:
+		return
+	item.weapon_thrower = self
+	item.weapon_projectile = true
+	item.weapon_velocity.x = facing * 480
+	item.weapon_lift_speed = 140
+	reset_running()
+	attack_time = 0
+	attack_buffer = 0
+	cooldown = 0.25
+	game.sound("swing")
+	update_visual(0)
+
+func release_weapon(direction: float, broken := false) -> Node2D:
+	if weapon.is_empty():
+		return null
+	var hand := Vector2(20 * facing, -55 - height)
+	if is_instance_valid(visual):
+		var data: Dictionary = visual.definition(visual.motion)
+		var anchor: Array = data.get("pivot_pixels", visual.character_data["pivot_pixels"])
+		var pixel_scale := float(data.get("scale", visual.character_data["scale"]))
+		var grip: Vector2 = visual.weapon_hand_position(visual.motion, visual.source_frame)
+		hand = (grip - Vector2(anchor[0], anchor[1])) * pixel_scale
+		hand.x *= facing
+		hand.y += visual.position.y
+	var item = game.spawn_weapon(position + Vector2(hand.x, 0), weapon)
+	item.weapon_durability = weapon_durability
+	item.height = maxf(15, -hand.y)
+	item.weapon_broken = broken
+	item.weapon_airborne = not broken
+	item.weapon_velocity = Vector2(direction * 150, 0)
+	item.weapon_lift_speed = 220
+	weapon = ""
+	visual.weapon = ""
+	visual.queue_redraw()
+	return item
+
+func break_equipped_weapon() -> void:
+	release_weapon(facing, true)
+	game.sound("hit")
+
+func launches_on_special() -> bool:
+	if kind == -1:
+		return run_attack or air_attack
+	if is_boss:
+		return run_attack or air_attack
+	return (air_attack and kind >= 1) or (run_attack and kind == 2)
 
 func launch_away(damage: float, direction: float, can_hit_others := true, thrower: Node2D = null) -> bool:
-	if dead or invincible > 0 or thrown_time > 0 or getup_time > 0:
+	if dead or invincible > 0 or thrown_time > 0 or (getup_time > 0 and kind == -1):
 		return false
+	release_weapon(direction)
 	hurt(damage, direction, true)
 	velocity = Vector2(direction * THROW_SPEED, 0)
 	height = 25
@@ -514,8 +738,10 @@ func update_flight_impacts(from: Vector2) -> void:
 			flight_hits.append(target)
 
 func hurt(damage: float, direction: float, heavy := false, from_grab := false) -> void:
-	if dead or invincible > 0 or thrown_time > 0 or getup_time > 0:
+	if dead or invincible > 0 or thrown_time > 0 or (getup_time > 0 and kind == -1):
 		return
+	if kind >= 0:
+		getup_time = 0
 	if not from_grab:
 		if grapple.active():
 			grapple.release()
@@ -540,6 +766,7 @@ func hurt(damage: float, direction: float, heavy := false, from_grab := false) -
 		game.combo_hits += 1
 		game.combo_timer = 2.0
 	if hp <= 0:
+		release_weapon(direction)
 		dead = true
 		death_time = 0
 		if kind != -1:

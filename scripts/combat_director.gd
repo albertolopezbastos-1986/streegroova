@@ -94,9 +94,9 @@ func update(dt: float) -> void:
 			turns.erase(enemy)
 			if is_instance_valid(enemy):
 				enemy.windup = 0
-				rested_until[enemy] = clock + randf_range(1.2, 2.0)
+				rested_until[enemy] = clock + (randf_range(0.2, 0.35) if enemy.is_boss else randf_range(1.2, 2.0))
 				last_attacker = enemy
-			next_turn = maxf(next_turn, clock + randf_range(0.35, 0.65))
+			next_turn = maxf(next_turn, clock + (randf_range(0.1, 0.2) if is_instance_valid(enemy) and enemy.is_boss else randf_range(0.35, 0.65)))
 	if game.player.dead or game.player.stun > 0 or game.player.invincible > 0.7 or game.player.thrown_time > 0 or game.player.getup_time > 0 or is_instance_valid(game.player.grabbed_by):
 		return
 	if turns.is_empty() and clock >= next_turn:
@@ -118,7 +118,7 @@ func grant_turn() -> bool:
 		var distance: float = enemy.position.distance_to(game.player.position)
 		if distance > 200:
 			continue
-		var cost := distance + (95.0 if enemy == last_attacker else 0.0)
+		var cost := distance + (95.0 if enemy == last_attacker and not enemy.is_boss else 0.0) - (80.0 if enemy.is_boss else 0.0)
 		if cost < best:
 			best = cost
 			candidate = enemy
@@ -126,6 +126,6 @@ func grant_turn() -> bool:
 		return false
 	turns[candidate] = clock + (3.5 if turns.is_empty() else 1.8)
 	candidate.combo_window = 0
-	candidate.ai_wait = maxf(candidate.ai_wait, 0.15)
+	candidate.ai_wait = maxf(candidate.ai_wait, 0.04 if candidate.is_boss else 0.15)
 	next_start = clock + 0.8
 	return true

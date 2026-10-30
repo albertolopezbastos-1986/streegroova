@@ -19,21 +19,23 @@ func run() -> void:
 	game.set_process(false)
 	game.new_run()
 	await process_frame
-	check(ProjectSettings.get_setting("display/window/size/viewport_height") == 720, "viewport is taller to show the buildings")
+	check(ProjectSettings.get_setting("display/window/size/viewport_height") == 640, "viewport matches the backgrounds' 3:2 aspect ratio")
+	check(is_equal_approx(960.0 / game.VIEW_HEIGHT, game.ENVIRONMENT_SOURCE_SIZE.x / game.ENVIRONMENT_SOURCE_SIZE.y), "viewport preserves native background proportions")
 	check(game.CURB_TOP_Y > game.WALK_MIN_Y and game.CURB_BOTTOM_Y < game.WALK_MAX_Y, "walkable floor spans sidewalk and asphalt")
-	check(game.CURB_TOP_Y - game.FLOOR_BACK_Y == 54, "sidewalk takes half the main floor")
-	check(453 - game.CURB_BOTTOM_Y == 54, "asphalt takes the other half of the main floor")
+	check(is_equal_approx(game.CURB_TOP_Y - game.FLOOR_BACK_Y, 182.0 * 492 / 1536), "sidewalk keeps the image's original height")
+	check(is_equal_approx(game.WALK_MAX_Y - game.CURB_BOTTOM_Y, 60.0 * 492 / 1536), "lower floor uses the remaining image without repeated strips")
 	var hero = game.player
 	hero.invincible = 0
 	check(game.world.scale == Vector2(1.96875, 1.96875), "world has 1.96875x framing")
 	check(is_equal_approx(game.WORLD_ZOOM / 2.625, 0.75), "zoom is exactly 25 percent lower than previous framing")
-	check(is_equal_approx(game.world_to_screen(hero.position).y, 630), "player feet start on the foreground asphalt")
+	check(is_equal_approx(game.world_to_screen(hero.position).y, game.VIEW_HEIGHT - 26 - (game.WALK_MAX_Y - game.START_Y) * game.WORLD_ZOOM), "player feet stay above the bottom HUD")
+	check(is_equal_approx(game.world_to_screen(Vector2(0, 99 + 1024.0 * 492 / 1536)).y, game.VIEW_HEIGHT - 26), "complete background ends exactly at the bottom HUD")
 	check(game.world_to_screen(hero.position).distance_to(hero.global_position) < 0.01, "effects transform matches actor transform")
 	check(is_equal_approx(float(hero.visual.character_data.scale), 0.6), "zoom preserves character's configured sprite scale")
 	for enemy in game.enemies:
 		check(enemy.position.y >= game.WALK_MIN_Y and enemy.position.y <= game.WALK_MAX_Y, "enemy spawns in sidewalk combat lane")
 		check(game.world_to_screen(enemy.position).x < 960, "first encounter is visible at the closer zoom")
-	check(game.WALK_MAX_Y - game.WALK_MIN_Y == 80, "sidewalk allows four times the previous depth travel")
+	check(game.WALK_MAX_Y - game.WALK_MIN_Y == 77, "walking stays inside the complete background")
 	Input.action_press("up")
 	for i in range(160):
 		hero.tick(0.016)
@@ -43,7 +45,7 @@ func run() -> void:
 	hero.tick(0.016)
 	Input.action_release("jump")
 	await process_frame
-	var top := 720.0
+	var top: float = game.VIEW_HEIGHT
 	for i in range(70):
 		hero.tick(0.016)
 		game.update_world_transform()
@@ -55,7 +57,7 @@ func run() -> void:
 	for i in range(160):
 		hero.tick(0.016)
 	Input.action_release("down")
-	check(hero.position.y == game.WALK_MAX_Y and game.world_to_screen(hero.position).y < 694, "foreground movement stays above bottom HUD")
+	check(hero.position.y == game.WALK_MAX_Y and game.world_to_screen(hero.position).y <= game.VIEW_HEIGHT - 26, "foreground movement stays above bottom HUD")
 	hero.facing = 1
 	var target = game.enemies[0]
 	target.position = hero.position + Vector2(45, -game.MELEE_DEPTH - 1)
@@ -80,12 +82,16 @@ func run() -> void:
 	var right_edge: Vector2 = game.world_to_screen(Vector2(game.LEVEL_WIDTH, game.START_Y))
 	check(absf(right_edge.x - 960) < 0.1, "camera uses zoomed viewport width at end of level")
 	hero.position.x = 1000
+	game.camera_x = 0
+	game.camera_peak_x = 0
+	game.left_bound = 30
 	for i in range(160):
 		game.update_game(0.016)
 	game.update_world_transform()
 	check(absf(game.world_to_screen(hero.position).x - game.CAMERA_ANCHOR_X) < 0.1, "scrolling keeps player in the left third of the screen")
 	hero.moving = true
 	hero.velocity = Vector2(-170, 0)
+	var peak: float = game.camera_peak_x
 	var smooth := true
 	for i in range(120):
 		hero.position.x -= 170 * 0.016
@@ -94,14 +100,14 @@ func run() -> void:
 		if absf(game.camera_x - previous) > 15:
 			smooth = false
 	game.update_world_transform()
-	check(game.world_to_screen(hero.position).x > 500, "walking left gives the player more room to see behind")
+	check(game.camera_x >= peak - game.BACKTRACK_DISTANCE, "walking left cannot reopen the previous scenery")
 	check(smooth, "camera changes directional framing smoothly")
 	hero.moving = false
 	hero.velocity = Vector2.ZERO
 	for i in range(180):
 		game.update_camera(0.016)
 	game.update_world_transform()
-	check(absf(game.world_to_screen(hero.position).x - game.CAMERA_LEFT_ANCHOR_X) < 0.1, "stopping preserves left-facing camera margin")
+	check(game.camera_x >= peak - game.BACKTRACK_DISTANCE and hero.position.x >= game.left_bound - 0.01, "stopping preserves the limited backtrack area")
 	hero.moving = true
 	hero.velocity.x = 170
 	for i in range(120):
@@ -114,7 +120,7 @@ func run() -> void:
 	hero.position.x = 30
 	for i in range(180):
 		game.update_camera(0.016)
-	check(absf(game.camera_x) < 0.01, "camera respects the left end of the world")
+	check(game.camera_x >= game.camera_peak_x - game.BACKTRACK_DISTANCE and hero.position.x >= game.left_bound - 0.01, "old areas stay closed after advancing")
 	print("ALL ", checks, " FRAMING CHECKS PASSED")
 	game.queue_free()
 	await process_frame
