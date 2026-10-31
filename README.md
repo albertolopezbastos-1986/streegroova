@@ -1,5 +1,7 @@
 # Street Groova
 
+Los agarres de los enemigos y jefes están desactivados. El jugador conserva sus agarres, golpes de agarre y lanzamientos contra enemigos comunes. Prueba: tests/test_enemy_grab_disabled.gd.
+
 Todas las hojas existentes incluyen ahora una carpeta frames/ con sus cuadros PNG y un preview.gif. [Índice de animaciones y vistas previas](assets/ANIMATION_PREVIEWS.md). Las hojas originales se conservan; regenerar con node scripts/export-animation-previews.mjs y verificar con --check.
 
 Beat 'em up de tres niveles, original inspirado en los arcade de los 90. Hecho en Godot 4, sin dependencias ni recursos externos. Abrí `project.godot` y presioná **F6 sobre `scenes/main.tscn`** o **F5** para jugar.

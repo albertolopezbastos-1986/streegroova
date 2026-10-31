@@ -389,9 +389,6 @@ func enemy_control(dt: float) -> void:
 		ai_wait = 0
 		return
 	if committed and on_flank and cooldown <= 0 and ai_wait <= 0 and ai_special_cooldown <= 0 and in_lane and target.invincible <= 0:
-		if absf(delta.x) < 25 and grapple.try_start():
-			ai_special_cooldown = 2.2 if is_boss else 5.0
-			return
 		var prefer_jump := kind == 1 and ai_jump_cooldown <= 0 and absf(delta.x) <= 175
 		if ai_slide_cooldown <= 0 and not prefer_jump and absf(delta.x) >= 100 and absf(delta.x) <= 220 and target.height == 0:
 			rush_windup = 0.22 if is_boss else 0.4

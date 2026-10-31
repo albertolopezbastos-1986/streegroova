@@ -28,6 +28,8 @@ func active() -> bool:
 
 func try_start() -> bool:
 	var hero := owner_fighter
+	if hero.kind >= 0:
+		return false
 	if active() or retry > 0 or hero.dead or hero.stun > 0 or hero.height > 0 or hero.attack_time > 0 or hero.cooldown > 0 or hero.thrown_time > 0 or hero.getup_time > 0 or is_instance_valid(hero.grabbed_by):
 		return false
 	if not hero.visual.sheets.has("grab_throw"):
