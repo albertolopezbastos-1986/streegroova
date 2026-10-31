@@ -5,6 +5,7 @@ var elapsed := 0.0
 var win_label: Label
 
 func _ready() -> void:
+	get_node("BlackBackdrop").size = get_viewport_rect().size
 	var frame := Vector2(960, ProjectSettings.get_setting("display/window/size/viewport_height"))
 	var background := get_node("Background") as Sprite2D
 	var image_size := background.texture.get_size()

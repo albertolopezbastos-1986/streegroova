@@ -7,6 +7,13 @@
 texture_filter = 1
 script = ExtResource("2_script")
 
+[node name="BlackBackdrop" type="ColorRect" parent="."]
+z_index = -2
+offset_right = 960.0
+offset_bottom = 640.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
 [node name="Background" type="Sprite2D" parent="."]
 z_index = -1
 scale = Vector2(0.6629834, 0.6629834)

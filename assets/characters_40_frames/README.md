@@ -62,3 +62,5 @@ Colocá una hoja PNG por movimiento en su carpeta, conservando el tamaño origin
 La carpeta `animations/runslide/` de Beto, Alito y Cami está preparada para la hoja del golpe durante la carrera. Colocá allí los sprites; su animación se conectará cuando esté disponible la hoja.
 
 Las carpetas `animations/punch_weapon/` de Beto, Alito y Cami están preparadas para el golpe con palo o caño. El juego usa un alias provisional del primer golpe hasta recibir las hojas.
+
+Los tres personajes tienen las carpetas animations/crouch/ y animations/ultimate_air/. La hoja activa de agacharse de Beto tiene 8 cuadros y vive en assets/characters/beto/animations/crouch/. Las carpetas de ulti aérea están listas para recibir sprites propios.

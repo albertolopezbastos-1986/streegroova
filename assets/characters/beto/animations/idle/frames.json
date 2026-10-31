@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/beto/animations/idle/idle.png",
+  "source_sha256": "ed6ad5ea24786cc9240f690f552acdaa8be87ace0698d1fccd552948866c09c7",
+  "frame_size": [
+    200,
+    200
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": null,
+  "runtime_manifest": null,
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 12,
+  "preview_durations": [
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.2833333333333333
+  ],
+  "gif": "assets/characters/beto/animations/idle/preview.gif"
+}

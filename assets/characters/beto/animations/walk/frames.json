@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/beto/animations/walk/walk.png",
+  "source_sha256": "2c6bf28839ded117fa0049966290080d78601042b11b1d8a3fc58235d76ef769",
+  "frame_size": [
+    200,
+    200
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": null,
+  "runtime_manifest": null,
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 12,
+  "preview_durations": [
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.2833333333333333
+  ],
+  "gif": "assets/characters/beto/animations/walk/preview.gif"
+}

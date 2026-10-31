@@ -16,9 +16,9 @@ func collect(game, hero) -> void:
 	hero.attack_time = 0
 	hero.cooldown = 0
 	hero.begin_attack()
-	check(hero.visual.motion == "pickup", "attack near food starts pickup placeholder")
-	hero.tick(0.18)
-	hero.tick(0.18)
+	check(hero.visual.motion == "pickup", "attack near food starts the floor-grab animation")
+	hero.tick(hero.visual.duration("pickup") * 0.51)
+	hero.tick(hero.visual.duration("pickup") * 0.51)
 
 func run() -> void:
 	var game = preload("res://scenes/main.tscn").instantiate()

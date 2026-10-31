@@ -1,0 +1,43 @@
+{
+  "sheet": "assets/characters/beto/animations/jump_attack/flykick.png",
+  "source_sha256": "d80ac4e791eb79e3280d911e9bbc23aefb12eb8f8955b80c2c6b3523e8c42000",
+  "frame_size": [
+    200,
+    200
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/beto/character.json",
+  "preview_indices": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 18,
+  "preview_durations": [
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.25555555555555554
+  ],
+  "gif": "assets/characters/beto/animations/jump_attack/preview.gif"
+}

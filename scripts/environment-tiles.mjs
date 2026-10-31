@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import zlib from 'node:zlib';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 export const WIDTH = 1536, HEIGHT = 1024, OVERLAP = 128;
 export const ids = ['docks-night', 'neon-bar', 'train-interior', 'forest-golden-hour', 'shopping-mall'];
@@ -50,7 +51,7 @@ function copyStrip(from, to, sourceX, targetX, width) {
 }
 
 const [command, id, numberText, source, floorText] = process.argv.slice(2);
-if (command) {
+if (command && process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   if (!ids.includes(id)) throw Error('Unknown environment');
   const number = Number(numberText), tile = n => `assets/environment/tiles/${id}/${String(n).padStart(2, '0')}.png`;
   if (number < 1 || number > 5) throw Error('Expected tile 1–5');

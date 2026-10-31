@@ -498,7 +498,8 @@ func tick_pickup(dt: float) -> void:
 		if pickup_target.dead or position.distance_to(pickup_target.position) > 38:
 			cancel_pickup()
 			return
-		if pickup_elapsed >= duration * 0.55:
+		var collect_progress: float = visual.definition("pickup").get("collect_progress", 0.55)
+		if pickup_elapsed >= duration * collect_progress:
 			if pickup_target.weapon.is_empty():
 				hp = minf(max_hp, hp + max_hp * (0.5 if pickup_target.beer else 0.75))
 			else:

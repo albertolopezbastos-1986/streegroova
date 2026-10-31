@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/beto/animations/hurt/damage.png",
+  "source_sha256": "8384a1b76025e8120d31555d822c6792a6384e0c14d9b0afab8e3c7c35ee0571",
+  "frame_size": [
+    200,
+    200
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/beto/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 10,
+  "preview_durations": [
+    0.1,
+    0.1,
+    0.1,
+    0.1,
+    0.1,
+    0.1,
+    0.1,
+    0.1,
+    0.30000000000000004
+  ],
+  "gif": "assets/characters/beto/animations/hurt/preview.gif"
+}

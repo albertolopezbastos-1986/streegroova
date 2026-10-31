@@ -1,0 +1,47 @@
+{
+  "sheet": "assets/characters/beto/animations/runslide/runslide.png",
+  "source_sha256": "ce542783680ddc79eff2e54bb492e531e68c3982de6b63f065b967b27ed16b7a",
+  "frame_size": [
+    200,
+    200
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 8,
+  "runtime_manifest": "assets/characters/beto/character.json",
+  "preview_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 24,
+  "preview_durations": [
+    0.041666666666666664,
+    0.041666666666666664,
+    0.041666666666666664,
+    0.041666666666666664,
+    0.041666666666666664,
+    0.041666666666666664,
+    0.041666666666666664,
+    0.24166666666666667
+  ],
+  "gif": "assets/characters/beto/animations/runslide/preview.gif"
+}

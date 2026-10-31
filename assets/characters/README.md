@@ -10,6 +10,8 @@ assets/characters/
     character.json
     animations/
       idle/idle.png
+      crouch/crouch.png
+      pickup/pickup.png
       walk/walk.png
       run/
       grab_throw/

@@ -113,9 +113,9 @@ func run() -> void:
 	enemy.ai_weapon_target = item
 	enemy.ai_weapon_seek_time = 3
 	assert(enemy.seek_weapon(0.016))
-	enemy.tick(0.2)
+	enemy.tick(enemy.visual.duration("pickup") * 0.51)
 	assert(enemy.weapon == "wood" and item.dead)
-	enemy.tick(0.2)
+	enemy.tick(enemy.visual.duration("pickup") * 0.51)
 	hero.position = enemy.position + Vector2(50, 0)
 	hero.invincible = 0
 	enemy.facing = 1

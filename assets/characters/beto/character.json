@@ -514,6 +514,130 @@
         5,
         6
       ]
+    },
+    "crouch": {
+      "path": "animations/crouch",
+      "file": "crouch.png",
+      "format": "sheet",
+      "fps": 24,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 8,
+      "sheet_columns": 4,
+      "sheet_rows": 2,
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "active_hit_frames": null
+    },
+    "pickup": {
+      "path": "animations/pickup",
+      "file": "pickup.png",
+      "format": "sheet",
+      "fps": 48,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 11,
+      "sheet_columns": 4,
+      "sheet_rows": 3,
+      "frame_order": "row_major",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        10,
+        9,
+        8,
+        7,
+        6,
+        5,
+        4,
+        3,
+        2,
+        1,
+        0
+      ],
+      "active_hit_frames": [],
+      "collect_progress": 0.5,
+      "weapon_hand_frames": [
+        [
+          133,
+          67.5
+        ],
+        [
+          132,
+          75.5
+        ],
+        [
+          135,
+          86
+        ],
+        [
+          137,
+          96.5
+        ],
+        [
+          138,
+          112
+        ],
+        [
+          138,
+          114.5
+        ],
+        [
+          137,
+          120
+        ],
+        [
+          140,
+          126.5
+        ],
+        [
+          115,
+          155
+        ],
+        [
+          123,
+          173
+        ],
+        [
+          116,
+          177
+        ]
+      ],
+      "placeholder": false,
+      "weapon_horizontal_frames": [
+        8,
+        9,
+        10
+      ]
+    },
+    "ultimate_air": {
+      "source_animation": "ultimate",
+      "placeholder": true,
+      "notes": "Accion aerea conectada. Carpeta animations/ultimate_air preparada para su hoja propia."
     }
   },
   "reference": "source/betopixel.png",

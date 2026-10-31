@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/beto/animations/jump/jump.png",
+  "source_sha256": "5b83779effd0de25d00275b0829b65d8422e9d44b77eae42be5bb563936bdeb3",
+  "frame_size": [
+    200,
+    200
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/beto/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 10,
+  "preview_durations": [
+    0.022500000000000003,
+    0.022500000000000003,
+    0.022499999999999996,
+    0.02250000000000001,
+    0.22499999999999998,
+    0.225,
+    0.18000000000000008,
+    0.13499999999999993,
+    0.24500000000000005
+  ],
+  "gif": "assets/characters/beto/animations/jump/preview.gif"
+}

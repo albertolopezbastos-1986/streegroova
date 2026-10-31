@@ -64,9 +64,9 @@ func run() -> void:
 	hero.cooldown = 0
 	hero.invincible = 0
 	hero.begin_attack()
-	hero.tick(0.2)
+	hero.tick(hero.visual.duration("pickup") * 0.51)
 	assert(hero.weapon == "pipe" and hero.weapon_durability == 70)
-	hero.tick(0.2)
+	hero.tick(hero.visual.duration("pickup") * 0.51)
 	hero.invincible = 0
 	hero.hurt(1, 1)
 	assert(hero.weapon == "pipe")

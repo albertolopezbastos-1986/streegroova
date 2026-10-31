@@ -10,6 +10,9 @@ func run() -> void:
 	game.new_run(true)
 	await process_frame
 	var hero = game.player
+	assert(hero.visual.sheets["pickup"] != hero.visual.sheets["crouch"])
+	assert(hero.visual.definition("pickup")["frame_count"] == 11)
+	assert(not hero.visual.definition("pickup")["placeholder"])
 	hero.position = Vector2(400, 420)
 	hero.hp = 20
 	game.drop_food(hero.position)
@@ -27,9 +30,13 @@ func run() -> void:
 	hero.stun = 0
 	hero.cooldown = 0
 	hero.begin_attack()
-	hero.tick(0.2)
+	var pickup_duration: float = hero.visual.duration("pickup")
+	hero.tick(pickup_duration * 0.49)
+	assert(not food.dead and hero.hp == 19)
+	hero.tick(pickup_duration * 0.02)
 	assert(hero.hp == 94 and food.dead)
-	hero.tick(0.2)
+	assert(hero.visual.source_frame == 10)
+	hero.tick(pickup_duration * 0.51)
 	assert(hero.pickup_target == null)
 	for kind in ["wood", "pipe"]:
 		var item = game.spawn_weapon(hero.position, kind)
@@ -39,9 +46,9 @@ func run() -> void:
 		assert(not item.dead)
 		hero.begin_attack()
 		assert(hero.visual.motion == "pickup" and hero.weapon != kind)
-		hero.tick(0.2)
+		hero.tick(pickup_duration * 0.51)
 		assert(item.dead and hero.weapon == kind and hero.visual.weapon == kind)
-		hero.tick(0.2)
+		hero.tick(pickup_duration * 0.51)
 		hero.cooldown = 0
 		hero.begin_attack()
 		assert(hero.attack_motion() == "punch_weapon")

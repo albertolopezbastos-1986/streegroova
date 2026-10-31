@@ -1,5 +1,7 @@
 # Street Groova
 
+Todas las hojas existentes incluyen ahora una carpeta frames/ con sus cuadros PNG y un preview.gif. [Índice de animaciones y vistas previas](assets/ANIMATION_PREVIEWS.md). Las hojas originales se conservan; regenerar con node scripts/export-animation-previews.mjs y verificar con --check.
+
 Beat 'em up de tres niveles, original inspirado en los arcade de los 90. Hecho en Godot 4, sin dependencias ni recursos externos. Abrí `project.godot` y presioná **F6 sobre `scenes/main.tscn`** o **F5** para jugar.
 
 Para generar la versión Web desde la terminal, como en Groova Invaders:
@@ -163,9 +165,9 @@ El concierto YOU WIN! ignora botones durante sus primeros 4 segundos visibles. D
 
 El escenario Calle original vuelve a usar `neighborhood-pixel.png`, su ancho de repetición de 492 unidades, fachadas, vereda, cordón, asfalto, juntas y decoración; el PNG se dibuja completo con escala uniforme. Los otros cinco escenarios conservan sus recorridos conectados.
 
-La comida y las armas del suelo se recogen pulsando golpe a menos de 32 unidades y en la misma franja. No se recogen al tocarlas. `pickup` usa temporalmente slide sin desplazamiento ni daño; el objeto se obtiene al 55% de la secuencia y un golpe recibido puede interrumpir la recogida. La comida queda si la vida está completa. Palos y caños aparecen en el suelo y también se pueden crear desde los botones PALO/CAÑO de debug; quedan equipados en la mano derecha durante las animaciones hasta recibir un lanzamiento. El agarre visual sigue anclajes por cuadro detectados desde el sprite; `weapon_hand_frames` en la animación permite indicar coordenadas [x,y] exactas para futuros sprites.
+La comida y las armas del suelo se recogen pulsando golpe a menos de 32 unidades y en la misma franja. No se recogen al tocarlas. `pickup` usa la animación de agacharse, con bajada y subida, sin desplazamiento ni daño; el objeto se obtiene al 50% de la secuencia, con la mano abajo y un golpe recibido puede interrumpir la recogida. La comida queda si la vida está completa. Palos y caños aparecen en el suelo y también se pueden crear desde los botones PALO/CAÑO de debug; quedan equipados en la mano derecha durante las animaciones hasta recibir un lanzamiento. El agarre visual sigue anclajes por cuadro detectados desde el sprite; `weapon_hand_frames` en la animación permite indicar coordenadas [x,y] exactas para futuros sprites.
 
-El ataque armado usa `punch_weapon`, provisionalmente el primer golpe, con alcance 105 y daño 36 (tablón) / 42 (caño), superior a los golpes comunes de 19/29. Las carpetas `animations/punch_weapon/` existen para Beto, Alito y Cami en los conjuntos original, 20 y 40 cuadros. Reemplazar el alias por la futura hoja permite conectar su animación propia. La recogida tiene un alias separado `pickup` para sustituir su placeholder después.
+El ataque armado usa `punch_weapon`, provisionalmente el primer golpe, con alcance 105 y daño 36 (tablón) / 42 (caño), superior a los golpes comunes de 19/29. Las carpetas `animations/punch_weapon/` existen para Beto, Alito y Cami en los conjuntos original, 20 y 40 cuadros. Reemplazar el alias por la futura hoja permite conectar su animación propia. La recogida usa una hoja `pickup` propia: ocho cuadros de bajada y tres nuevos extendiendo la mano al piso, seguidos de la vuelta en sentido inverso.
 
 STAGE CLEAR usa un panel al 65% del tamaño anterior, desplazado hacia arriba y con menos oscurecimiento; el personaje también festeja entre niveles. Validación de recogidas y armas: `godot --headless --path . --script tests/test_pickups_weapons.gd`.
 
@@ -186,3 +188,11 @@ El retroceso se limita continuamente a 240 unidades desde el mayor avance de cá
 El tablón lanzado consume 50 puntos de durabilidad al impactar contra cualquier personaje. Con 100 puntos resiste dos impactos lanzados; el segundo lo rompe. Sus golpes en la mano conservan el desgaste por tier.
 
 Los jefes no pueden ser agarrados. Reciben daño de patadas, slides, armas lanzadas y cuerpos en vuelo, pero esos impactos no los lanzan; sólo la ulti puede hacerlos salir volando. Un arma lanzada que golpea a un jefe igualmente se detiene y consume durabilidad. Prueba: tests/test_boss_launch_immunity.gd.
+
+Atajo de prueba: 0 (también numérico) completa el nivel actual con celebración, cartel y cuenta regresiva normales. Se habilita con la propiedad exportada `enable_level_skip` del nodo principal, activada por defecto; al desactivarla la tecla no salta niveles. En debug, 0 conserva su función de matar enemigos sin completar un nivel. Prueba: tests/test_level_skip.gd.
+
+La animación base de agacharse tiene ocho cuadros, con el primero tomado del idle original y los siguientes creados con image_gen. El jugador sólo se agacha al pulsar golpe cerca de comida o de un arma para recogerla. No hay tecla de agachado independiente. [Sprites, GIF y prompts](assets/characters/beto/animations/crouch/README.md). Prueba: tests/test_crouch.gd.
+
+La recogida de comida y armas usa ahora los dibujos de agacharse: baja, obtiene el objeto y vuelve a levantarse. Los conjuntos original, 20 y 40 tienen carpetas crouch y ultimate_air para Beto, Alito y Cami. La ulti aérea sigue usando el alias provisional hasta recibir su hoja dedicada.
+
+La recogida completa el gesto con tres cuadros nuevos de la mano bajando, abriendo los dedos y cerrándolos junto al suelo. El contacto obtiene el objeto al 50% de la secuencia; después se retira el brazo y Beto se levanta. [Animación y prompts](assets/characters/beto/animations/pickup/README.md).

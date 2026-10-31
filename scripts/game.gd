@@ -1,5 +1,7 @@
 extends Node2D
 
+@export var enable_level_skip := true
+
 const Breakable = preload("res://scripts/breakable.gd")
 const CombatDirector = preload("res://scripts/combat_director.gd")
 const Fighter = preload("res://scripts/fighter.gd")
@@ -679,6 +681,10 @@ func _input(event: InputEvent) -> void:
 			return
 		character_select.handle_input(event)
 		return
+	if enable_level_skip and not debug_room and state == "play" and event is InputEventKey and event.pressed and not event.echo and event.physical_keycode in [KEY_0, KEY_KP_0]:
+		skip_current_level()
+		get_viewport().set_input_as_handled()
+		return
 	if debug_room and event is InputEventKey and event.pressed and not event.echo:
 		if state == "play" and event.physical_keycode == KEY_O:
 			open_debug_items()
@@ -883,6 +889,18 @@ func keep_enemies_in_play_area() -> void:
 		enemy.position.y = clampf(enemy.position.y, WALK_MIN_Y, WALK_MAX_Y)
 		enemy.z_index = int(enemy.position.y)
 
+func skip_current_level() -> void:
+	if not enable_level_skip or debug_room or state != "play" or player.dead:
+		return
+	for enemy in enemies:
+		enemy.grapple.release()
+		enemy.dead = true
+		enemy.hide()
+	ult_time = 0
+	player.ultimate_pose = 0
+	stage = WAVE_COUNT - 1
+	complete_level()
+
 func complete_level() -> void:
 	mobile_controls.release_all()
 	combat_director.reset()
@@ -1019,7 +1037,6 @@ func draw_original_street_tile(x: float, tile_width: float, index: int) -> void:
 	rect(x, 99, 1, 240, Color("4c4d52"))
 	for bracket in range(8):
 		rect(x - 3, 118 + bracket * 28, 7, 2, Color("282c35"))
-	label_at("GROOVA", Vector2(x + 361, 193), 20, Color("dfb179"))
 
 func draw_environment_tile(x: float, tile_width: float, index: int) -> void:
 	draw_background_image(environment_tile_texture(background_index, index), x, tile_width)
@@ -1064,31 +1081,40 @@ func draw_overlay() -> void:
 	if ult_time > 0:
 		canvas.draw_rect(Rect2(0, 0, 960, VIEW_HEIGHT), Color(0.015, 0.02, 0.08, 0.72))
 		var center: Vector2 = world_to_screen(player.position - Vector2(0, 45 + player.height))
-		canvas.draw_circle(center, (85 + sin(time * 30) * 8) * WORLD_ZOOM, Color(0.3, 1, 0.9, 0.10))
-		canvas.draw_arc(center, (1.6 - ult_time) * 600 * WORLD_ZOOM, 0, TAU, 96, MINT, 5)
+		var gold := Color("ffd15c")
+		var radius := (85 + sin(time * 30) * 8) * WORLD_ZOOM
+		var wave_radius := maxf(1, (1.6 - ult_time) * 600 * WORLD_ZOOM)
+		for glow in range(4, 0, -1):
+			canvas.draw_circle(center, radius + glow * 7, Color(gold, 0.025))
+			canvas.draw_arc(center, wave_radius, 0, TAU, 96, Color(gold, 0.035 * (5 - glow)), 5 + glow * 5)
+		canvas.draw_circle(center, radius, Color(gold, 0.13))
+		canvas.draw_arc(center, radius, 0, TAU, 96, Color(gold, 0.6), 2)
+		canvas.draw_arc(center, wave_radius, 0, TAU, 96, gold, 5)
 		# Draw the posed hero above the darkened scene.
 		player.z_index = 1001
-		overlay_text(canvas, "G R O O V A   B R E A K", Vector2(235, 172), 32, MINT)
+		var title := "G R O O V A   B R E A K"
+		var title_at := Vector2(235, 172)
+		for glow_offset in [Vector2(-3, 0), Vector2(3, 0), Vector2(0, -3), Vector2(0, 3), Vector2(-1, -1), Vector2(1, 1)]:
+			canvas.draw_string(font, title_at + glow_offset, title, HORIZONTAL_ALIGNMENT_LEFT, -1, ArcadeUI.font_size(32), Color(gold, 0.16))
+		overlay_text(canvas, title, title_at, 32, gold)
 	else:
 		player.z_index = int(player.position.y)
 	draw_hud(canvas)
 	if state == "play":
-		if not debug_room and banner_time > 0 and player.height < 10 and not enemies.any(func(e): return not e.dead and e.height > 10):
-			overlay_text(canvas, ("%02d / EL JEFE DEL BARRIO" % WAVE_COUNT if stage == WAVE_COUNT - 1 else "%02d / EL DISTRITO NEON" % (stage + 1)), Vector2(300, 127), 21, CREAM)
 		if transition > 0 and stage < WAVE_COUNT - 1 and int(transition / 0.5) % 2 == 0:
 			var go_size := 72
 			var go_width := font.get_string_size("GO", HORIZONTAL_ALIGNMENT_LEFT, -1, ArcadeUI.font_size(go_size)).x
-			var arrow_x := 940.0 - 160.0
+			var arrow_x := 940.0 - 98.0
 			overlay_text(canvas, "GO", Vector2(arrow_x - 10 - go_width, 196), go_size, Color.WHITE)
-			canvas.draw_rect(Rect2(arrow_x, 160, 124, 18), Color.WHITE)
-			canvas.draw_colored_polygon(PackedVector2Array([Vector2(arrow_x + 118, 138), Vector2(940, 169), Vector2(arrow_x + 118, 200)]), Color.WHITE)
+			canvas.draw_rect(Rect2(arrow_x, 160, 62, 18), Color.WHITE)
+			canvas.draw_colored_polygon(PackedVector2Array([Vector2(arrow_x + 56, 138), Vector2(940, 169), Vector2(arrow_x + 56, 200)]), Color.WHITE)
 		if is_instance_valid(player.grabbed_by):
 			var grip: RefCounted = player.grabbed_by.grapple
 			overlay_centered(canvas, "ZAFATE! PULSA GOLPE, SALTO O DIRECCIONES", 163, 17, Color("f7c47e"))
 			canvas.draw_rect(Rect2(330, 176, 300, 8), Color("30344c"))
 			canvas.draw_rect(Rect2(330, 176, 300.0 * grip.escape_presses / grip.ESCAPE_REQUIRED, 8), MINT)
 		if combo_hits > 1:
-			overlay_text(canvas, "%02d HITS" % combo_hits, Vector2(779, 164), 27, Color("ffc785"))
+			overlay_text(canvas, "%02d HITS" % combo_hits, Vector2(779, 142), 27, Color.WHITE)
 		if respawn_time > 0:
 			overlay_text(canvas, "LEVANTATE. LA NOCHE SIGUE.", Vector2(273, 253), 24, CREAM)
 	if state in ["stage_clear", "victory"] or (state == "fade_out" and not starting_campaign):
@@ -1126,8 +1152,10 @@ func draw_stage_presentation(canvas: Node2D) -> void:
 	canvas.draw_line(Vector2(90, top + 49), Vector2(870, top + 49), Color("3b5660"), 2)
 	overlay_centered(canvas, "STREET GROOVA / ALL STAGES CLEAR" if final else "STREET GROOVA / NIVEL %02d" % (level_index + 1), top + 34, 17, Color("f7c47e"))
 	var color := MINT if sin(presentation_time * 8) > -0.5 else Color("f7c47e")
-	overlay_centered(canvas, "CONGRATULATIONS!" if final else "STAGE CLEAR", top + 112, 65 if final else 76, color)
-	overlay_centered(canvas, "LOS TRES NIVELES COMPLETADOS" if final else "PREPARATE PARA EL NIVEL %02d" % (level_index + 2), top + 157, 20, CREAM)
+	var heading_size := 65 if final else 76
+	var heading_pixels := ArcadeUI.font_size(heading_size)
+	var heading_baseline := top + 133 + (font.get_ascent(heading_pixels) - font.get_descent(heading_pixels)) * 0.5
+	overlay_centered(canvas, "CONGRATULATIONS!" if final else "STAGE CLEAR", heading_baseline, heading_size, color)
 	if final:
 		overlay_centered(canvas, "PUNTOS  %06d" % score, top + 192, 18, Color("f7c47e"))
 	for i in range(18):
@@ -1208,8 +1236,6 @@ func draw_hud(canvas: Node2D) -> void:
 			overlay_centered(canvas, "JEFE DEL BARRIO  %d / %d" % [enemy.hp, enemy.max_hp], 115, 12, CREAM)
 	if not touch_visible and state == "play":
 		canvas.draw_rect(Rect2(0, VIEW_HEIGHT - 26, 960, 26), Color(0.04, 0.06, 0.12, 0.94))
-		overlay_text(canvas, "J GOLPE/RECOGER  CORRIENDO: SLIDE   ESPACIO SALTO   L ULTI", Vector2(24, VIEW_HEIGHT - 16), 12, CREAM)
-		overlay_text(canvas, "H AYUDA / ESC PAUSA / M SONIDO", Vector2(669, VIEW_HEIGHT - 16), 11, CREAM)
 
 func setup_audio() -> void:
 	for i in range(8):

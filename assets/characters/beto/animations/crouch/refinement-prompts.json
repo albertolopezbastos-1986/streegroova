@@ -1,0 +1,28 @@
+{
+  "tool": "image_gen built-in",
+  "transparent_background": true,
+  "selected_source_order": [
+    "original idle frame 0",
+    "near-idle.png",
+    "01.png",
+    "02.png",
+    "mid-crouch.png",
+    "03.png",
+    "04.png",
+    "07.png"
+  ],
+  "records": [
+    {
+      "id": "near-idle",
+      "prompt": "Use case: identity-preserve. Asset type: ONE crisp pixel-art Beto crouch animation frame, with genuine TRANSPARENT ALPHA. Image1 is the EXACT idle sprite to preserve. Make the tiniest possible first anticipation frame for crouching, only about 5% of a crouch: hair top should move from logical y11 to y17 on the200x200 grid. Bend knees just slightly, lower head and torso only SIX logical pixels. Do NOT create a deep crouch. Preserve exact face, head size, hand pose, shirt folds and shoes from image1 as closely as possible. Soles stay at logical y188 and shoe centers x54,x144. Camera and canvas framing unchanged. Same coarse pixel clusters as references, logical200x200 detail enlarged with nearest-style pixels to1280x1280 canvas. No higher-resolution illustration, blur, smoothed outlines, extra details, accessories, floor, shadow, letters, grid or checkerboard. Right-facing full-body sprite with same amount of transparent canvas, NEVER auto-crop, resize or recenter the sprite. This is pose editing of an existing character, not a redesign.",
+      "source": "/home/alberto/.codex/generated_images/01a18abd-de54-7163-9fb2-48e19ae11ce6/exec-f4279370-ad44-4608-a152-bece479b1553.png",
+      "output_hint": "Generated images are saved to /home/alberto/.codex/generated_images/01a18abd-de54-7163-9fb2-48e19ae11ce6 as /home/alberto/.codex/generated_images/01a18abd-de54-7163-9fb2-48e19ae11ce6/exec-f4279370-ad44-4608-a152-bece479b1553.png by default.\nIf you need to use a generated image at another path, copy it and leave the original in place unless the user explicitly asks you to delete it.\nThe generated image is already displayed to the user. There is no need to render it in the final response as a Markdown image or file link."
+    },
+    {
+      "id": "mid-crouch",
+      "prompt": "Use case: identity-preserve. Asset type: ONE crisp pixel-art Beto crouch animation frame, with genuine TRANSPARENT ALPHA. Image1 and Image2 are adjacent accepted animation frames of the same character. Draw ONE intermediate frame exactly HALFWAY between these two poses. Top of hair should lie halfway vertically between them, around logical y52 on the200x200 sprite grid, while shoe soles remain at logical y188. Knees and hips halfway between the two references. Preserve the SAME face, head size, hands, costume, shoes, pixel palette, linework and body proportions, do NOT create a different character. Feet remain locked in the exact same positions in both references. Same coarse pixel clusters as references, logical200x200 detail enlarged with nearest-style pixels to1280x1280 canvas. No higher-resolution illustration, blur, smoothed outlines, extra details, accessories, floor, shadow, letters, grid or checkerboard. Right-facing full-body sprite with same amount of transparent canvas, NEVER auto-crop, resize or recenter the sprite. This is pose editing of an existing character, not a redesign.",
+      "source": "/home/alberto/.codex/generated_images/01a18abd-de54-7163-9fb2-48e19ae11ce6/exec-98535ee3-b4db-4f89-b911-a363ed4d7694.png",
+      "output_hint": "Generated images are saved to /home/alberto/.codex/generated_images/01a18abd-de54-7163-9fb2-48e19ae11ce6 as /home/alberto/.codex/generated_images/01a18abd-de54-7163-9fb2-48e19ae11ce6/exec-98535ee3-b4db-4f89-b911-a363ed4d7694.png by default.\nIf you need to use a generated image at another path, copy it and leave the original in place unless the user explicitly asks you to delete it.\nThe generated image is already displayed to the user. There is no need to render it in the final response as a Markdown image or file link."
+    }
+  ]
+}

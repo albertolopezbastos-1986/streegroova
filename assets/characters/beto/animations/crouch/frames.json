@@ -1,0 +1,62 @@
+{
+  "sheet": "assets/characters/beto/animations/crouch/crouch.png",
+  "source_sha256": "da663c09abd874185d570be231b4b2749f33f6bd9cba9c949cbe332fc08bdf76",
+  "frame_size": [
+    200,
+    200
+  ],
+  "columns": 4,
+  "rows": 2,
+  "frames": 8,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 8,
+  "runtime_manifest": "assets/characters/beto/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    7,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1,
+    0
+  ],
+  "preview_fps": 16,
+  "preview_durations": [
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625
+  ],
+  "gif": "assets/characters/beto/animations/crouch/preview.gif"
+}

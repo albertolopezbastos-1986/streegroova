@@ -87,7 +87,8 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO, 0, Vector2(facing * (-1 if character_data.get("default_facing", "right") == "left" else 1), 1))
 	if not weapon.is_empty():
 		var hand := (weapon_hand_position(name, source_frame) - Vector2(anchor[0], anchor[1])) * pixel_scale
-		var direction := Vector2(1, -0.18) if motion == "punch_weapon" else Vector2(0.2, -1)
+		var horizontal_grip: bool = motion == "punch_weapon" or source_frame in data.get("weapon_horizontal_frames", [])
+		var direction := Vector2(1, -0.18) if horizontal_grip else Vector2(0.2, -1)
 		WeaponArt.draw_weapon(self, weapon, hand, direction.angle())
 	draw_texture_rect_region(sheets[name], Rect2(-Vector2(anchor[0], anchor[1]) * pixel_scale, cell * pixel_scale), region)
 
@@ -113,7 +114,8 @@ func weapon_hand_position(name: String, frame: int) -> Vector2:
 		for x in range(cell.x - 1, 0, -1):
 			var sum_y := 0.0
 			var count := 0
-			for y in range(int(cell.y * 0.24), cell.y):
+			# Ignore warm pixels in shoe highlights when finding the guarded hand.
+			for y in range(int(cell.y * 0.24), ceili(cell.y * 0.82)):
 				var color := image.get_pixel(origin.x + x, origin.y + y)
 				if color.a > 0.5 and color.r > 0.38 and color.r > color.g * 1.2 and color.g > color.b * 1.15:
 					sum_y += y
