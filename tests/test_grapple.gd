@@ -46,24 +46,24 @@ func run() -> void:
 	for i in range(40):
 		hero.tick(0.016)
 		enemy.tick(0.016)
-	check(grab.state == "hold" and hero.visual.source_frame == 8, "player freezes precisely at throw frame eight")
+	check(grab.state == "hold" and hero.visual.source_frame == 2, "player holds the separate grab sheet at frame two")
 	check(enemy.visual.motion == "hurt" and enemy.visual.source_frame == 3, "captive freezes precisely at damage frame three")
 	var start: Vector2 = enemy.position
 	for i in range(60):
 		hero.tick(0.016)
 		enemy.tick(0.016)
-	check(enemy.position == start and hero.visual.source_frame == 8, "both stay frozen while waiting for input")
+	check(enemy.position == start and hero.visual.source_frame == 2, "both stay frozen while waiting for input")
 	var before: float = enemy.hp
 	Input.action_press("attack")
 	hero.tick(0.016)
 	Input.action_release("attack")
 	await process_frame
-	check(grab.state == "punch" and hero.visual.motion == "grab_punch_01", "attack alone chooses first grab punch with placeholder art")
+	check(grab.state == "punch" and hero.visual.motion == "grab_punch_01", "attack alone chooses first grab punch with dedicated knee art")
 	for i in range(40):
 		hero.tick(0.016)
 		enemy.tick(0.016)
 	check(enemy.hp == before - 19 and enemy.grabbed_by == hero, "grab punch deals damage once without releasing enemy")
-	check(grab.state == "hold" and hero.visual.source_frame == 8, "grab punch returns to frozen hold")
+	check(grab.state == "hold" and hero.visual.source_frame == 2, "grab punch returns to frozen hold")
 	Input.action_press("attack")
 	hero.tick(0.016)
 	Input.action_release("attack")

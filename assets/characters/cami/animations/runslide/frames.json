@@ -1,0 +1,41 @@
+{
+  "sheet": "assets/characters/cami/animations/runslide/runslide.png",
+  "source": "assets/characters/cami/animations/runslide/source/runslide-original.png",
+  "source_sha256": "ca960764ccb5ddc11f2c772721f4d167b66ba2836e7f542a26491d2564fbc4d5",
+  "frame_size": [
+    162,
+    245
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "hold_frame": null,
+  "release_frame": null,
+  "runtime_fps": 18,
+  "player_speed": 1,
+  "preview_fps": 18,
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_hold_seconds": 0.2222222222222222,
+  "gif": "assets/characters/cami/animations/runslide/preview.gif"
+}

@@ -85,18 +85,16 @@ En Web, con esa opción vacía, se usa automáticamente el dominio donde está a
 
 ## Configurar el sitio y publicar
 
-`deploy.config.json` contiene el destino provisional solicitado:
+`deploy.config.json` apunta al sitio de producción:
 
 ```json
 {
-  "site": "placeholdernetlify",
-  "url": "https://placeholdernetlify.netlify.app"
+  "site": "streetgroovafighter",
+  "url": "https://streetgroovafighter.netlify.app"
 }
 ```
 
-Este placeholder no crea ni reserva un sitio. Mientras siga así, `npm run deploy` muestra qué falta configurar y termina antes de invocar Netlify. Se puede seguir exportando, haciendo build y probando localmente.
-
-Cuando tengas un sitio para Street Groova, reemplazá `site` por su nombre o ID y `url` por su URL HTTPS real. Alternativamente, usá las variables `NETLIFY_SITE_ID` y `DEPLOY_URL`. La configuración del deploy no cambia la API del juego: en Web el ranking sigue usando el dominio donde se aloja.
+El deploy publica en el sitio existente Street Groova Fighter. Se pueden usar `NETLIFY_SITE_ID` y `DEPLOY_URL` para elegir otro destino explícitamente. En Web el ranking usa el mismo dominio donde se aloja el juego.
 
 Luego ejecutá:
 

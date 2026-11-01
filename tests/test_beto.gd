@@ -70,8 +70,15 @@ func run() -> void:
 	for i in range(12):
 		hero.tick(0.016)
 	check(hero.combo == 1 and hero.visual.motion == "attack_02", "buffered press chains second punch")
+	target.position = hero.position + Vector2(45, 0)
+	target.invincible = 0
+	hero.strike()
 	hero.begin_attack()
-	check(hero.combo == 2 and hero.visual.motion == "attack_03", "third combo move uses guitar sheet")
+	check(hero.combo == 2 and hero.visual.motion == "attack_01", "third combo move repeats first punch")
+	target.invincible = 0
+	hero.strike()
+	hero.begin_attack()
+	check(hero.combo == 3 and hero.visual.motion == "attack_03", "fourth combo move uses guitar sheet")
 	hero.attack_time = 0
 	hero.cooldown = 0
 	hero.combo_window = 0

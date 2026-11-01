@@ -267,7 +267,7 @@ func load_level(remaining_health := -1.0) -> void:
 	stage = 0
 	camera_x = 0
 	camera_peak_x = 0
-	camera_anchor_x = CAMERA_ANCHOR_X
+	camera_anchor_x = CAMERA_ANCHOR_X * screen_width() / 960.0
 	camera_direction = 1
 	left_bound = 30
 	right_bound = INF if debug_room else 850
@@ -279,7 +279,7 @@ func load_level(remaining_health := -1.0) -> void:
 	shake = 0
 	player = Fighter.new()
 	world.add_child(player)
-	player.setup(self, -1, Vector2(CAMERA_ANCHOR_X / WORLD_ZOOM, START_Y), character_pack)
+	player.setup(self, -1, Vector2(CAMERA_ANCHOR_X * screen_width() / 960.0 / WORLD_ZOOM, START_Y), character_pack)
 	player.hp = player.max_hp if remaining_health < 0 else minf(remaining_health, player.max_hp)
 	player.invincible = 1.5
 	if not debug_room:
@@ -781,6 +781,15 @@ func _process(dt: float) -> void:
 	update_world_transform()
 	queue_redraw()
 
+func screen_width() -> float:
+	return get_viewport_rect().size.x if touch_visible else 960.0
+
+func interface_scale() -> float:
+	return minf(1.0, screen_width() / 960.0)
+
+func interface_origin() -> Vector2:
+	return Vector2((screen_width() - 960 * interface_scale()) / 2, 0)
+
 func update_world_transform() -> void:
 	var offset := Vector2(randf_range(-shake, shake), randf_range(-shake, shake))
 	var follow_y := 0.0
@@ -889,9 +898,9 @@ func update_camera(dt: float) -> void:
 	if player.stun <= 0 and player.thrown_time <= 0 and not is_instance_valid(player.grabbed_by) and player.attack_time <= 0:
 		if absf(player.velocity.x) > 5 and (player.moving or player.height > 0):
 			camera_direction = signf(player.velocity.x)
-	var target_anchor := CAMERA_LEFT_ANCHOR_X if camera_direction < 0 else CAMERA_ANCHOR_X
+	var target_anchor := (CAMERA_LEFT_ANCHOR_X if camera_direction < 0 else CAMERA_ANCHOR_X) * screen_width() / 960.0
 	camera_anchor_x = move_toward(camera_anchor_x, target_anchor, dt * 720)
-	var view_width := 960.0 / WORLD_ZOOM
+	var view_width := screen_width() / WORLD_ZOOM
 	var max_camera := INF if debug_room else maxf(0, minf(LEVEL_WIDTH, right_bound) - view_width)
 	var min_camera := minf(max_camera, maxf(0, camera_peak_x - BACKTRACK_DISTANCE))
 	var target_x := clampf(player.position.x - camera_anchor_x / WORLD_ZOOM, min_camera, max_camera)
@@ -946,7 +955,7 @@ func complete_level() -> void:
 	else:
 		state = "victory"
 		# Bring the winner into view for the celebration, independent of stage edges.
-		player.position.x = camera_x + 480.0 / WORLD_ZOOM
+		player.position.x = camera_x + screen_width() * 0.5 / WORLD_ZOOM
 		player.position.y = START_Y
 		player.facing = 1
 		player.victory_time = 0
@@ -1022,12 +1031,12 @@ func _draw() -> void:
 	get_node("Overlay").queue_redraw()
 
 func draw_city() -> void:
-	rect(0, 0, 960, VIEW_HEIGHT, Color("151b29"))
+	rect(0, 0, screen_width(), VIEW_HEIGHT, Color("151b29"))
 	draw_set_transform(world.position, 0, Vector2.ONE * WORLD_ZOOM)
 	var tile_width := ENVIRONMENT_TILE_WIDTH
 	var tile_step := tile_width if background_index == 0 else ENVIRONMENT_TILE_STEP
 	var first := floori((camera_x + 80) / tile_step) - 1
-	var last := ceili((camera_x + 960.0 / WORLD_ZOOM + 80) / tile_step)
+	var last := ceili((camera_x + screen_width() / WORLD_ZOOM + 80) / tile_step)
 	for i in range(first, last + 1):
 		var x := -80.0 + i * tile_step
 		if background_index == 0:
@@ -1035,7 +1044,7 @@ func draw_city() -> void:
 		else:
 			draw_environment_tile(x, tile_width, i)
 	if enemies.filter(func(e): return not e.dead).size() > 0:
-		var visible_width := 960.0 / WORLD_ZOOM
+		var visible_width := screen_width() / WORLD_ZOOM
 		if right_bound >= camera_x and right_bound < camera_x + visible_width:
 			for j in range(4):
 				rect(right_bound, 409 + j * 6, 1, 3, Color("e17e8a"))
@@ -1098,7 +1107,7 @@ func draw_overlay() -> void:
 	for p in particles:
 		canvas.draw_rect(Rect2(world_to_screen(p.pos), Vector2.ONE * p.size * WORLD_ZOOM), p.color)
 	if ult_time > 0:
-		canvas.draw_rect(Rect2(0, 0, 960, VIEW_HEIGHT), Color(0.015, 0.02, 0.08, 0.72))
+		canvas.draw_rect(Rect2(0, 0, screen_width(), VIEW_HEIGHT), Color(0.015, 0.02, 0.08, 0.72))
 		var center: Vector2 = world_to_screen(player.position - Vector2(0, 45 + player.height))
 		var gold := Color("ffd15c")
 		var radius := (85 + sin(time * 30) * 8) * WORLD_ZOOM
@@ -1111,6 +1120,7 @@ func draw_overlay() -> void:
 		canvas.draw_arc(center, wave_radius, 0, TAU, 96, gold, 5)
 		# Draw the posed hero above the darkened scene.
 		player.z_index = 1001
+		canvas.draw_set_transform(interface_origin(), 0, Vector2.ONE * interface_scale())
 		var title := "G R O O V A   B R E A K"
 		var title_at := Vector2(235, 172)
 		for glow_offset in [Vector2(-3, 0), Vector2(3, 0), Vector2(0, -3), Vector2(0, 3), Vector2(-1, -1), Vector2(1, 1)]:
@@ -1118,6 +1128,7 @@ func draw_overlay() -> void:
 		overlay_text(canvas, title, title_at, 32, gold)
 	else:
 		player.z_index = int(player.position.y)
+	canvas.draw_set_transform(interface_origin(), 0, Vector2.ONE * interface_scale())
 	draw_hud(canvas)
 	if state == "play":
 		if transition > 0 and stage < WAVE_COUNT - 1 and int(transition / 0.5) % 2 == 0:
@@ -1141,8 +1152,9 @@ func draw_overlay() -> void:
 	if state == "start":
 		overlay_centered(canvas, "START", VIEW_HEIGHT * 0.45, 76, MINT)
 	if state in ["title", "pause", "over", "won"] or show_help:
+		canvas.draw_set_transform(Vector2.ZERO)
 		canvas.draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.025, 0.035, 0.08, 0.90))
-		canvas.draw_set_transform(Vector2(0, (VIEW_HEIGHT - 540.0) / 2))
+		canvas.draw_set_transform(interface_origin() + Vector2(0, (VIEW_HEIGHT - 540.0 * interface_scale()) / 2), 0, Vector2.ONE * interface_scale())
 		if state == "title":
 			var logo_scale := minf(180.0 / START_LOGO.get_width(), 80.0 / START_LOGO.get_height())
 			var logo_size := START_LOGO.get_size() * logo_scale
@@ -1166,8 +1178,9 @@ func draw_overlay() -> void:
 func draw_stage_presentation(canvas: Node2D) -> void:
 	var final := state == "victory"
 	var top := 155.0 if final else 205.0
+	canvas.draw_set_transform(Vector2.ZERO)
 	canvas.draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.025, 0.035, 0.08, 0.20))
-	canvas.draw_set_transform(Vector2(168, 20), 0, Vector2(0.65, 0.65))
+	canvas.draw_set_transform(interface_origin() + Vector2(168, 20) * interface_scale(), 0, Vector2.ONE * 0.65 * interface_scale())
 	canvas.draw_rect(Rect2(62, top, 836, 225), Color("101322"))
 	canvas.draw_rect(Rect2(70, top + 8, 820, 209), MINT, false, 3)
 	canvas.draw_line(Vector2(90, top + 49), Vector2(870, top + 49), Color("3b5660"), 2)

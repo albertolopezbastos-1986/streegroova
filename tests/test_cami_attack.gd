@@ -21,7 +21,7 @@ func run() -> void:
 	hero.begin_attack()
 	assert(hero.attack_motion() == "attack_01")
 	assert(hero.visual.sheets["attack_01"].resource_path == "res://assets/characters/cami/animations/attack_01/punch1.png")
-	assert(is_equal_approx(hero.attack_duration, 0.5))
+	assert(is_equal_approx(hero.attack_duration, 0.3))
 	for frame in range(9):
 		hero.attack_time = hero.attack_duration * (1.0 - (frame + 0.1) / 9.0)
 		hero.update_visual(0)
@@ -36,6 +36,7 @@ func run() -> void:
 	hero.cooldown = 0
 	hero.combo = 0
 	hero.combo_window = 1
+	hero.combo_connected = true
 	enemy.hp = 1000
 	enemy.invincible = 0
 	hero.begin_attack()
@@ -72,8 +73,9 @@ func run() -> void:
 	for direction in [1.0, -1.0]:
 		hero.attack_time = 0
 		hero.cooldown = 0
-		hero.combo = 1
+		hero.combo = 2
 		hero.combo_window = 1
+		hero.combo_connected = true
 		hero.position = Vector2(350, 390)
 		hero.facing = direction
 		enemy.position = hero.position + Vector2(direction * 60, 0)
@@ -102,8 +104,9 @@ func run() -> void:
 		assert(max_lift == 48 and hero.visual.position.y == 0, "hop lifts 48 units and lands at the end")
 		assert(enemy.hp == 971 and hero.hits.size() == 1, "third attack hits once for combo finisher damage")
 	# An interruption cancels the remaining hop and retreat.
-	hero.combo = 1
+	hero.combo = 2
 	hero.combo_window = 1
+	hero.combo_connected = true
 	hero.cooldown = 0
 	hero.begin_attack()
 	hero.tick(hero.attack_duration * 0.6)
@@ -112,6 +115,39 @@ func run() -> void:
 	hero.hurt(1, 1)
 	assert(hero.visual.position.y == 0, "taking damage clears the attack hop immediately")
 	print("CAMI FINISHER PASSED: own art, 48-unit hop, 41.4-unit retreat in both directions, one hit, clean interruption")
+	# Play the full combo with the enemy ticking between contacts.
+	hero.stun = 0
+	hero.attack_time = 0
+	hero.cooldown = 0
+	hero.combo_window = 0
+	hero.position = Vector2(350, 390)
+	hero.facing = 1
+	enemy.position = hero.position + Vector2(60, 0)
+	enemy.hp = 1000
+	enemy.invincible = 0
+	enemy.stun = 0
+	enemy.hit_lock = 0
+	var anchor: Vector2 = enemy.position
+	var shake_seen := false
+	for step in range(4):
+		hero.begin_attack()
+		assert(hero.attack_motion() == ["attack_01", "attack_02", "attack_01", "attack_03"][step])
+		while hero.cooldown > 0:
+			hero.tick(0.005)
+			if enemy.hp < 1000:
+				enemy.tick(0.005)
+				assert(enemy.position.is_equal_approx(anchor), "enemy stays in range throughout the combo")
+				shake_seen = shake_seen or absf(enemy.visual.position.x) > 0.1
+		assert(enemy.hp == 1000 - (19 * (step + 1) if step < 3 else 86), "every combo step connects exactly once")
+	assert(shake_seen, "hit feedback shakes the sprite")
+	while enemy.hit_lock > 0:
+		enemy.tick(0.005)
+	assert(is_zero_approx(enemy.visual.position.x), "sprite settles after impact")
+	enemy.position = Vector2(600, 390)
+	enemy.ai_weapon_cooldown = 100
+	enemy.tick(0.02)
+	assert(enemy.position != Vector2(600, 390), "enemy can move again after the lock expires")
+	print("CAMI COMBO PASSED: four connected hits, sprite shake, temporary movement lock and release")
 	game.queue_free()
 	await process_frame
 	await create_timer(0.1).timeout

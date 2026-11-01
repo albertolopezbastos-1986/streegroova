@@ -24,7 +24,7 @@ func run() -> void:
 				hero.player_control(0.2)
 				Input.action_release(action)
 				var base_speed: float = game.DEPTH_SPEED if action in ["up", "down"] else (hero.RUN_SPEED if sprint else hero.WALK_SPEED)
-				var walk_multiplier := 0.75 if character_id == "cami" and (not sprint or action in ["up", "down"]) else 1.0
+				var walk_multiplier := 0.9 if character_id == "cami" and (not sprint or action in ["up", "down"]) else 1.0
 				var run_multiplier := 0.75 if character_id == "cami" and hero.running else 1.0
 				assert(is_equal_approx(hero.position.distance_to(start), base_speed * multiplier * walk_multiplier * run_multiplier * 0.2), "%s %s sprint=%s travels the expected distance" % [character_id, action, sprint])
 		hero.reset_running()

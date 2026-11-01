@@ -1,0 +1,41 @@
+{
+  "sheet": "assets/characters/cami/animations/grab_throw/grabthrow.png",
+  "source": "assets/characters/cami/animations/grab_throw/source/grabthrow-original.png",
+  "source_sha256": "cf09dececa41669ba4d998a8f02690e75ec99ee9fe3e919973a312b0c053ff42",
+  "frame_size": [
+    162,
+    245
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "hold_frame": null,
+  "release_frame": 6,
+  "runtime_fps": 20,
+  "player_speed": 2,
+  "preview_fps": 40,
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_hold_seconds": 0.2,
+  "gif": "assets/characters/cami/animations/grab_throw/preview.gif"
+}

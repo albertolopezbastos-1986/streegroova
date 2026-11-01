@@ -25,7 +25,7 @@ Después de **Press Start** se abre la selección con tres portraits. Cambiá co
 | Mover por la calle | WASD / flechas | Stick izquierdo / cruceta |
 | Correr | Doble toque izquierda/derecha y mantener el segundo | Doble toque stick / cruceta y mantener |
 | Golpe deslizante | J / Z mientras corrés | X mientras corrés |
-| Golpear / combo de tres golpes | J / Z | X |
+| Golpear / combo de cuatro golpes | J / Z | X |
 | Saltar | Espacio / K | A |
 | Patada voladora | Golpear durante el salto | X en el aire |
 | Groova Break | L / X | Y |
@@ -198,3 +198,13 @@ La animación base de agacharse tiene ocho cuadros, con el primero tomado del id
 La recogida de comida y armas usa ahora los dibujos de agacharse: baja, obtiene el objeto y vuelve a levantarse. Los conjuntos original, 20 y 40 tienen carpetas crouch y ultimate_air para Beto, Alito y Cami. Beto usa su hoja dedicada `jumpultimate.png` para la ulti aérea, con energía dorada aplicada por shader.
 
 La recogida completa el gesto con tres cuadros nuevos de la mano bajando, abriendo los dedos y cerrándolos junto al suelo. El contacto obtiene el objeto al 50% de la secuencia; después se retira el brazo y Beto se levanta. [Animación y prompts](assets/characters/beto/animations/pickup/README.md).
+
+El combo del jugador sigue el orden punch 1 → punch 2 → punch 1 → punch 3; el cuarto golpe conserva el daño y alcance del remate. Cami camina un 20% más lejos en el mismo tiempo (multiplicador 0,9) y sus golpes del combo duran un 40% menos. Cada impacto efectivo del jugador hace vibrar el sprite enemigo durante 0,16 s y bloquea su desplazamiento durante 0,65 s, renovables con otro golpe, sin pausar la animación. Los lanzamientos y KO conservan su desplazamiento. Validación: `tests/test_cami_attack.gd`, `tests/test_cami_reach.gd`, `tests/test_character_movement.gd` y `tests/test_beto.gd`.
+
+Los cuerpos lanzados por patadas voladoras, slides y revoleos recorren dos tercios de la distancia anterior, tanto jugadores como enemigos. Se conserva la altura, duración del vuelo y frenado; los KO mantienen además su reducción previa a la mitad. Validación: `tests/test_knockout_distance.gd`.
+
+Beto y Cami tienen captura y sostén separados en `animations/grab/`, con hoja `grab.png`, nueve PNG en `frames/` y `preview.gif`. Beto conserva los cuadros 0–8 originales y el revoleo anterior. Cami usa su nueva hoja de 13 cuadros, captura con 0–2 y mantiene el cuadro 2; su revoleo usa la hoja propia `grab_throw/grabthrow.png` y libera al enemigo en el cuadro 6. Regenerar con `node scripts/prepare-grab.mjs`. Validación: `tests/test_grab_animations.gd` y `tests/test_grapple.gd`.
+
+El combo de todos los personajes solo avanza cuando el golpe anterior causa daño a otro luchador. Un golpe al aire reinicia el siguiente ataque en punch 1; golpear objetos o un blanco invulnerable no habilita la continuación. Los ataques especiales tampoco adelantan el combo de puños. Validación: `tests/test_combo_contact.gd`.
+
+En mobile el viewport conserva 820 unidades de alto y ajusta su ancho a la proporción real del dispositivo, ocupando toda la pantalla. En vertical se ve menos escenario horizontal y los luchadores conservan su tamaño por altura. La cámara, HUD y menús se adaptan al ancho. Los botones tienen radio 48: PEGAR a la izquierda, SALTAR a la derecha y ULTI centrada debajo. Los cambios de orientación liberan los controles activos. Validación: `tests/test_mobile_framing.gd` y `tests/test_mobile_controls.gd`.

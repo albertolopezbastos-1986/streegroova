@@ -1,0 +1,46 @@
+{
+  "sheet": "assets/characters/beto/animations/grab_punch_01/grabpunch.png",
+  "source": "assets/characters/beto/animations/grab/source/grab-current.png",
+  "source_sha256": "34acf86e117621e9234ecbc3e4ab556c2dddbc18ac02d8a304c65fc639515171",
+  "frame_size": [
+    200,
+    200
+  ],
+  "columns": 4,
+  "rows": 4,
+  "frames": 13,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "hold_frame": null,
+  "release_frame": null,
+  "runtime_fps": 24,
+  "player_speed": 1,
+  "preview_fps": 24,
+  "preview_indices": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "preview_hold_seconds": 0.20833333333333334,
+  "gif": "assets/characters/beto/animations/grab_punch_01/preview.gif"
+}

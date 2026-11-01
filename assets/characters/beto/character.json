@@ -7,6 +7,38 @@
   "pivot": "feet_center",
   "notes": "Beto integrado al jugador. Idle y walk: hojas de 20 cuadros (5x5, pose extra omitida). Primer golpe: 40 cuadros. Walk usa escala y pivote propios para conservar altura y apoyo. La ulti reutiliza el golpe con guitarra.",
   "animations": {
+    "grab": {
+      "path": "animations/grab",
+      "file": "grab.png",
+      "format": "sheet",
+      "fps": 20,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 13,
+      "sheet_columns": 4,
+      "sheet_rows": 4,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "hold_frame": 2,
+      "active_hit_frames": [],
+      "placeholder": false
+    },
     "idle": {
       "path": "../../characters_20_frames/beto/animations/idle",
       "format": "sheet",
@@ -391,8 +423,37 @@
       ]
     },
     "grab_punch_01": {
-      "source_animation": "attack_01",
-      "placeholder": true
+      "path": "animations/grab_punch_01",
+      "file": "grabpunch.png",
+      "format": "sheet",
+      "fps": 24,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 10,
+      "sheet_columns": 4,
+      "sheet_rows": 4,
+      "frame_indices": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "active_hit_frames": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "placeholder": false
     },
     "run": {
       "path": "../../characters_20_frames/beto/animations/run",

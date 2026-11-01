@@ -11,6 +11,10 @@ const ENEMY_SPEEDS = [79.0, 96.0, 53.0]
 const ENEMY_JUMP_INTERVALS = [7.6, 5.6, 16.0]
 const ENEMY_SLIDE_INTERVALS = [12.0, 9.0, 8.0]
 
+const PLAYER_COMBO := [1, 2, 1, 3]
+const HIT_LOCK_DURATION := 0.65
+const HIT_SHAKE_DURATION := 0.16
+
 const WALK_SPEED := 170.0
 const RUN_SPEED := 300.0
 const DOUBLE_TAP_TIME := 0.28
@@ -19,6 +23,7 @@ const SLIDE_BRAKE := 450.0
 const THROW_SPEED := 380.0
 const THROW_GROUND_BRAKE := 800.0
 const KNOCKOUT_DISTANCE_MULTIPLIER := 0.5
+const LAUNCH_DISTANCE_MULTIPLIER := 2.0 / 3.0
 
 var running := false
 var run_attack := false
@@ -68,6 +73,8 @@ var attack_time := 0.0
 var attack_duration := 0.3
 var cooldown := 0.0
 var stun := 0.0
+var hit_lock := 0.0
+var hit_shake := 0.0
 var invincible := 0.0
 var dead := false
 var death_time := 0.0
@@ -75,6 +82,7 @@ var anim := 0.0
 var moving := false
 var combo := 0
 var combo_window := 0.0
+var combo_connected := false
 var hits: Array = []
 var ai_wait := 0.0
 var windup := 0.0
@@ -131,6 +139,8 @@ func make_boss() -> void:
 
 func tick(dt: float) -> void:
 	anim += dt
+	hit_lock = maxf(0, hit_lock - dt)
+	hit_shake = maxf(0, hit_shake - dt)
 	grapple.retry = maxf(0, grapple.retry - dt)
 	cooldown = maxf(0, cooldown - dt)
 	stun = maxf(0, stun - dt)
@@ -162,7 +172,7 @@ func tick(dt: float) -> void:
 		death_time += dt
 		height = maxf(0, height + jump_speed * dt)
 		jump_speed -= 950 * dt
-		position.x = clampf(position.x + velocity.x * dt, movement_left_bound(), game.right_bound)
+		position.x = clampf(position.x + velocity.x * dt * LAUNCH_DISTANCE_MULTIPLIER, movement_left_bound(), game.right_bound)
 		if height == 0:
 			velocity = velocity.move_toward(Vector2.ZERO, dt * THROW_GROUND_BRAKE * KNOCKOUT_DISTANCE_MULTIPLIER)
 		update_flight_impacts(from)
@@ -185,7 +195,7 @@ func tick(dt: float) -> void:
 	if thrown_time > 0:
 		var from := position
 		thrown_time = maxf(0, thrown_time - dt)
-		position.x = clampf(position.x + velocity.x * dt, movement_left_bound(), game.right_bound)
+		position.x = clampf(position.x + velocity.x * dt * LAUNCH_DISTANCE_MULTIPLIER, movement_left_bound(), game.right_bound)
 		update_flight_impacts(from)
 		if height == 0:
 			flight_can_hit = false
@@ -228,6 +238,9 @@ func tick(dt: float) -> void:
 	if stun > 0:
 		position += velocity * dt
 		velocity = velocity.move_toward(Vector2.ZERO, dt * 650)
+		moving = false
+	elif hit_lock > 0 and kind >= 0:
+		velocity = Vector2.ZERO
 		moving = false
 	elif ultimate_pose <= 0:
 		if kind == -1:
@@ -467,12 +480,14 @@ func begin_attack() -> void:
 	tap_time = 0
 	air_attack = height > 0
 	weapon_attack = not weapon.is_empty() and not air_attack and not run_attack and not prop_attack
-	combo = 0 if run_attack else ((combo + 1) % 3 if combo_window > 0 else 0)
+	combo = 0 if run_attack else ((combo + 1) % (PLAYER_COMBO.size() if kind == -1 else 3) if combo_window > 0 and combo_connected else 0)
 	if run_attack:
 		velocity = Vector2(facing * SLIDE_SPEED, 0)
 		moving = false
 		game.dust(position)
 	attack_duration = visual.duration(attack_motion())
+	if kind == -1 and not air_attack and not run_attack and not weapon_attack and not prop_attack:
+		attack_duration *= float(visual.character_data.get("combo_duration_multiplier", 1.0))
 	if kind >= 0:
 		attack_duration *= 0.8 if is_boss else [1.0, 0.9, 1.22][kind]
 	if run_attack:
@@ -484,6 +499,7 @@ func begin_attack() -> void:
 	if kind >= 0:
 		ai_wait = (0.04 if combo < 2 else 0.18) if is_boss else (0.12 if combo < 2 else 0.8)
 	hits.clear()
+	combo_connected = false
 	game.sound("swing")
 	update_visual(0)
 
@@ -492,7 +508,10 @@ func attack_motion() -> String:
 		return "runslide"
 	if weapon_attack:
 		return "punch_weapon"
-	return "jump_attack" if air_attack else "attack_%02d" % (combo + 1)
+	return "jump_attack" if air_attack else "attack_%02d" % (PLAYER_COMBO[combo] if kind == -1 else combo + 1)
+
+func is_combo_finisher() -> bool:
+	return combo == (PLAYER_COMBO.size() - 1 if kind == -1 else 2)
 
 func begin_pickup(item: Node2D) -> void:
 	if not item.weapon.is_empty() and not game.weapons_allowed():
@@ -619,7 +638,8 @@ func update_visual(dt: float) -> void:
 		var movement: Dictionary = visual.definition(motion).get("movement", {})
 		if not movement.is_empty():
 			attack_hop = sin(attack_movement_phase(progress, movement) * PI) * float(movement.get("hop_height", 0.0))
-	visual.position = Vector2(0, -roundf(height + celebration_hop + attack_hop))
+	var shake_x := sin((HIT_SHAKE_DURATION - hit_shake) * 150.0 + 1.0) * 2.5 * hit_shake / HIT_SHAKE_DURATION if hit_shake > 0 else 0.0
+	visual.position = Vector2(shake_x, -roundf(height + celebration_hop + attack_hop))
 	visual.modulate.a = 0.4 if invincible > 0 and stun <= 0 and ultimate_pose <= 0 and not dead and int(anim * 16) % 2 == 0 else 1.0
 	visual.visible = kind == -1 or not dead or death_time < 1.65
 	if dead and kind >= 0:
@@ -643,7 +663,7 @@ func strike() -> void:
 		if target.dead or target in hits:
 			continue
 		var delta: Vector2 = target.position - position
-		var reach := 105.0 if attack_motion() == "punch_weapon" else (89.0 if air_attack or combo == 2 or prop_attack else 70.0)
+		var reach := 105.0 if attack_motion() == "punch_weapon" else (89.0 if air_attack or is_combo_finisher() or prop_attack else 70.0)
 		if kind == 2 and not weapon_attack:
 			reach = 80
 		reach *= float(visual.definition(attack_motion()).get("reach_multiplier", 1.0))
@@ -655,7 +675,7 @@ func strike() -> void:
 			var hp_before: float = target.hp
 			var damage := 16.0
 			if kind == -1:
-				damage = 29 if combo == 2 or air_attack or run_attack else 19
+				damage = 29 if is_combo_finisher() or air_attack or run_attack else 19
 				if attack_motion() == "punch_weapon":
 					damage = 42 if weapon == "pipe" else 36
 			elif is_boss:
@@ -669,7 +689,11 @@ func strike() -> void:
 			if launches_on_special() and target.has_method("launch_away"):
 				target.launch_away(damage, facing, true, self)
 			else:
-				target.hurt(damage, facing, combo == 2 or air_attack or kind == 2)
+				target.hurt(damage, facing, is_combo_finisher() or air_attack or kind == 2)
+			if target.hp < hp_before and target.has_method("launch_away") and not (air_attack or run_attack or weapon_attack or prop_attack):
+				combo_connected = true
+			if kind == -1 and target.has_method("lock_on_hit") and target.hp < hp_before:
+				target.lock_on_hit()
 			if weapon_attack and target.has_method("launch_away") and target.hp < hp_before:
 				weapon_durability = maxi(0, weapon_durability - weapon_hit_cost(target))
 				if weapon_durability == 0:
@@ -807,6 +831,16 @@ func update_flight_impacts(from: Vector2) -> void:
 		if target.launch_away(FLIGHT_IMPACT_DAMAGE, direction, false):
 			flight_hits.append(target)
 
+func lock_on_hit() -> void:
+	if kind < 0:
+		return
+	hit_shake = HIT_SHAKE_DURATION
+	if not dead and thrown_time <= 0:
+		hit_lock = HIT_LOCK_DURATION
+		velocity = Vector2.ZERO
+		moving = false
+	update_visual(0)
+
 func hurt(damage: float, direction: float, heavy := false, from_grab := false) -> void:
 	if dead or invincible > 0 or thrown_time > 0 or (getup_time > 0 and kind == -1):
 		return
@@ -821,6 +855,7 @@ func hurt(damage: float, direction: float, heavy := false, from_grab := false) -
 	hp = maxf(0, hp - damage)
 	stun = (0.44 if heavy else 0.36) if kind == -1 else (0.38 if heavy else 0.25)
 	hurt_duration = stun
+	combo_connected = false
 	attack_buffer = 0
 	velocity = Vector2(direction * (230 if heavy else 115), 0)
 	attack_time = 0

@@ -9,16 +9,21 @@ import { verifyDeployment } from '../scripts/verify-deploy.mjs';
 import { runnablePath, preparePreset, findGodot } from '../scripts/export-game.mjs';
 
 test('placeholder permits local work but cannot be used as a deploy target', () => {
-  assert.throws(() => deploymentConfig('.', {}), /placeholdernetlify/);
-  assert.deepEqual(deploymentConfig('.', { NETLIFY_SITE_ID: 'street-groova', DEPLOY_URL: 'https://street-groova.netlify.app/' }), {
-    site: 'street-groova', url: 'https://street-groova.netlify.app'
+  const root = mkdtempSync(join(tmpdir(), 'groova-placeholder-'));
+  try {
+    writeFileSync(join(root, 'deploy.config.json'), JSON.stringify({ site: 'placeholdernetlify', url: 'https://placeholdernetlify.netlify.app' }));
+    assert.throws(() => deploymentConfig(root, {}), /placeholdernetlify/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+  assert.deepEqual(deploymentConfig('.', {}), { site: 'streetgroovafighter', url: 'https://streetgroovafighter.netlify.app' });
+  assert.deepEqual(deploymentConfig('.', { NETLIFY_SITE_ID: 'streetgroovafighter', DEPLOY_URL: 'https://streetgroovafighter.netlify.app/' }), {
+    site: 'streetgroovafighter', url: 'https://streetgroovafighter.netlify.app'
   });
-  assert.throws(() => deploymentConfig('.', { NETLIFY_SITE_ID: 'street-groova', DEPLOY_URL: 'http://street-groova.netlify.app' }), /HTTPS/);
+  assert.throws(() => deploymentConfig('.', { NETLIFY_SITE_ID: 'streetgroovafighter', DEPLOY_URL: 'http://streetgroovafighter.netlify.app' }), /HTTPS/);
   assert.throws(() => deploymentConfig('.', { NETLIFY_SITE_ID: 'site;bad', DEPLOY_URL: 'https://game.test' }), /nombre o ID/);
 });
 
 test('deploy selects its own site, production context, game folder and Functions', () => {
-  assert.deepEqual(deployArgs('street-groova'), ['netlify-cli', 'deploy', '--build', '--prod', '--context', 'production', '--site', 'street-groova', '--dir', 'web', '--functions', 'netlify/functions']);
+  assert.deepEqual(deployArgs('streetgroovafighter'), ['netlify-cli', 'deploy', '--build', '--prod', '--context', 'production', '--site', 'streetgroovafighter', '--dir', 'web', '--functions', 'netlify/functions']);
 });
 
 test('verification detects wrong release, missing Functions and old mobile keyboard', async () => {

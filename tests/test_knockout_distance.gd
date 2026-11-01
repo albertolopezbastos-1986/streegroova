@@ -27,6 +27,8 @@ func run() -> void:
 					hero.tick(0.005)
 				assert(hero.height == 0 and hero.velocity.is_zero_approx())
 				distances.append(absf(hero.position.x - 1500))
+				var previous_distance := 190.95 if lethal else 381.9
+				assert(absf(float(distances[-1]) - previous_distance * 2.0 / 3.0) < 0.1, "launch travels one third less than before")
 			print(id, " direction=", direction, " distances=", distances)
 			assert(absf(float(distances[1]) - float(distances[0]) * 0.5) < 0.1, "KO distance is exactly half the ordinary launch for " + id)
 			# Ordinary lethal hits must also launch, not only special attacks.
@@ -37,6 +39,21 @@ func run() -> void:
 			hero.hurt(hero.max_hp, direction)
 			assert(hero.dead and hero.height > 0 and hero.jump_speed > 0)
 			assert(hero.velocity.x == direction * hero.THROW_SPEED * 0.5)
+	# Enemy tiers obey the same travel reduction, for surviving and lethal hits.
+	for kind in range(3):
+		for direction in [1.0, -1.0]:
+			for lethal in [false, true]:
+				game.new_run(true)
+				await process_frame
+				game.right_bound = 4000
+				game.debug_spawn_enemy(kind)
+				var enemy = game.enemies[-1]
+				enemy.position = Vector2(1500, 390)
+				assert(enemy.launch_away(1000 if lethal else 1, direction, false))
+				while enemy.height > 0 or not enemy.velocity.is_zero_approx():
+					enemy.tick(0.005)
+				var previous_distance := 190.95 if lethal else 381.9
+				assert(absf(absf(enemy.position.x - 1500) - previous_distance * 2.0 / 3.0) < 0.1, "all enemy tiers travel one third less in both directions")
 	print("KNOCKOUT DISTANCE PASSED: all three heroes, both facings, lethal ordinary/special hits, half launch distance, ground stop")
 	game.queue_free()
 	await process_frame

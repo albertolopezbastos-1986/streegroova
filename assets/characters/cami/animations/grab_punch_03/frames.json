@@ -1,0 +1,40 @@
+{
+  "sheet": "assets/characters/cami/animations/grab_punch_03/grabpunch.png",
+  "source": "assets/characters/cami/animations/grab_punch_01/source/grabpunch-original.png",
+  "source_sha256": "7717ac4bd78044234b879beb0c70a3220b543b43e6617eeae0b9798ad682ef73",
+  "frame_size": [
+    162,
+    245
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "hold_frame": null,
+  "release_frame": null,
+  "runtime_fps": 24,
+  "player_speed": 1,
+  "preview_fps": 24,
+  "preview_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_hold_seconds": 0.20833333333333334,
+  "gif": "assets/characters/cami/animations/grab_punch_03/preview.gif"
+}

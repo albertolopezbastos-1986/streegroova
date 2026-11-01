@@ -113,9 +113,11 @@ func tick(dt: float) -> void:
 	var catch_speed := PLAYER_CATCH_SPEED if hero.kind == -1 else 1.0
 	var throw_speed := PLAYER_THROW_SPEED if hero.kind == -1 else 1.0
 	var hold_frame := int(data.get("hold_frame", 8))
+	var throw_start := int(data.get("throw_start_frame", hold_frame + 1))
 	match state:
 		"catch":
-			if elapsed * catch_speed >= float(hold_frame + 1) / fps:
+			var capture: Dictionary = hero.visual.definition(catch_motion())
+			if elapsed * catch_speed >= float(int(capture.get("hold_frame", 8)) + 1) / float(capture["fps"]):
 				state = "hold" if buffered_action.is_empty() else buffered_action
 				elapsed = 0
 				if not buffered_action.is_empty():
@@ -170,12 +172,12 @@ func tick(dt: float) -> void:
 					state = "hold"
 					elapsed = 0
 		"throw":
-			var current_frame := hold_frame + 1 + int(elapsed * fps * throw_speed)
+			var current_frame := throw_start + int(elapsed * fps * throw_speed)
 			if current_frame >= int(data.get("release_frame", 15)):
 				launch()
 				state = "recover"
 		"recover":
-			if hold_frame + 1 + int(elapsed * fps * throw_speed) >= int(data["frame_indices"].size()):
+			if throw_start + int(elapsed * fps * throw_speed) >= int(data["frame_indices"].size()):
 				state = ""
 				retry = 0.65
 				hero.cooldown = 0.15
@@ -254,18 +256,23 @@ func select_punch_animation() -> void:
 	var name := "grab_punch_%02d" % (punch_count + 1)
 	punch_animation = name if owner_fighter.visual.sheets.has(name) else "grab_punch_01"
 
+func catch_motion() -> String:
+	return "grab" if owner_fighter.visual.sheets.has("grab") else "grab_throw"
+
 func pose() -> void:
 	var hero := owner_fighter
 	if state in ["punch", "punch_recover"]:
 		hero.visual.update_pose(punch_animation, 0, locked_facing, elapsed / hero.visual.duration(punch_animation))
 		return
-	var data: Dictionary = hero.visual.definition("grab_throw")
+	var motion := catch_motion() if state in ["catch", "hold"] else "grab_throw"
+	var data: Dictionary = hero.visual.definition(motion)
+	var frames: Array = data["frame_indices"]
 	var hold_frame := int(data.get("hold_frame", 8))
 	var frame := hold_frame
 	if state == "catch":
 		frame = mini(hold_frame, int(elapsed * float(data["fps"]) * (PLAYER_CATCH_SPEED if hero.kind == -1 else 1.0)))
 	elif state in ["throw", "recover"]:
-		frame = mini(data["frame_indices"].size() - 1, hold_frame + 1 + int(elapsed * float(data["fps"]) * (PLAYER_THROW_SPEED if hero.kind == -1 else 1.0)))
-	hero.visual.update_pose("grab_throw", 0, locked_facing, 0)
-	hero.visual.source_frame = frame
+		frame = mini(frames.size() - 1, int(data.get("throw_start_frame", hold_frame + 1)) + int(elapsed * float(data["fps"]) * (PLAYER_THROW_SPEED if hero.kind == -1 else 1.0)))
+	hero.visual.update_pose(motion, 0, locked_facing, 0)
+	hero.visual.source_frame = int(frames[clampi(frame, 0, frames.size() - 1)])
 	hero.visual.queue_redraw()

@@ -6,6 +6,157 @@
   "pivot": "feet_center",
   "notes": "Idle, walk, run, jump y los tres ataques del combo propios integrados. Los movimientos pendientes usan idle como placeholder. El tama\u00f1o de Cami sigue vinculado al de Beto.",
   "animations": {
+    "grab": {
+      "path": "animations/grab",
+      "file": "grab.png",
+      "format": "sheet",
+      "fps": 20,
+      "loop": false,
+      "frame_size": [
+        162,
+        245
+      ],
+      "frame_count": 13,
+      "sheet_columns": 4,
+      "sheet_rows": 4,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "hold_frame": 2,
+      "active_hit_frames": [],
+      "placeholder": false
+    },
+    "grab_throw": {
+      "path": "animations/grab_throw",
+      "file": "grabthrow.png",
+      "format": "sheet",
+      "fps": 20,
+      "loop": false,
+      "frame_size": [
+        162,
+        245
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "throw_start_frame": 0,
+      "release_frame": 6,
+      "active_hit_frames": [],
+      "placeholder": false
+    },
+    "grab_punch_01": {
+      "path": "animations/grab_punch_01",
+      "file": "grabpunch.png",
+      "format": "sheet",
+      "fps": 24,
+      "loop": false,
+      "frame_size": [
+        162,
+        245
+      ],
+      "frame_count": 8,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "active_hit_frames": [
+        4,
+        5,
+        6
+      ],
+      "placeholder": false
+    },
+    "grab_punch_02": {
+      "path": "animations/grab_punch_02",
+      "file": "grabpunch.png",
+      "format": "sheet",
+      "fps": 24,
+      "loop": false,
+      "frame_size": [
+        162,
+        245
+      ],
+      "frame_count": 8,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "active_hit_frames": [
+        4,
+        5,
+        6
+      ],
+      "placeholder": false
+    },
+    "grab_punch_03": {
+      "path": "animations/grab_punch_03",
+      "file": "grabpunch.png",
+      "format": "sheet",
+      "fps": 24,
+      "loop": false,
+      "frame_size": [
+        162,
+        245
+      ],
+      "frame_count": 8,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "active_hit_frames": [
+        4,
+        5,
+        6
+      ],
+      "placeholder": false
+    },
     "idle": {
       "path": "animations/idle",
       "format": "sheet",
@@ -377,6 +528,37 @@
       "placeholder": true,
       "loop": false
     },
+    "runslide": {
+      "path": "animations/runslide",
+      "format": "sheet",
+      "file": "runslide.png",
+      "fps": 18,
+      "loop": false,
+      "frame_size": [
+        162,
+        245
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "active_hit_frames": [
+        3,
+        4,
+        5
+      ],
+      "placeholder": false
+    },
     "pickup": {
       "path": "animations/pickup",
       "format": "sheet",
@@ -387,7 +569,7 @@
         162,
         245
       ],
-      "frame_count": 22,
+      "frame_count": 14,
       "sheet_columns": 5,
       "sheet_rows": 5,
       "frame_indices": [
@@ -398,14 +580,6 @@
         4,
         5,
         6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        10,
-        9,
-        8,
         7,
         6,
         5,
@@ -688,7 +862,8 @@
     "definition": "res://assets/characters/beto/character.json",
     "ratio": 0.88
   },
-  "walk_speed_multiplier": 0.75,
+  "walk_speed_multiplier": 0.9,
+  "combo_duration_multiplier": 0.6,
   "run_speed_multiplier": 0.75,
   "jump_height_multiplier": 0.85,
   "weapons_allowed": false
