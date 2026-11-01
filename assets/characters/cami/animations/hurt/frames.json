@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/cami/animations/hurt/hurt.png",
+  "source_sha256": "d9886698e10c7af498478fa517abc5bbba1b31834d858c7e23180ef331745c3a",
+  "frame_size": [
+    162,
+    245
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/cami/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 25,
+  "preview_durations": [
+    0.04,
+    0.04,
+    0.04,
+    0.04,
+    0.04,
+    0.04,
+    0.04,
+    0.04,
+    0.24000000000000002
+  ],
+  "gif": "assets/characters/cami/animations/hurt/preview.gif"
+}

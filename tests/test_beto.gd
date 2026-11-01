@@ -113,11 +113,11 @@ func run() -> void:
 	game.charge = 100
 	game.use_ultimate()
 	check(hero.ultimate_airborne and hero.visual.motion == "ultimate_air", "ultimate activated mid-jump selects a distinct aerial animation")
-	check(hero.visual.sheets["ultimate_air"] == hero.visual.sheets["ultimate"] and hero.visual.definition("ultimate_air")["placeholder"], "aerial ultimate temporarily shares ground art")
+	check(hero.visual.sheets["ultimate_air"] != hero.visual.sheets["ultimate"] and not hero.visual.definition("ultimate_air")["placeholder"], "aerial ultimate uses its dedicated supplied sheet")
 	game.ult_time = 0.6
 	hero.height = 0
 	hero.update_visual(0.01)
-	check(hero.visual.motion == "ultimate_air" and hero.visual.source_frame >= 6, "aerial variant retains its identity and impact timing throughout ultimate")
+	check(hero.visual.motion == "ultimate_air" and hero.visual.source_frame >= 5, "aerial variant retains its identity and impact timing throughout ultimate")
 	game.ult_time = 0
 	hero.ultimate_pose = 0
 	game.charge = 100

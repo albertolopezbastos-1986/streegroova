@@ -1,8 +1,20 @@
 {
   "fallback": "beto",
   "characters": [
-    { "id": "beto", "enabled": true, "definition": "res://assets/characters/beto/character.json" },
-    { "id": "alito", "enabled": false, "definition": "res://assets/characters/alito/character.json" },
-    { "id": "cami", "enabled": false, "definition": "res://assets/characters/cami/character.json" }
+    {
+      "id": "beto",
+      "enabled": true,
+      "definition": "res://assets/characters/beto/character.json"
+    },
+    {
+      "id": "cami",
+      "enabled": true,
+      "definition": "res://assets/characters/cami/character.json"
+    },
+    {
+      "id": "alito",
+      "enabled": true,
+      "definition": "res://assets/characters/alito/character.json"
+    }
   ]
 }

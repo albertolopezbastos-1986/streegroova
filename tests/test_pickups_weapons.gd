@@ -73,7 +73,7 @@ func run() -> void:
 		assert(hero.visual.weapon == "pipe")
 	game.complete_level()
 	game.update_presentation(0.1)
-	assert(hero.victory_time > 0 and hero.visual.position.y < 0)
+	assert(hero.victory_time > 0 and hero.visual.motion == "victory" and hero.visual.position.y == 0)
 	print("ALL PICKUP AND WEAPON CHECKS PASSED")
 	game.queue_free()
 	await process_frame

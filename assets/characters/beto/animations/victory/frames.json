@@ -1,0 +1,47 @@
+{
+  "sheet": "assets/characters/beto/animations/victory/victory.png",
+  "source_sha256": "f034a8afe8a4a07b0834d24c4eb2d927bce0b0a4dad5897fa5425d159e5d685a",
+  "frame_size": [
+    200,
+    200
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 8,
+  "runtime_manifest": "assets/characters/beto/character.json",
+  "preview_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 12,
+  "preview_durations": [
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.08333333333333333,
+    0.2833333333333333
+  ],
+  "gif": "assets/characters/beto/animations/victory/preview.gif"
+}

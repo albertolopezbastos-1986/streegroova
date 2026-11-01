@@ -7,7 +7,9 @@ func run() -> void:
 	var game = preload("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
 	game.set_process(false)
-	assert(game.LEVEL_COUNT == 3 and game.ENVIRONMENTS.size() == 6)
+	assert(game.LEVEL_COUNT == 3 and game.ENVIRONMENTS.size() == 5)
+	for environment in game.ENVIRONMENTS:
+		assert(environment["id"] != "docks-night", "Puerto must never be available")
 	var covered: Dictionary = {}
 	var orders: Dictionary = {}
 	seed(2563)
@@ -19,11 +21,11 @@ func run() -> void:
 		assert(chosen[0] != game.FINAL_BACKGROUND_INDEX and chosen[1] != game.FINAL_BACKGROUND_INDEX)
 		var unique: Dictionary = {}
 		for index in chosen:
-			assert(index >= 0 and index < 6 and not unique.has(index))
+			assert(index >= 0 and index < game.ENVIRONMENTS.size() and not unique.has(index))
 			unique[index] = true
 			covered[index] = true
 		orders[str(chosen)] = true
-	assert(covered.size() == 6 and orders.size() > 1)
+	assert(covered.size() == game.ENVIRONMENTS.size() and orders.size() > 1)
 	assert(game.ENVIRONMENT_TILE_WIDTH == 492 and game.ENVIRONMENT_SOURCE_SIZE == Vector2(1536, 1024))
 	for environment_index in range(game.ENVIRONMENTS.size()):
 		var environment: Dictionary = game.ENVIRONMENTS[environment_index]
@@ -61,7 +63,7 @@ func run() -> void:
 		for wave in range(5):
 			game.stage = wave
 			assert(game.background_index == chosen[level])
-	for index in range(6):
+	for index in range(game.ENVIRONMENTS.size()):
 		game.background_index = index
 		game.queue_redraw()
 		await process_frame

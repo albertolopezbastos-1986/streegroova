@@ -1,3 +1,5 @@
-# Ulti en el aire — beto
+# Ulti aérea — Beto
 
-Carpeta para la hoja ultimate_air.png, con alfa transparente. Es una secuencia diferente de ultimate (ulti en el piso). Registrar la cuadrícula real, cuadros y escala en character.json al agregar el arte. La acción ya selecciona ultimate_air si se activa durante el salto. Su entrada actual es un alias provisional de ultimate; esta carpeta todavía no contiene sprites propios.
+Hoja original `jumpultimate.png`: 600 × 600, cuadrícula de 3 × 3 y celdas de 200 × 200. La animación usa los cuadros 1–8; el cuadro 0 de idle se conserva en el archivo original.
+
+Los nueve cuadros están en `frames/`; `preview.gif` muestra la secuencia activa. La energía verde se convierte a dorado durante el juego mediante shader, conservando intacto el PNG original.

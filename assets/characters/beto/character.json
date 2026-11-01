@@ -635,9 +635,90 @@
       ]
     },
     "ultimate_air": {
-      "source_animation": "ultimate",
-      "placeholder": true,
-      "notes": "Accion aerea conectada. Carpeta animations/ultimate_air preparada para su hoja propia."
+      "path": "animations/ultimate_air",
+      "file": "jumpultimate.png",
+      "format": "sheet",
+      "fps": 5,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 8,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_order": "row_major",
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "active_hit_frames": [],
+      "placeholder": false,
+      "impact_frame": 5,
+      "impact_progress": 0.59
+    },
+    "grab_punch_03": {
+      "path": "animations/grab_punch_03",
+      "file": "grabpunch3.png",
+      "format": "sheet",
+      "fps": 24,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 8,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_order": "row_major",
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "active_hit_frames": [
+        5,
+        6
+      ],
+      "placeholder": false
+    },
+    "victory": {
+      "path": "animations/victory",
+      "file": "victory.png",
+      "format": "sheet",
+      "fps": 12,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 8,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_order": "row_major",
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "active_hit_frames": [],
+      "placeholder": false
     }
   },
   "reference": "source/betopixel.png",
@@ -651,5 +732,6 @@
     110,
     120
   ],
-  "portrait_file": "portraits/portrait.png"
+  "portrait_file": "portraits/portrait.png",
+  "jump_height_multiplier": 0.85
 }

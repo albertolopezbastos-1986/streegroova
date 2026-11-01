@@ -115,9 +115,6 @@ func stop_projectile() -> void:
 func _draw() -> void:
 	if dead:
 		return
-	draw_set_transform(Vector2(0, -1), 0, Vector2(1, 0.22))
-	draw_circle(Vector2.ZERO, 19, Color(0, 0, 0, 0.35))
-	draw_set_transform(Vector2.ZERO)
 	if not weapon.is_empty():
 		if weapon_broken:
 			for side in [-1, 1]:

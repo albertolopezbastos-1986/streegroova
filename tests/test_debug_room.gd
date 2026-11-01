@@ -18,7 +18,7 @@ func run() -> void:
 	game.show_character_selection()
 	game._input(key(KEY_TAB))
 	assert(game.state == "debug_select" and game.debug_environment_select.open and not game.character_select.open)
-	assert(game.debug_environment_select.buttons.size() == 6)
+	assert(game.debug_environment_select.buttons.size() == 5)
 	game._input(key(KEY_2))
 	assert(game.debug_room and game.state == "play" and not game.character_select.open)
 	assert(game.background_index == 1)
@@ -76,7 +76,7 @@ func run() -> void:
 	game.player.position.x = game.LEVEL_WIDTH * 2
 	game.update_camera(2.0)
 	assert(game.camera_x <= 850 - 960.0 / game.WORLD_ZOOM)
-	for index in range(6):
+	for index in range(game.ENVIRONMENTS.size()):
 		game.open_debug_environment_selection()
 		game.debug_environment_select.buttons[index].pressed.emit()
 		assert(game.debug_room and game.state == "play" and game.background_index == index)

@@ -5,6 +5,7 @@ const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const CharacterVisual = preload("res://scripts/character_visual.gd")
 const Catalog = preload("res://scripts/character_catalog.gd")
 const ENEMY_PALETTE = preload("res://assets/characters/enemy_palette.gdshader")
+const ULTIMATE_AIR_GOLD = preload("res://assets/characters/ultimate_air_gold.gdshader")
 const ENEMY_COLORS = [Color("d6aa51"), Color("d45c79"), Color("c94742")]
 const ENEMY_SPEEDS = [79.0, 96.0, 53.0]
 const ENEMY_JUMP_INTERVALS = [7.6, 5.6, 16.0]
@@ -17,6 +18,7 @@ const SLIDE_SPEED := 360.0
 const SLIDE_BRAKE := 450.0
 const THROW_SPEED := 380.0
 const THROW_GROUND_BRAKE := 800.0
+const KNOCKOUT_DISTANCE_MULTIPLIER := 0.5
 
 var running := false
 var run_attack := false
@@ -80,6 +82,7 @@ var ultimate_pose := 0.0
 var ultimate_airborne := false
 var air_attack := false
 var visual: Node2D
+var ultimate_air_material: ShaderMaterial
 var hurt_duration := 0.0
 var jump_elapsed := 0.0
 var attack_buffer := 0.0
@@ -93,6 +96,11 @@ func setup(owner_game: Node2D, type: int, at: Vector2, character_pack: Dictionar
 	position = at
 	visual = CharacterVisual.new()
 	visual.configure(character_pack if not character_pack.is_empty() else Catalog.character("beto"))
+	if kind == -1:
+		max_hp = 100.0 * float(visual.character_data.get("max_health_multiplier", 1.0))
+		hp = max_hp
+		ultimate_air_material = ShaderMaterial.new()
+		ultimate_air_material.shader = ULTIMATE_AIR_GOLD
 	add_child(visual)
 	if kind >= 0:
 		facing = 1 if game.player.position.x >= position.x else -1
@@ -156,7 +164,7 @@ func tick(dt: float) -> void:
 		jump_speed -= 950 * dt
 		position.x = clampf(position.x + velocity.x * dt, movement_left_bound(), game.right_bound)
 		if height == 0:
-			velocity = velocity.move_toward(Vector2.ZERO, dt * (THROW_GROUND_BRAKE if thrown_time > 0 else 650.0))
+			velocity = velocity.move_toward(Vector2.ZERO, dt * THROW_GROUND_BRAKE * KNOCKOUT_DISTANCE_MULTIPLIER)
 		update_flight_impacts(from)
 		if height == 0:
 			flight_can_hit = false
@@ -204,7 +212,13 @@ func tick(dt: float) -> void:
 		position.x = clampf(position.x + velocity.x * dt, movement_left_bound(), game.right_bound)
 		velocity.x = move_toward(velocity.x, 0, SLIDE_BRAKE * dt)
 	if attack_time > 0:
+		var previous_progress := attack_progress()
 		attack_time = maxf(0, attack_time - dt)
+		if kind == -1 and stun <= 0 and not air_attack:
+			var movement: Dictionary = visual.definition(attack_motion()).get("movement", {})
+			if not movement.is_empty():
+				var step := attack_movement_phase(attack_progress(), movement) - attack_movement_phase(previous_progress, movement)
+				position.x = clampf(position.x - facing * float(movement.get("retreat_distance", 0.0)) * step, movement_left_bound(), game.right_bound)
 		if attack_is_active():
 			strike()
 	if run_attack and attack_time <= 0:
@@ -242,7 +256,12 @@ func player_control(dt: float) -> void:
 		return
 	update_running(direction.x, dt)
 	if height == 0:
-		velocity = Vector2(direction.x * (RUN_SPEED if running else WALK_SPEED), direction.y * game.DEPTH_SPEED)
+		var movement_multiplier := float(visual.character_data.get("movement_speed_multiplier", 1.0))
+		if not running:
+			movement_multiplier *= float(visual.character_data.get("walk_speed_multiplier", 1.0))
+		else:
+			movement_multiplier *= float(visual.character_data.get("run_speed_multiplier", 1.0))
+		velocity = Vector2(direction.x * (RUN_SPEED if running else WALK_SPEED), direction.y * game.DEPTH_SPEED) * movement_multiplier
 		if direction.x != 0 and attack_time <= 0:
 			facing = signf(direction.x)
 	# Horizontal momentum is conserved in the air: neutral and forward jumps differ.
@@ -292,9 +311,11 @@ func takeoff(momentum: Vector2, impulse := 420.0) -> bool:
 	if dead or stun > 0 or height > 0 or thrown_time > 0 or getup_time > 0 or attack_time > 0 or is_instance_valid(grabbed_by) or grapple.active():
 		return false
 	reset_running()
-	jump_speed = impulse
-	jump_duration = impulse * 2.0 / 950.0
-	height = 1
+	var height_multiplier := float(visual.character_data.get("jump_height_multiplier", 1.0))
+	# Ballistic height grows with the square of takeoff speed.
+	jump_speed = impulse * sqrt(height_multiplier)
+	jump_duration = jump_speed * 2.0 / 950.0
+	height = height_multiplier
 	jump_elapsed = 0
 	velocity = momentum
 	moving = false
@@ -474,6 +495,8 @@ func attack_motion() -> String:
 	return "jump_attack" if air_attack else "attack_%02d" % (combo + 1)
 
 func begin_pickup(item: Node2D) -> void:
+	if not item.weapon.is_empty() and not game.weapons_allowed():
+		return
 	reset_running()
 	pickup_target = item
 	pickup_elapsed = 0
@@ -517,6 +540,24 @@ func attack_progress() -> float:
 	var duration := slide_animation_duration if run_attack else attack_duration
 	return clampf((attack_duration - attack_time) / duration, 0, 1)
 
+func attack_movement_phase(progress: float, movement: Dictionary) -> float:
+	var start := float(movement.get("start_progress", 0.0))
+	var finish := float(movement.get("end_progress", 1.0))
+	return clampf((progress - start) / maxf(finish - start, 0.001), 0, 1)
+
+func update_ultimate_movement(from_progress: float, to_progress: float) -> void:
+	if kind != -1 or not ultimate_airborne or not can_use_ultimate():
+		return
+	var recoil: Dictionary = visual.definition("ultimate_air").get("recoil", {})
+	if recoil.is_empty():
+		return
+	var before := attack_movement_phase(from_progress, recoil)
+	var after := attack_movement_phase(to_progress, recoil)
+	# Smoothstep eases into and out of the diagonal impulse without a snap.
+	var step := after * after * (3.0 - 2.0 * after) - before * before * (3.0 - 2.0 * before)
+	position.x = clampf(position.x - facing * float(recoil.get("retreat_distance", 0.0)) * step, movement_left_bound(), game.right_bound)
+	height += float(recoil.get("rise_height", 0.0)) * step
+
 func attack_is_active() -> bool:
 	if weapon_attack and weapon.is_empty():
 		return false
@@ -543,7 +584,10 @@ func update_visual(dt: float) -> void:
 		progress = pickup_elapsed / visual.duration("pickup")
 	elif victory_time >= 0:
 		motion = "victory" if visual.sheets.has("victory") else "jump"
-		progress = fposmod(victory_time, visual.duration(motion)) / visual.duration(motion)
+		if motion == "victory" and not visual.definition(motion).get("loop", false):
+			progress = clampf(victory_time / visual.duration(motion), 0, 1)
+		else:
+			progress = fposmod(victory_time, visual.duration(motion)) / visual.duration(motion)
 	elif is_instance_valid(grabbed_by):
 		motion = "hurt"
 		progress = -1
@@ -570,12 +614,19 @@ func update_visual(dt: float) -> void:
 	var celebration_hop := 0.0
 	if victory_time >= 0 and not visual.sheets.has("victory"):
 		celebration_hop = sin(progress * PI) * 24
-	visual.position = Vector2(0, -roundf(height + celebration_hop))
+	var attack_hop := 0.0
+	if kind == -1 and attack_time > 0 and stun <= 0 and not dead and not air_attack and not is_instance_valid(grabbed_by):
+		var movement: Dictionary = visual.definition(motion).get("movement", {})
+		if not movement.is_empty():
+			attack_hop = sin(attack_movement_phase(progress, movement) * PI) * float(movement.get("hop_height", 0.0))
+	visual.position = Vector2(0, -roundf(height + celebration_hop + attack_hop))
 	visual.modulate.a = 0.4 if invincible > 0 and stun <= 0 and ultimate_pose <= 0 and not dead and int(anim * 16) % 2 == 0 else 1.0
 	visual.visible = kind == -1 or not dead or death_time < 1.65
 	if dead and kind >= 0:
 		visual.modulate.a = clampf((1.65 - death_time) / 0.35, 0, 1)
 	visual.weapon = weapon
+	if kind == -1:
+		visual.material = ultimate_air_material if motion == "ultimate_air" else null
 	visual.update_pose(motion, dt, facing, progress)
 	if not dead and is_instance_valid(grabbed_by):
 		visual.source_frame = 3
@@ -595,6 +646,7 @@ func strike() -> void:
 		var reach := 105.0 if attack_motion() == "punch_weapon" else (89.0 if air_attack or combo == 2 or prop_attack else 70.0)
 		if kind == 2 and not weapon_attack:
 			reach = 80
+		reach *= float(visual.definition(attack_motion()).get("reach_multiplier", 1.0))
 		if delta.x * facing > -12 and delta.x * facing < reach and absf(delta.y) < game.MELEE_DEPTH:
 			var height_difference: float = absf(height - target.height)
 			if height_difference > (112.0 if air_attack else 40.0):
@@ -685,6 +737,10 @@ func release_weapon(direction: float, broken := false) -> Node2D:
 		hand.x *= facing
 		hand.y += visual.position.y
 	var item = game.spawn_weapon(position + Vector2(hand.x, 0), weapon)
+	if item == null:
+		weapon = ""
+		visual.weapon = ""
+		return null
 	item.weapon_durability = weapon_durability
 	item.height = maxf(15, -hand.y)
 	item.weapon_broken = broken
@@ -716,6 +772,8 @@ func launch_away(damage: float, direction: float, can_hit_others := true, throwe
 		return hp < before
 	release_weapon(direction)
 	hurt(damage, direction, true)
+	if dead:
+		return true
 	velocity = Vector2(direction * THROW_SPEED, 0)
 	height = 25
 	jump_speed = 330
@@ -781,6 +839,17 @@ func hurt(damage: float, direction: float, heavy := false, from_grab := false) -
 		release_weapon(direction)
 		dead = true
 		death_time = 0
+		var push_direction := signf(direction) if not is_zero_approx(direction) else -facing
+		facing = -push_direction
+		velocity = Vector2(push_direction * THROW_SPEED * KNOCKOUT_DISTANCE_MULTIPLIER, 0)
+		height = 25
+		jump_speed = 330
+		thrown_time = 1.1
+		flight_can_hit = false
+		flight_hits.clear()
+		getup_time = 0
+		air_attack = false
+		moving = false
 		if kind != -1:
 			game.score += [250, 350, 600][kind]
 	update_visual(0)
@@ -788,7 +857,6 @@ func hurt(damage: float, direction: float, heavy := false, from_grab := false) -
 func _draw() -> void:
 	if dead and kind >= 0 and death_time >= 1.65:
 		return
-	draw_ellipse_shadow()
 	if kind < 0:
 		return
 	var color: Color = ENEMY_COLORS[kind]
@@ -803,11 +871,6 @@ func _draw() -> void:
 		draw_rect(Rect2(-19, -head - height - 4, 38 * hp / max_hp, 2), color)
 	if windup > 0 or rush_windup > 0:
 		draw_string(ArcadeUI.FONT, Vector2(-4, -head * 0.65), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("ffdb8b"))
-
-func draw_ellipse_shadow() -> void:
-	var shade := Color(0.015, 0.02, 0.06, 0.5)
-	draw_rect(Rect2(-15, -3, 30, 6), shade)
-	draw_rect(Rect2(-20, -1, 40, 3), shade)
 
 func movement_left_bound() -> float:
 	return game.left_bound if kind == -1 else 30.0

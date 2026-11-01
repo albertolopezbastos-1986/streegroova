@@ -1,110 +1,241 @@
 {
   "id": "alito",
   "display_name": "Alito",
-  "status": "pending_assets",
+  "status": "integrated",
   "default_facing": "right",
-  "scale": 1,
+  "scale": 0.47244094488188976,
   "pivot": "feet_center",
-  "notes": "Una hoja por movimiento. El juego todavia no lee este manifiesto. FPS y cuadros de impacto se ajustaran al integrar las animaciones.",
+  "notes": "Idle, walk, run y jump propios integrados. Run usa los cuadros 5\u201319, excluyendo el \u00faltimo cuadro dibujado (20). Walk usa los cuadros 0\u201319 con escala y pivote propios para conservar altura y apoyo. Los movimientos pendientes usan el idle de Alito como placeholder visual.",
   "animations": {
     "idle": {
       "path": "animations/idle",
       "format": "sheet",
       "fps": 8,
       "loop": true,
-      "frame_size": null,
-      "frame_count": null,
-      "sheet_columns": null,
-      "sheet_rows": null,
-      "active_hit_frames": null
+      "frame_size": [
+        170,
+        254
+      ],
+      "frame_count": 41,
+      "sheet_columns": 7,
+      "sheet_rows": 6,
+      "active_hit_frames": null,
+      "file": "idle.png",
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40
+      ]
     },
     "walk": {
       "path": "animations/walk",
       "format": "sheet",
+      "file": "walking.png",
       "fps": 10,
       "loop": true,
-      "frame_size": null,
-      "frame_count": null,
-      "sheet_columns": null,
-      "sheet_rows": null,
-      "active_hit_frames": null
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_count": 20,
+      "sheet_columns": 7,
+      "sheet_rows": 3,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "pivot_pixels": [
+        128,
+        232
+      ],
+      "scale": 0.5169308993326507
     },
     "attack_01": {
-      "path": "animations/attack_01",
-      "format": "sheet",
+      "source_animation": "idle",
+      "placeholder": true,
       "fps": 12,
-      "loop": false,
-      "frame_size": null,
-      "frame_count": null,
-      "sheet_columns": null,
-      "sheet_rows": null,
-      "active_hit_frames": null
+      "loop": false
     },
     "attack_02": {
-      "path": "animations/attack_02",
-      "format": "sheet",
+      "source_animation": "idle",
+      "placeholder": true,
       "fps": 12,
-      "loop": false,
-      "frame_size": null,
-      "frame_count": null,
-      "sheet_columns": null,
-      "sheet_rows": null,
-      "active_hit_frames": null
+      "loop": false
     },
     "attack_03": {
-      "path": "animations/attack_03",
-      "format": "sheet",
+      "source_animation": "idle",
+      "placeholder": true,
       "fps": 12,
-      "loop": false,
-      "frame_size": null,
-      "frame_count": null,
-      "sheet_columns": null,
-      "sheet_rows": null,
-      "active_hit_frames": null
+      "loop": false
     },
     "jump": {
       "path": "animations/jump",
       "format": "sheet",
-      "fps": 10,
+      "file": "jump.png",
+      "fps": 15,
       "loop": false,
-      "frame_size": null,
-      "frame_count": null,
-      "sheet_columns": null,
-      "sheet_rows": null,
-      "active_hit_frames": null
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_count": 9,
+      "sheet_columns": 4,
+      "sheet_rows": 4,
+      "frame_indices": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "pivot_pixels": [
+        128,
+        232
+      ],
+      "scale": 0.5169308993326507
     },
     "jump_attack": {
-      "path": "animations/jump_attack",
-      "format": "sheet",
+      "source_animation": "idle",
+      "placeholder": true,
       "fps": 12,
-      "loop": false,
-      "frame_size": null,
-      "frame_count": null,
-      "sheet_columns": null,
-      "sheet_rows": null,
-      "active_hit_frames": null
+      "loop": false
     },
     "hurt": {
-      "path": "animations/hurt",
-      "format": "sheet",
+      "source_animation": "idle",
+      "placeholder": true,
       "fps": 10,
-      "loop": false,
-      "frame_size": null,
-      "frame_count": null,
-      "sheet_columns": null,
-      "sheet_rows": null,
-      "active_hit_frames": null
+      "loop": false
     },
     "death": {
-      "path": "animations/death",
-      "format": "sheet",
+      "source_animation": "idle",
+      "placeholder": true,
       "fps": 8,
-      "loop": false,
-      "frame_size": null,
-      "frame_count": null,
-      "sheet_columns": null,
-      "sheet_rows": null,
-      "active_hit_frames": null
+      "loop": false
+    },
+    "punch_weapon": {
+      "source_animation": "idle",
+      "placeholder": true,
+      "loop": false
+    },
+    "pickup": {
+      "source_animation": "idle",
+      "placeholder": true,
+      "loop": false
+    },
+    "ultimate": {
+      "source_animation": "idle",
+      "placeholder": true,
+      "loop": false
+    },
+    "ultimate_air": {
+      "source_animation": "idle",
+      "placeholder": true,
+      "loop": false
+    },
+    "run": {
+      "path": "animations/run",
+      "format": "sheet",
+      "file": "run.png",
+      "fps": 20,
+      "loop": true,
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_count": 15,
+      "sheet_columns": 5,
+      "sheet_rows": 5,
+      "frame_indices": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "pivot_pixels": [
+        128,
+        232
+      ],
+      "scale": 0.5169308993326507
     }
-  }
+  },
+  "pivot_pixels": [
+    85,
+    250
+  ],
+  "portrait_file": "portraits/portrait.png",
+  "movement_speed_multiplier": 0.9,
+  "jump_height_multiplier": 0.5,
+  "max_health_multiplier": 2.0,
+  "crate_spawn_multiplier": 0.5
 }

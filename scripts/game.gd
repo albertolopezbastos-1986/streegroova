@@ -7,17 +7,17 @@ const CombatDirector = preload("res://scripts/combat_director.gd")
 const Fighter = preload("res://scripts/fighter.gd")
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const START_LOGO: Texture2D = preload("res://assets/branding/groovaipa-logo.png")
+const TITLE_LOGO: Texture2D = preload("res://assets/branding/street-groova-fighter-logo.png")
 const CharacterCatalog = preload("res://scripts/character_catalog.gd")
 const PIXEL_STREET = preload("res://assets/environment/neighborhood-pixel.png")
 const ENVIRONMENT_TILE_COUNT := 5
-const FINAL_BACKGROUND_INDEX := 2 # Neon bar: the campaign always ends here.
+const FINAL_BACKGROUND_INDEX := 1 # Neon bar: the campaign always ends here.
 const ENVIRONMENT_SOURCE_SIZE := Vector2(1536, 1024)
 const ENVIRONMENT_TILE_WIDTH := 492.0
 const ENVIRONMENT_OVERLAP := 128.0
 const ENVIRONMENT_TILE_STEP := ENVIRONMENT_TILE_WIDTH * (1536.0 - ENVIRONMENT_OVERLAP) / 1536.0
 const ENVIRONMENTS = [
 	{"id": "neighborhood", "name": "Calle original", "tiles": ["res://assets/environment/neighborhood-pixel.png"]},
-	{"id": "docks-night", "name": "Docks", "tiles": ["res://assets/environment/tiles/docks-night/01.png", "res://assets/environment/tiles/docks-night/02.png", "res://assets/environment/tiles/docks-night/03.png", "res://assets/environment/tiles/docks-night/04.png", "res://assets/environment/tiles/docks-night/05.png"]},
 	{"id": "neon-bar", "name": "Bar neon", "tiles": ["res://assets/environment/tiles/neon-bar/01.png", "res://assets/environment/tiles/neon-bar/02.png", "res://assets/environment/tiles/neon-bar/03.png", "res://assets/environment/tiles/neon-bar/04.png", "res://assets/environment/tiles/neon-bar/05.png"]},
 	{"id": "train-interior", "name": "Tren", "tiles": ["res://assets/environment/tiles/train-interior/01.png", "res://assets/environment/tiles/train-interior/02.png", "res://assets/environment/tiles/train-interior/03.png", "res://assets/environment/tiles/train-interior/04.png", "res://assets/environment/tiles/train-interior/05.png"]},
 	{"id": "forest-golden-hour", "name": "Bosque dorado", "tiles": ["res://assets/environment/tiles/forest-golden-hour/01.png", "res://assets/environment/tiles/forest-golden-hour/02.png", "res://assets/environment/tiles/forest-golden-hour/03.png", "res://assets/environment/tiles/forest-golden-hour/04.png", "res://assets/environment/tiles/forest-golden-hour/05.png"]},
@@ -240,7 +240,7 @@ func choose_backgrounds() -> Array:
 	chosen.append(FINAL_BACKGROUND_INDEX)
 	return chosen
 
-func load_level(remaining_health := 100.0) -> void:
+func load_level(remaining_health := -1.0) -> void:
 	background_index = int(campaign_backgrounds[level_index])
 	mobile_controls.release_all()
 	if is_instance_valid(player):
@@ -280,7 +280,7 @@ func load_level(remaining_health := 100.0) -> void:
 	player = Fighter.new()
 	world.add_child(player)
 	player.setup(self, -1, Vector2(CAMERA_ANCHOR_X / WORLD_ZOOM, START_Y), character_pack)
-	player.hp = remaining_health
+	player.hp = player.max_hp if remaining_health < 0 else minf(remaining_health, player.max_hp)
 	player.invincible = 1.5
 	if not debug_room:
 		spawn_wave()
@@ -526,7 +526,7 @@ func debug_action(number: int) -> void:
 			var pack := CharacterCatalog.load_pack("res://assets/characters/%s/character.json" % id)
 			var placeholder := pack.is_empty()
 			if placeholder:
-				pack = CharacterCatalog.character("beto").duplicate(true)
+				pack = CharacterCatalog.character(id).duplicate(true)
 				pack["id"] = id
 				pack["display_name"] = id.capitalize() + " (grafica Beto)"
 			var at: Vector2 = player.position
@@ -542,6 +542,13 @@ func debug_action(number: int) -> void:
 			world.add_child(player)
 			player.setup(self, -1, at, pack)
 			player.facing = direction
+			if not weapons_allowed():
+				for item in weapons:
+					item.queue_free()
+				weapons.clear()
+				for enemy in enemies:
+					enemy.weapon = ""
+					enemy.visual.weapon = ""
 			player.invincible = 1.5
 			ult_time = 0
 			ult_applied = false
@@ -591,7 +598,7 @@ func spawn_wave() -> void:
 		enemies.append(enemy)
 	try_spawn_supply()
 	keep_enemies_in_play_area()
-	if stage in weapon_spawn_waves and stage not in weapon_spawned_waves:
+	if weapons_allowed() and stage in weapon_spawn_waves and stage not in weapon_spawned_waves:
 		spawn_weapon(Vector2(minf(right_bound - 45, player.position.x + 320), START_Y), "wood" if randf() < 0.5 else "pipe")
 		weapon_spawned_waves.append(stage)
 	banner_time = 3
@@ -603,10 +610,13 @@ func try_spawn_supply() -> bool:
 		return false
 	if randf() >= 0.4:
 		return false
+	var is_barrel := randf() < 0.5
+	if not is_barrel and randf() >= float(character_pack["definition"].get("crate_spawn_multiplier", 1.0)):
+		return false
 	var prop = Breakable.new()
 	world.add_child(prop)
 	var x := clampf(player.position.x + 230, left_bound + 40, right_bound - 40)
-	prop.setup(self, Vector2(x, START_Y), randf() < 0.5)
+	prop.setup(self, Vector2(x, START_Y), is_barrel)
 	props.append(prop)
 	return true
 
@@ -630,7 +640,12 @@ func update_supplies(dt: float) -> void:
 	for item in weapons:
 		item.tick(dt)
 
+func weapons_allowed() -> bool:
+	return bool(character_pack.get("definition", {}).get("weapons_allowed", true))
+
 func spawn_weapon(at: Vector2, kind: String) -> Node2D:
+	if not weapons_allowed():
+		return null
 	var item = Breakable.new()
 	world.add_child(item)
 	item.setup(self, at, false)
@@ -642,6 +657,8 @@ func nearby_pickup(fighter: Node2D) -> Node2D:
 	var closest: Node2D
 	var distance := 32.0
 	for item in food + weapons:
+		if not item.weapon.is_empty() and not weapons_allowed():
+			continue
 		if item.dead or item.weapon_airborne or item.weapon_broken or (item.weapon.is_empty() and fighter.hp >= fighter.max_hp):
 			continue
 		var offset: Vector2 = item.position - fighter.position
@@ -790,8 +807,10 @@ func update_game(dt: float) -> void:
 		freeze -= dt
 		return
 	if ult_time > 0:
+		var previous_progress := (1.6 - ult_time) / 1.6
 		ult_time -= dt
 		player.ultimate_pose = 0.1
+		player.update_ultimate_movement(previous_progress, (1.6 - ult_time) / 1.6)
 		player.update_visual(dt)
 		player.queue_redraw()
 		if ult_time < 0.65 and not ult_applied:
@@ -1125,11 +1144,13 @@ func draw_overlay() -> void:
 		canvas.draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.025, 0.035, 0.08, 0.90))
 		canvas.draw_set_transform(Vector2(0, (VIEW_HEIGHT - 540.0) / 2))
 		if state == "title":
-			var logo_scale := minf(360.0 / START_LOGO.get_width(), 190.0 / START_LOGO.get_height())
+			var logo_scale := minf(180.0 / START_LOGO.get_width(), 80.0 / START_LOGO.get_height())
 			var logo_size := START_LOGO.get_size() * logo_scale
 			canvas.draw_texture_rect(START_LOGO, Rect2(Vector2((960 - logo_size.x) / 2, 8), logo_size), false)
-			overlay_centered(canvas, "STREET GROOVA", 258, 60, Color("f187a5"))
-			overlay_centered(canvas, "PRESS START", 390, 30, CREAM if sin(time * 4) > -0.4 else Color("818799"))
+			var title_scale := minf(420.0 / TITLE_LOGO.get_width(), 270.0 / TITLE_LOGO.get_height())
+			var title_size := TITLE_LOGO.get_size() * title_scale
+			canvas.draw_texture_rect(TITLE_LOGO, Rect2(Vector2((960 - title_size.x) / 2, 250 - title_size.y / 2), title_size), false)
+			overlay_centered(canvas, "PRESS START", 500, 30, CREAM if sin(time * 4) > -0.4 else Color("818799"))
 		elif state == "pause" or show_help:
 			overlay_text(canvas, "PAUSA" if not show_help else "COMO JUGAR", Vector2(335, 173), 48, MINT)
 			draw_controls(canvas, 240)

@@ -23,6 +23,21 @@ static func character(id: String) -> Dictionary:
 				return pack
 	var fallback: String = roster["fallback"]
 	if id != fallback:
+		for entry in slots():
+			if entry["id"] != id:
+				continue
+			var manifest = load(str(entry["definition"]))
+			if not manifest is JSON:
+				continue
+			var data: Dictionary = manifest.data
+			var portrait_path := str(entry["definition"]).get_base_dir().path_join(str(data.get("portrait_file", "portraits/portrait.png")))
+			if ResourceLoader.exists(portrait_path):
+				var pack := character(fallback).duplicate(true)
+				pack["id"] = id
+				pack["display_name"] = data.get("display_name", id.capitalize())
+				pack["portrait"] = load(portrait_path)
+				cache[id] = pack
+				return pack
 		return character(fallback)
 	push_error("No se pudo cargar el personaje base: " + fallback)
 	return {}
@@ -103,6 +118,16 @@ static func load_pack(path: String) -> Dictionary:
 		animations["ultimate_air"]["placeholder"] = true
 		sheets["ultimate_air"] = sheets["ultimate"]
 	var idle: Dictionary = animations["idle"]
+	# Normalize different sprite cell heights before applying a relative size.
+	var relative: Dictionary = data.get("relative_size", {})
+	if not relative.is_empty():
+		var reference = load(str(relative.get("definition", "")))
+		if not reference is JSON or not reference.data is Dictionary:
+			return {}
+		var reference_data: Dictionary = reference.data
+		var reference_idle: Dictionary = reference_data["animations"]["idle"]
+		var reference_scale := float(reference_idle.get("scale", reference_data["scale"]))
+		data["scale"] = reference_scale * float(reference_idle["frame_size"][1]) / float(idle["frame_size"][1]) * float(relative.get("ratio", 1.0))
 	data["pivot_pixels"] = data.get("pivot_pixels", [float(idle["frame_size"][0]) / 2, float(idle["frame_size"][1]) - 10])
 	var portrait: Texture2D
 	var portrait_file: String = data.get("portrait_file", "portraits/portrait.png")

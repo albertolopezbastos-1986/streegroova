@@ -1,0 +1,47 @@
+{
+  "sheet": "assets/characters/beto/animations/ultimate_air/jumpultimate.png",
+  "source_sha256": "00822430d784c16714ff2f239769b9cdfdf0c9cd3b3d3dd1395ad8caf137d022",
+  "frame_size": [
+    200,
+    200
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 8,
+  "runtime_manifest": "assets/characters/beto/character.json",
+  "preview_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 5,
+  "preview_durations": [
+    0.2,
+    0.2,
+    0.2,
+    0.2,
+    0.2,
+    0.2,
+    0.2,
+    0.4
+  ],
+  "gif": "assets/characters/beto/animations/ultimate_air/preview.gif"
+}

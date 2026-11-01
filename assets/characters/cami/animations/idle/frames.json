@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/cami/animations/idle/idle.png",
+  "source_sha256": "9c7bcf8e2a78992172a4ffb215db116117a83fd30b40267265b638e8808a2bf4",
+  "frame_size": [
+    162,
+    245
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/cami/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 8,
+  "preview_durations": [
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125
+  ],
+  "gif": "assets/characters/cami/animations/idle/preview.gif"
+}

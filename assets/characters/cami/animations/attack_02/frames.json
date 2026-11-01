@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/cami/animations/attack_02/punch2.png",
+  "source_sha256": "59e3bf8f94fa1a68b00f7abd293725d3013abfc8fba13acef75fb9f82a5e1b13",
+  "frame_size": [
+    162,
+    245
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/cami/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 18,
+  "preview_durations": [
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.25555555555555554
+  ],
+  "gif": "assets/characters/cami/animations/attack_02/preview.gif"
+}

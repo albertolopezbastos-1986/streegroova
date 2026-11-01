@@ -131,7 +131,7 @@ Validación de palanca, multitouch, carrera y limpieza de controles: `godot --he
 
 Los tres niveles repiten por ahora el escenario, las cinco oleadas y el jefe del nivel 1. El HUD indica el nivel y la oleada. Al superar los niveles 1 y 2 se muestra **STAGE CLEAR** con luces arcade durante 3,5 segundos y se carga automáticamente la primera oleada del siguiente nivel. Se conservan personaje, salud, vidas, carga de ulti, puntos y el identificador de la partida; se reinician la cámara, los enemigos, las cajas, los barriles y la comida del escenario.
 
-Al superar el nivel 3 aparece **CONGRATULATIONS!** con confeti y una celebración de cinco segundos. El personaje usa `jump` como animación provisional de victoria; agregar una animación opcional `victory` al manifiesto la reemplaza automáticamente. Después se abre el ranking con el puntaje acumulado de los tres niveles. El debug room no participa de la progresión de campaña.
+Al superar el nivel 3 aparece **CONGRATULATIONS!** con confeti y una celebración de cinco segundos. Beto usa su animación `victory` y sostiene la pose final. Después se abre el ranking con el puntaje acumulado de los tres niveles. El debug room no participa de la progresión de campaña.
 
 Validación de las 15 oleadas, intermedios, continuidad y victoria final: `godot --headless --path . --script tests/test_campaign.gd`.
 
@@ -195,6 +195,6 @@ Atajo de prueba: 0 (también numérico) completa el nivel actual con celebració
 
 La animación base de agacharse tiene ocho cuadros, con el primero tomado del idle original y los siguientes creados con image_gen. El jugador sólo se agacha al pulsar golpe cerca de comida o de un arma para recogerla. No hay tecla de agachado independiente. [Sprites, GIF y prompts](assets/characters/beto/animations/crouch/README.md). Prueba: tests/test_crouch.gd.
 
-La recogida de comida y armas usa ahora los dibujos de agacharse: baja, obtiene el objeto y vuelve a levantarse. Los conjuntos original, 20 y 40 tienen carpetas crouch y ultimate_air para Beto, Alito y Cami. La ulti aérea sigue usando el alias provisional hasta recibir su hoja dedicada.
+La recogida de comida y armas usa ahora los dibujos de agacharse: baja, obtiene el objeto y vuelve a levantarse. Los conjuntos original, 20 y 40 tienen carpetas crouch y ultimate_air para Beto, Alito y Cami. Beto usa su hoja dedicada `jumpultimate.png` para la ulti aérea, con energía dorada aplicada por shader.
 
 La recogida completa el gesto con tres cuadros nuevos de la mano bajando, abriendo los dedos y cerrándolos junto al suelo. El contacto obtiene el objeto al 50% de la secuencia; después se retira el brazo y Beto se levanta. [Animación y prompts](assets/characters/beto/animations/pickup/README.md).
