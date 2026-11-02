@@ -1,5 +1,7 @@
 extends Node2D
 
+const OLIVE_GUITAR = preload("res://assets/characters/olive_guitar.gdshader")
+
 const WeaponArt = preload("res://scripts/weapon_art.gd")
 
 var character_data: Dictionary = {}
@@ -11,6 +13,9 @@ static var image_cache: Dictionary = {}
 func configure(pack: Dictionary) -> void:
 	character_data = pack["definition"]
 	sheets = pack["sheets"]
+	if character_data.get("id", "") == "beto":
+		material = ShaderMaterial.new()
+		material.shader = OLIVE_GUITAR
 	motion = "idle"
 	clock = 0
 	source_frame = 0

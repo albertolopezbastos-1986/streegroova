@@ -1,0 +1,37 @@
+{
+  "sheet": "assets/enemies/enemie1/animations/attack_02/punch2_1.png",
+  "source_sha256": "ac0579eba2e05a5e1f2d41f03d8d701aa23c2960faca9e9fcfd34e5c377da4bb",
+  "frame_size": [
+    163,
+    234
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/enemies/enemie1/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 22
+}

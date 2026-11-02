@@ -21,12 +21,13 @@ func run() -> void:
 	game.new_run()
 	await process_frame
 	var hero = game.player
-	hero.invincible = 999
+	hero.hp = 10000
+	hero.max_hp = 10000
 	for enemy in game.enemies:
 		check(is_instance_valid(enemy.visual), "enemy has pixel sprite renderer")
-		check(enemy.visual.sheets["idle"] == hero.visual.sheets["idle"], "enemy clones Beto's actual sprite sheets")
-		check(enemy.visual.definition("attack_01")["frame_indices"].size() == 40, "enemy shares the 40-frame first punch")
-		check(enemy.visual.material is ShaderMaterial, "enemy has a separate clothing palette")
+		check(enemy.visual.sheets["idle"] != hero.visual.sheets["idle"] and enemy.visual.character_data["id"] == "enemie%d" % (enemy.kind + 1), "enemy uses its own character sheets")
+		check(enemy.visual.definition("attack_01")["frame_indices"].size() == 9, "enemy uses its nine-frame first punch")
+		check(enemy.visual.material == null, "enemy retains its original palette")
 		check(not enemy.can_use_ultimate(), "enemy has no ultimate permission")
 	var enemy = game.enemies[0]
 	# Isolate animation/move coverage from the separately tested group director.
@@ -38,6 +39,7 @@ func run() -> void:
 	var attacks: Dictionary = {}
 	var telegraphed := false
 	for i in range(360):
+		hero.invincible = 0
 		enemy.tick(0.016)
 		telegraphed = telegraphed or enemy.windup > 0
 		if enemy.visual.motion.begins_with("attack_"):
@@ -51,26 +53,24 @@ func run() -> void:
 	enemy.ai_wait = 0
 	enemy.ai_jump_cooldown = 0
 	enemy.tick(0.016)
-	check(enemy.height > 0 and enemy.velocity.x < 0 and enemy.visual.motion == "jump", "AI jumps forward to close distance")
-	var kicked := false
-	for i in range(60):
+	check(enemy.height == 0 and not enemy.running and not enemy.run_attack, "enemy approaches on foot")
+	var stayed_grounded := true
+	for i in range(180):
+		enemy.ai_jump_cooldown = 0
+		enemy.ai_slide_cooldown = 0
 		enemy.tick(0.016)
-		kicked = kicked or (enemy.visual.motion == "jump_attack" and enemy.height > 0)
-	check(kicked, "AI converts its approach jump to flying kick")
-	check(enemy.height == 0, "enemy lands after its aerial attack")
+		stayed_grounded = stayed_grounded and enemy.height == 0 and not enemy.running and not enemy.run_attack and enemy.rush_windup == 0
+	check(stayed_grounded, "enemy stays grounded without rushing")
+	check(not enemy.takeoff(Vector2(100, 0)), "enemy cannot initiate a jump")
 	enemy.position = hero.position + Vector2(45, 0)
 	enemy.attack_time = 0
 	enemy.windup = 0
 	enemy.cooldown = 0
 	enemy.ai_wait = 0
-	enemy.ai_jump_cooldown = 0
 	hero.attack_time = 0.1
 	enemy.tick(0.016)
-	check(enemy.height > 0 and enemy.velocity == Vector2.ZERO, "AI can neutral-jump to evade a close attack")
+	check(enemy.height == 0, "enemy does not jump to evade")
 	hero.attack_time = 0
-	enemy.height = 0
-	enemy.jump_speed = 0
-	enemy.air_attack = false
 	enemy.attack_time = 0
 	hero.hp = 100
 	hero.invincible = 0
@@ -78,10 +78,6 @@ func run() -> void:
 	enemy.begin_attack()
 	enemy.strike()
 	check(hero.hp == 100, "ground punch cannot hit a high airborne player")
-	enemy.height = 70
-	enemy.begin_attack()
-	enemy.strike()
-	check(hero.hp < 100, "air kick can hit a player at matching height")
 	enemy.ultimate_pose = 1
 	enemy.update_visual(0)
 	check(enemy.visual.motion != "ultimate", "enemy cannot enter ultimate animation even with pose timer set")
@@ -96,16 +92,16 @@ func run() -> void:
 	enemy.cooldown = 100
 	enemy.invincible = 0
 	enemy.hurt(10, -1)
-	check(enemy.visual.motion == "hurt", "enemy uses Beto's damage animation")
+	check(enemy.visual.motion == "hurt", "enemy uses its own damage animation")
 	for i in range(25):
 		enemy.tick(0.016)
 	check(enemy.visual.motion != "hurt", "enemy recovers after damage")
 	enemy.invincible = 0
 	enemy.hurt(1000, -1)
-	check(enemy.dead and enemy.visual.motion == "death", "enemy uses Beto's KO animation")
+	check(enemy.dead and enemy.visual.motion == "death", "enemy uses its own KO animation")
 	for i in range(75):
 		enemy.tick(0.016)
-	check(enemy.visual.source_frame == 8, "enemy KO reaches final lying-down frame")
+	check(enemy.visual.source_frame == 20, "enemy KO reaches final lying-down frame")
 	for i in range(40):
 		enemy.tick(0.016)
 	check(not enemy.visual.visible, "defeated clone fades after KO instead of staying in the lane")

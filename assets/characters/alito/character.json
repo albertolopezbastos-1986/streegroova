@@ -5,7 +5,7 @@
   "default_facing": "right",
   "scale": 0.47244094488188976,
   "pivot": "feet_center",
-  "notes": "Idle, walk, run y jump propios integrados. Run usa los cuadros 5\u201319, excluyendo el \u00faltimo cuadro dibujado (20). Walk usa los cuadros 0\u201319 con escala y pivote propios para conservar altura y apoyo. Los movimientos pendientes usan el idle de Alito como placeholder visual.",
+  "notes": "Idle, walk, run y jump propios integrados. Run usa los cuadros 5\u201319, excluyendo el \u00faltimo cuadro dibujado (20). Walk usa los cuadros 0\u201319 con escala y pivote propios para conservar altura y apoyo. Los movimientos pendientes usan el idle de Alito como placeholder visual. Victory propio integrado: 13 cuadros, sin bucle y con pose final sostenida. Ulti propia de 9 cuadros con explosi\u00f3n sincronizada al impacto; s\u00f3lo se activa en el suelo. Primer golpe propio de 9 cuadros; contacto durante la embestida (4\u20135). Combo propio de dos golpes: el segundo es la patada que lanza enemigos. Patada a\u00e9rea propia: cuadros 6\u201310 contando desde 1 (\u00edndices 5\u20139), contacto en la extensi\u00f3n final.",
   "animations": {
     "idle": {
       "path": "animations/idle",
@@ -107,16 +107,65 @@
       "scale": 0.5169308993326507
     },
     "attack_01": {
-      "source_animation": "idle",
-      "placeholder": true,
-      "fps": 12,
-      "loop": false
+      "path": "animations/attack_01",
+      "file": "punch1.png",
+      "format": "sheet",
+      "fps": 18,
+      "loop": false,
+      "frame_size": [
+        170,
+        254
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "active_hit_frames": [
+        4,
+        5
+      ],
+      "placeholder": false
     },
     "attack_02": {
-      "source_animation": "idle",
-      "placeholder": true,
-      "fps": 12,
-      "loop": false
+      "path": "animations/attack_02",
+      "file": "punch2.png",
+      "format": "sheet",
+      "fps": 18,
+      "loop": false,
+      "frame_size": [
+        170,
+        254
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "active_hit_frames": [
+        3,
+        4
+      ],
+      "launches_enemies": true,
+      "placeholder": false
     },
     "attack_03": {
       "source_animation": "idle",
@@ -155,10 +204,29 @@
       "scale": 0.5169308993326507
     },
     "jump_attack": {
-      "source_animation": "idle",
-      "placeholder": true,
-      "fps": 12,
-      "loop": false
+      "path": "animations/jump_attack",
+      "file": "flykick.png",
+      "format": "sheet",
+      "fps": 15,
+      "loop": false,
+      "frame_size": [
+        170,
+        254
+      ],
+      "frame_count": 5,
+      "sheet_columns": 5,
+      "sheet_rows": 5,
+      "frame_indices": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "active_hit_frames": [
+        9
+      ],
+      "placeholder": false
     },
     "hurt": {
       "source_animation": "idle",
@@ -183,9 +251,35 @@
       "loop": false
     },
     "ultimate": {
-      "source_animation": "idle",
-      "placeholder": true,
-      "loop": false
+      "path": "animations/ultimate",
+      "file": "ulti.png",
+      "format": "sheet",
+      "fps": 5.625,
+      "loop": false,
+      "frame_size": [
+        170,
+        254
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "active_hit_frames": [
+        6
+      ],
+      "impact_frame": 6,
+      "impact_progress": 0.59375,
+      "placeholder": false
     },
     "ultimate_air": {
       "source_animation": "idle",
@@ -227,6 +321,37 @@
         232
       ],
       "scale": 0.5169308993326507
+    },
+    "victory": {
+      "path": "animations/victory",
+      "file": "victory.png",
+      "format": "sheet",
+      "fps": 8,
+      "loop": false,
+      "frame_size": [
+        170,
+        254
+      ],
+      "frame_count": 13,
+      "sheet_columns": 4,
+      "sheet_rows": 4,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "active_hit_frames": [],
+      "placeholder": false
     }
   },
   "pivot_pixels": [
@@ -237,5 +362,9 @@
   "movement_speed_multiplier": 0.9,
   "jump_height_multiplier": 0.5,
   "max_health_multiplier": 2.0,
-  "crate_spawn_multiplier": 0.5
+  "crate_spawn_multiplier": 0.5,
+  "combo_sequence": [
+    1,
+    2
+  ]
 }

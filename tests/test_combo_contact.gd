@@ -27,12 +27,20 @@ func run() -> void:
 				assert(not hero.combo_connected, "misses cannot build a combo")
 			for step in range(4):
 				enemy.position = hero.position + Vector2(direction * 45, 0)
+				enemy.thrown_time = 0
+				enemy.getup_time = 0
+				enemy.height = 0
+				enemy.jump_speed = 0
 				enemy.invincible = 0
 				hero.strike()
 				assert(hero.combo_connected)
 				hero.begin_attack()
-				assert(hero.combo == (step + 1) % 4, "confirmed hits advance the combo and wrap after the finisher")
+				assert(hero.combo == (step + 1) % hero.player_combo().size(), "confirmed hits advance the combo and wrap after the finisher")
 			# Miss the second punch: the third input must restart from punch 1.
+			enemy.thrown_time = 0
+			enemy.getup_time = 0
+			enemy.height = 0
+			enemy.jump_speed = 0
 			enemy.invincible = 0
 			hero.strike()
 			hero.begin_attack()
@@ -48,6 +56,10 @@ func run() -> void:
 			hero.begin_attack()
 			assert(hero.combo == 0 and not hero.combo_connected)
 			# A connected punch still expires with the existing combo window.
+			enemy.thrown_time = 0
+			enemy.getup_time = 0
+			enemy.height = 0
+			enemy.jump_speed = 0
 			enemy.invincible = 0
 			hero.strike()
 			hero.combo_window = 0

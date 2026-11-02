@@ -1,0 +1,37 @@
+{
+  "sheet": "assets/enemies/enemie3/animations/idle/idle3.png",
+  "source_sha256": "dd1038dd9b9bd2bb1d0299dbfea087e138af915e96450f9e224acb61ad2827dd",
+  "frame_size": [
+    159,
+    245
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/enemies/enemie3/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 8
+}

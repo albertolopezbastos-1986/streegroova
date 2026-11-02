@@ -367,8 +367,20 @@
       ]
     },
     "ultimate": {
-      "source_animation": "attack_03",
+      "path": "animations/ultimate",
+      "file": "ulti.png",
+      "format": "sheet",
+      "fps": 25.625,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "sheet_columns": 7,
+      "sheet_rows": 6,
+      "frame_count": 41,
       "frame_indices": [
+        0,
         1,
         2,
         3,
@@ -376,10 +388,46 @@
         5,
         6,
         7,
-        8
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40
       ],
-      "impact_frame": 6,
-      "impact_progress": 0.59
+      "active_hit_frames": [
+        29
+      ],
+      "impact_frame": 29,
+      "impact_progress": 0.59,
+      "placeholder": false
     },
     "grab_throw": {
       "path": "../../characters_20_frames/beto/animations/grab_throw",

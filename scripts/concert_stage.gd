@@ -5,12 +5,6 @@ var elapsed := 0.0
 var win_label: Label
 
 func _ready() -> void:
-	get_node("BlackBackdrop").size = get_viewport_rect().size
-	var frame := Vector2(960, ProjectSettings.get_setting("display/window/size/viewport_height"))
-	var background := get_node("Background") as Sprite2D
-	var image_size := background.texture.get_size()
-	background.scale = Vector2.ONE * minf(frame.x / image_size.x, frame.y / image_size.y)
-	background.position = (frame - image_size * background.scale) * 0.5
 	win_label = Label.new()
 	win_label.text = "YOU WIN!"
 	win_label.position = Vector2(0, 65)
@@ -23,8 +17,30 @@ func _ready() -> void:
 	win_label.add_theme_constant_override("shadow_offset_y", 4)
 	win_label.z_index = 5
 	add_child(win_label)
+	get_viewport().size_changed.connect(update_layout)
+	update_layout()
+
+func mobile_layout() -> bool:
+	var game = get_parent().get_parent()
+	return OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.has_feature("mobile") or bool(game.get("touch_visible"))
+
+func update_layout() -> void:
+	var frame := get_viewport_rect().size
+	get_node("BlackBackdrop").size = frame
+	var background := get_node("Background") as Sprite2D
+	var image_size := background.texture.get_size()
+	var mobile := mobile_layout()
+	var area := frame if mobile else Vector2(960, 640)
+	var ratio := maxf(area.x / image_size.x, area.y / image_size.y) if mobile else minf(area.x / image_size.x, area.y / image_size.y)
+	background.scale = Vector2.ONE * ratio
+	background.position = (area - image_size * ratio) * 0.5
+	win_label.position = Vector2(0, area.y * 0.1)
+	win_label.size = Vector2(area.x, 64)
+	win_label.add_theme_font_size_override("font_size", int(clampf(area.x * 0.046, 28, 44)))
+	queue_redraw()
 
 func restart() -> void:
+	update_layout()
 	elapsed = 0
 	queue_redraw()
 
@@ -36,6 +52,8 @@ func _process(dt: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
+	var area := get_viewport_rect().size if mobile_layout() else Vector2(960, 640)
+	draw_set_transform(Vector2.ZERO, 0, area / Vector2(960, 640))
 	var colors := [Color("d735ba"), Color("38c9ed"), Color("ffc36b")]
 	for i in range(5):
 		var origin := Vector2(180 + i * 150, 75)

@@ -251,7 +251,7 @@
         4,
         5
       ],
-      "reach_multiplier": 2
+      "reach_multiplier": 1.0
     },
     "attack_02": {
       "path": "animations/attack_02",
@@ -281,7 +281,7 @@
         4,
         5
       ],
-      "reach_multiplier": 2
+      "reach_multiplier": 1.0
     },
     "attack_03": {
       "path": "animations/attack_03",
@@ -347,7 +347,7 @@
         162,
         281
       ],
-      "reach_multiplier": 2
+      "reach_multiplier": 1.0
     },
     "jump": {
       "path": "animations/jump",

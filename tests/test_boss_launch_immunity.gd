@@ -28,7 +28,8 @@ func run() -> void:
 	hero.throw_weapon()
 	var item = game.weapons[-1]
 	var before: float = boss.hp
-	item.tick(0.25)
+	for step in range(15):
+		item.tick(1.0 / 60.0)
 	assert(boss.hp == before - 36 and boss.thrown_time == 0)
 	assert(item.weapon_velocity.x == 0 and item.weapon_durability == 50)
 	game.ult_time = 0.7

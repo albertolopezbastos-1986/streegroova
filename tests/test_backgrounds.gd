@@ -15,7 +15,7 @@ func run() -> void:
 	seed(2563)
 	for trial in range(50):
 		var chosen: Array = game.choose_backgrounds()
-		assert(chosen.size() == 3)
+		assert(chosen == [0, 4, 1], "campaign always uses street, shopping, bar")
 		assert(chosen[2] == game.FINAL_BACKGROUND_INDEX)
 		assert(game.ENVIRONMENTS[chosen[2]]["id"] == "neon-bar")
 		assert(chosen[0] != game.FINAL_BACKGROUND_INDEX and chosen[1] != game.FINAL_BACKGROUND_INDEX)
@@ -25,7 +25,7 @@ func run() -> void:
 			unique[index] = true
 			covered[index] = true
 		orders[str(chosen)] = true
-	assert(covered.size() == game.ENVIRONMENTS.size() and orders.size() > 1)
+	assert(covered.size() == 3 and orders.size() == 1)
 	assert(game.ENVIRONMENT_TILE_WIDTH == 492 and game.ENVIRONMENT_SOURCE_SIZE == Vector2(1536, 1024))
 	for environment_index in range(game.ENVIRONMENTS.size()):
 		var environment: Dictionary = game.ENVIRONMENTS[environment_index]
@@ -69,7 +69,7 @@ func run() -> void:
 		await process_frame
 	game.new_run(true)
 	assert(game.background_index == 0)
-	print("ALL BACKGROUND CHECKS PASSED: two random stages, final bar, connected panoramas")
+	print("ALL BACKGROUND CHECKS PASSED: fixed street, shopping, bar, connected panoramas")
 	game.queue_free()
 	await process_frame
 	quit()

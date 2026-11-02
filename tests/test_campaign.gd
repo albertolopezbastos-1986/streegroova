@@ -23,17 +23,19 @@ func run() -> void:
 	game.new_run()
 	await process_frame
 	var id: String = game.run_id
-	var backgrounds: Array = game.campaign_backgrounds.duplicate()
+	var backgrounds: Array = [0, 4, 1]
 	game.player.hp = 63
 	game.lives = 2
 	game.charge = 75
 	for level in range(3):
-		check(game.background_index == backgrounds[level] and game.campaign_backgrounds == backgrounds, "campaign uses its fixed randomized environment order")
+		check(game.background_index == backgrounds[level] and game.campaign_backgrounds == backgrounds, "campaign uses its fixed street, shopping, bar order")
 		check(game.level_index == level and game.stage == 0 and game.state == "play", "level %d starts at wave one" % (level + 1))
 		for wave in range(game.WAVE_COUNT):
 			check(game.stage == wave, "level %d wave %d is reachable" % [level + 1, wave + 1])
 			if wave == game.WAVE_COUNT - 1:
 				check(game.enemies[-1].is_boss, "each level has its final boss")
+				check(game.enemies[-1].visual.character_data["id"] == ["enemie1", "enemie3", "enemie2"][level], "boss identity follows the campaign order")
+				check(is_equal_approx(game.enemies[-1].visual.scale.x, 1.25), "boss retains its enlarged size")
 			for enemy in game.enemies:
 				enemy.dead = true
 			game.score += 100
@@ -56,6 +58,11 @@ func run() -> void:
 			check(game.level_index == level and game.state == "stage_clear", "intermission stays on screen for its duration")
 			game.update_presentation(0.11)
 			check(game.state == "fade_out" and game.level_index == level, "hidden countdown ends by fading out current level")
+			game.update_level_transition(game.FADE_DURATION)
+			check(game.state == "map_in", "map appears before the level")
+			game.update_level_transition(game.FADE_DURATION)
+			check(game.state == "map_hold" and game.fade_screen.color.a == 0, "map fades in fully")
+			game.update_level_transition(game.MAP_DURATION)
 			game.update_level_transition(game.FADE_DURATION)
 			check(game.state == "black_hold" and game.fade_screen.color.a == 1, "next level loads behind black screen")
 			game.update_level_transition(game.BLACK_HOLD_DURATION)

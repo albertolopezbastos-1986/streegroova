@@ -1,0 +1,228 @@
+{
+  "id": "enemie2",
+  "display_name": "Malo 2",
+  "default_facing": "right",
+  "scale": 0.46875,
+  "pivot_pixels": [
+    87.5,
+    250
+  ],
+  "notes": "Enemigo terrestre: camina y ataca, no salta, corre ni hace deslizantes. Las animaciones obligatorias de salto son aliases de compatibilidad, no se usan en su IA.",
+  "animations": {
+    "idle": {
+      "format": "sheet",
+      "file": "idle2.png",
+      "frame_size": [
+        175,
+        256
+      ],
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_count": 9,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "fps": 8,
+      "loop": true,
+      "active_hit_frames": [],
+      "placeholder": false,
+      "path": "animations/idle"
+    },
+    "walk": {
+      "format": "sheet",
+      "file": "walk2.png",
+      "frame_size": [
+        175,
+        256
+      ],
+      "sheet_columns": 5,
+      "sheet_rows": 5,
+      "frame_count": 21,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "fps": 16,
+      "loop": true,
+      "active_hit_frames": [],
+      "placeholder": false,
+      "path": "animations/walk"
+    },
+    "attack_01": {
+      "format": "sheet",
+      "file": "punch1_2.png",
+      "frame_size": [
+        175,
+        256
+      ],
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_count": 9,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "fps": 22,
+      "loop": false,
+      "active_hit_frames": [
+        5,
+        6
+      ],
+      "placeholder": false,
+      "path": "animations/attack_01"
+    },
+    "attack_02": {
+      "format": "sheet",
+      "file": "punch2_2.png",
+      "frame_size": [
+        175,
+        256
+      ],
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_count": 9,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "fps": 22,
+      "loop": false,
+      "active_hit_frames": [
+        5,
+        6
+      ],
+      "placeholder": false,
+      "path": "animations/attack_02"
+    },
+    "hurt": {
+      "format": "sheet",
+      "file": "hurt2.png",
+      "frame_size": [
+        175,
+        256
+      ],
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_count": 9,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "fps": 24,
+      "loop": false,
+      "active_hit_frames": [],
+      "placeholder": false,
+      "path": "animations/hurt"
+    },
+    "death": {
+      "format": "sheet",
+      "file": "ko2.png",
+      "frame_size": [
+        175,
+        256
+      ],
+      "sheet_columns": 5,
+      "sheet_rows": 5,
+      "frame_count": 21,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "fps": 18,
+      "loop": false,
+      "active_hit_frames": [],
+      "placeholder": false,
+      "path": "animations/death"
+    },
+    "attack_03": {
+      "source_animation": "attack_01"
+    },
+    "jump": {
+      "source_animation": "attack_02",
+      "frame_indices": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "placeholder": true
+    },
+    "jump_attack": {
+      "source_animation": "attack_02",
+      "placeholder": true
+    },
+    "runslide": {
+      "source_animation": "attack_02",
+      "placeholder": true
+    }
+  }
+}

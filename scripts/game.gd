@@ -9,8 +9,15 @@ const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const START_LOGO: Texture2D = preload("res://assets/branding/groovaipa-logo.png")
 const TITLE_LOGO: Texture2D = preload("res://assets/branding/street-groova-fighter-logo.png")
 const CharacterCatalog = preload("res://scripts/character_catalog.gd")
+const CAMPAIGN_MAP = preload("res://assets/environment/campaign-map.png")
+const MAP_DURATION := 3.0
+const MAP_STATIONS = [Vector2(515, 473), Vector2(862, 435), Vector2(1263, 425)]
+const MAP_NAMES = ["MORÓN", "CIUDADELA", "LINIERS"]
+
 const PIXEL_STREET = preload("res://assets/environment/neighborhood-pixel.png")
 const ENVIRONMENT_TILE_COUNT := 5
+const CAMPAIGN_BOSSES = [0, 2, 1] # Malo 1, malo 3, malo 2.
+const CAMPAIGN_BACKGROUNDS = [0, 4, 1] # Calle, shopping, bar.
 const FINAL_BACKGROUND_INDEX := 1 # Neon bar: the campaign always ends here.
 const ENVIRONMENT_SOURCE_SIZE := Vector2(1536, 1024)
 const ENVIRONMENT_TILE_WIDTH := 492.0
@@ -67,7 +74,7 @@ var combo_hits := 0
 var combo_timer := 0.0
 var stage := 0
 var level_index := 0
-var campaign_backgrounds: Array = [0, 1, 2]
+var campaign_backgrounds: Array = CAMPAIGN_BACKGROUNDS.duplicate()
 var background_index := 0
 var cached_environment_index := -1
 var cached_environment_tiles: Array[Texture2D] = []
@@ -91,6 +98,15 @@ var touch_visible := false
 var mobile_controls: CanvasLayer
 var sounds: Dictionary = {}
 var audio_players: Array = []
+const MUSIC_TRACKS = {
+	"intro": "res://assets/Intro.wav",
+	"wasabi": "res://assets/Wasabi.wav",
+	"dueto": "res://assets/Dueto.wav",
+	"con_groove": "res://assets/Con Groove.wav",
+	"3d": "res://assets/3D.wav",
+}
+const LEVEL_MUSIC = ["wasabi", "dueto", "con_groove"]
+var current_music := ""
 var music: AudioStreamPlayer
 var muted := false
 var best := 0
@@ -233,12 +249,7 @@ func new_run(as_debug := false) -> void:
 	load_level()
 
 func choose_backgrounds() -> Array:
-	var pool: Array = range(ENVIRONMENTS.size())
-	pool.erase(FINAL_BACKGROUND_INDEX)
-	pool.shuffle()
-	var chosen := pool.slice(0, LEVEL_COUNT - 1)
-	chosen.append(FINAL_BACKGROUND_INDEX)
-	return chosen
+	return CAMPAIGN_BACKGROUNDS.duplicate()
 
 func load_level(remaining_health := -1.0) -> void:
 	background_index = int(campaign_backgrounds[level_index])
@@ -290,6 +301,7 @@ func load_level(remaining_health := -1.0) -> void:
 	state = "play"
 
 func show_character_selection() -> void:
+	play_music("intro")
 	debug_environment_select.hide_panel()
 	debug_room = false
 	debug_panel.get_child(0).hide()
@@ -359,9 +371,11 @@ func activate_screen(target: String) -> void:
 			concert_layer.hide()
 			world.show()
 			state = "title"
+			play_music("intro")
 			show_help = false
 		"concert":
 			state = "concert"
+			play_music("3d")
 			concert_time = 0
 			world.hide()
 			concert_layer.show()
@@ -404,6 +418,21 @@ func update_level_transition(dt: float) -> void:
 				player.facing = 1
 				player.update_visual(0)
 				fade_screen.color.a = 1
+				state = "map_in"
+				play_music(LEVEL_MUSIC[clampi(level_index, 0, LEVEL_MUSIC.size() - 1)])
+				cinematic_time = 0
+		"map_in":
+			fade_screen.color.a = 1 - clampf(cinematic_time / FADE_DURATION, 0, 1)
+			if cinematic_time >= FADE_DURATION:
+				state = "map_hold"
+				cinematic_time = 0
+		"map_hold":
+			if cinematic_time >= MAP_DURATION:
+				state = "map_out"
+				cinematic_time = 0
+		"map_out":
+			fade_screen.color.a = clampf(cinematic_time / FADE_DURATION, 0, 1)
+			if cinematic_time >= FADE_DURATION:
 				state = "black_hold"
 				cinematic_time = 0
 		"black_hold":
@@ -592,7 +621,8 @@ func spawn_wave() -> void:
 		var enemy = Fighter.new()
 		world.add_child(enemy)
 		var x := minf(right_bound - 65, player.position.x + 155 + i * 38)
-		enemy.setup(self, waves[stage][i], Vector2(x, lerpf(WALK_MIN_Y + 10, WALK_MAX_Y - 10, float(i % 3) / 2.0)))
+		var enemy_kind: int = CAMPAIGN_BOSSES[level_index] if stage == WAVE_COUNT - 1 else waves[stage][i]
+		enemy.setup(self, enemy_kind, Vector2(x, lerpf(WALK_MIN_Y + 10, WALK_MAX_Y - 10, float(i % 3) / 2.0)))
 		if stage == WAVE_COUNT - 1:
 			enemy.make_boss()
 		enemies.append(enemy)
@@ -689,7 +719,7 @@ func _input(event: InputEvent) -> void:
 	if state == "debug_select":
 		debug_environment_select.handle_input(event)
 		return
-	if state in ["stage_clear", "victory", "fade_out", "black_hold", "fade_in", "entrance", "start"]:
+	if state in ["stage_clear", "victory", "fade_out", "map_in", "map_hold", "map_out", "black_hold", "fade_in", "entrance", "start"]:
 		return
 	if state == "select":
 		if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_TAB:
@@ -769,7 +799,7 @@ func _process(dt: float) -> void:
 		update_game(minf(dt, 0.04))
 	elif state in ["stage_clear", "victory"]:
 		update_presentation(dt)
-	elif state in ["fade_out", "black_hold", "fade_in", "entrance", "start"]:
+	elif state in ["fade_out", "map_in", "map_hold", "map_out", "black_hold", "fade_in", "entrance", "start"]:
 		update_level_transition(dt)
 	if state != "pause":
 		for p in particles:
@@ -1104,28 +1134,31 @@ func neon_sign(x: float, y: float, words: String, color: Color, size: int) -> vo
 
 func draw_overlay() -> void:
 	var canvas: Node2D = get_node("Overlay")
+	if state in ["map_in", "map_hold", "map_out"]:
+		draw_campaign_map(canvas)
+		return
 	for p in particles:
 		canvas.draw_rect(Rect2(world_to_screen(p.pos), Vector2.ONE * p.size * WORLD_ZOOM), p.color)
 	if ult_time > 0:
 		canvas.draw_rect(Rect2(0, 0, screen_width(), VIEW_HEIGHT), Color(0.015, 0.02, 0.08, 0.72))
 		var center: Vector2 = world_to_screen(player.position - Vector2(0, 45 + player.height))
-		var gold := Color("ffd15c")
+		var aura: Color = player.ultimate_color()
 		var radius := (85 + sin(time * 30) * 8) * WORLD_ZOOM
 		var wave_radius := maxf(1, (1.6 - ult_time) * 600 * WORLD_ZOOM)
 		for glow in range(4, 0, -1):
-			canvas.draw_circle(center, radius + glow * 7, Color(gold, 0.025))
-			canvas.draw_arc(center, wave_radius, 0, TAU, 96, Color(gold, 0.035 * (5 - glow)), 5 + glow * 5)
-		canvas.draw_circle(center, radius, Color(gold, 0.13))
-		canvas.draw_arc(center, radius, 0, TAU, 96, Color(gold, 0.6), 2)
-		canvas.draw_arc(center, wave_radius, 0, TAU, 96, gold, 5)
+			canvas.draw_circle(center, radius + glow * 7, Color(aura, 0.025))
+			canvas.draw_arc(center, wave_radius, 0, TAU, 96, Color(aura, 0.035 * (5 - glow)), 5 + glow * 5)
+		canvas.draw_circle(center, radius, Color(aura, 0.13))
+		canvas.draw_arc(center, radius, 0, TAU, 96, Color(aura, 0.6), 2)
+		canvas.draw_arc(center, wave_radius, 0, TAU, 96, aura, 5)
 		# Draw the posed hero above the darkened scene.
 		player.z_index = 1001
 		canvas.draw_set_transform(interface_origin(), 0, Vector2.ONE * interface_scale())
 		var title := "G R O O V A   B R E A K"
 		var title_at := Vector2(235, 172)
 		for glow_offset in [Vector2(-3, 0), Vector2(3, 0), Vector2(0, -3), Vector2(0, 3), Vector2(-1, -1), Vector2(1, 1)]:
-			canvas.draw_string(font, title_at + glow_offset, title, HORIZONTAL_ALIGNMENT_LEFT, -1, ArcadeUI.font_size(32), Color(gold, 0.16))
-		overlay_text(canvas, title, title_at, 32, gold)
+			canvas.draw_string(font, title_at + glow_offset, title, HORIZONTAL_ALIGNMENT_LEFT, -1, ArcadeUI.font_size(32), Color(aura, 0.16))
+		overlay_text(canvas, title, title_at, 32, aura)
 	else:
 		player.z_index = int(player.position.y)
 	canvas.draw_set_transform(interface_origin(), 0, Vector2.ONE * interface_scale())
@@ -1280,10 +1313,10 @@ func setup_audio() -> void:
 	for sound_name in ["hit", "swing", "jump", "power", "ultimate", "select"]:
 		sounds[sound_name] = synth_sound(sound_name)
 	music = AudioStreamPlayer.new()
-	music.volume_db = -23
+	music.volume_db = -12
 	add_child(music)
-	music.stream = synth_music()
-	music.play()
+	music.finished.connect(func(): music.play())
+	play_music("intro")
 
 func _exit_tree() -> void:
 	CharacterCatalog.cache.clear()
@@ -1331,30 +1364,32 @@ func synth_sound(which: String) -> AudioStreamWAV:
 	wav.data = samples
 	return wav
 
-func synth_music() -> AudioStreamWAV:
-	var rate := 22050
-	var beat := 0.48
-	var duration := beat * 32
-	var count := int(duration * rate)
-	var data := PackedByteArray()
-	data.resize(count * 2)
-	var notes := [55.0, 55.0, 65.406, 73.416, 55.0, 82.407, 73.416, 65.406]
-	for i in range(count):
-		var t := float(i) / rate
-		var step := int(t / (beat / 2))
-		var phase := fmod(t, beat / 2)
-		var frequency: float = notes[(step / 2) % notes.size()]
-		var bass := sin(t * frequency * TAU) * exp(-phase * 11) * 0.36
-		var kick_t := fmod(t, beat)
-		var kick := sin(kick_t * (53 + 70 * exp(-kick_t * 35)) * TAU) * exp(-kick_t * 23) * 0.55
-		var snare := randf_range(-1, 1) * exp(-kick_t * 27) * 0.17 if int(t / beat) % 2 == 1 else 0.0
-		var hat := randf_range(-1, 1) * exp(-phase * 100) * 0.11
-		var melody := sin(t * frequency * 8 * TAU) * exp(-phase * 18) * 0.065
-		data.encode_s16(i * 2, int(clampf(bass + kick + snare + hat + melody, -1, 1) * 27000))
-	var wav := AudioStreamWAV.new()
-	wav.format = AudioStreamWAV.FORMAT_16_BITS
-	wav.mix_rate = rate
-	wav.data = data
-	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	wav.loop_end = count
-	return wav
+func play_music(track: String) -> void:
+	if track == current_music and music.stream != null:
+		return
+	var stream = load(str(MUSIC_TRACKS[track])) as AudioStream
+	if stream == null:
+		push_error("No se pudo cargar la música: " + track)
+		return
+	music.stop()
+	music.stream = stream
+	current_music = track
+	music.play()
+
+func draw_campaign_map(canvas: Node2D) -> void:
+	canvas.draw_set_transform(Vector2.ZERO)
+	canvas.draw_rect(Rect2(0, 0, screen_width(), VIEW_HEIGHT), Color.BLACK)
+	var map_size := CAMPAIGN_MAP.get_size()
+	var map_scale := minf(screen_width() / map_size.x, VIEW_HEIGHT / map_size.y)
+	var origin := (Vector2(screen_width(), VIEW_HEIGHT) - map_size * map_scale) / 2
+	canvas.draw_texture_rect(CAMPAIGN_MAP, Rect2(origin, map_size * map_scale), false)
+	var station := clampi(level_index, 0, 2)
+	var center: Vector2 = origin + MAP_STATIONS[station] * map_scale
+	var color := Color("ffd15c") if int(time / 0.3) % 2 == 0 else Color("ed1835")
+	canvas.draw_circle(center, 24 * map_scale, Color.BLACK)
+	canvas.draw_circle(center, 19 * map_scale, Color.WHITE)
+	canvas.draw_circle(center, 14 * map_scale, color)
+	canvas.draw_arc(center, 29 * map_scale, 0, TAU, 48, color, 3 * map_scale)
+	canvas.draw_set_transform(interface_origin(), 0, Vector2.ONE * interface_scale())
+	canvas.draw_rect(Rect2(270, 22, 420, 48), Color(0, 0, 0, 0.85))
+	overlay_text(canvas, "NIVEL %d · %s" % [station + 1, MAP_NAMES[station]], Vector2(295, 55), 26, color)

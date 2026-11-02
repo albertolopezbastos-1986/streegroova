@@ -1,0 +1,37 @@
+{
+  "sheet": "assets/enemies/enemie1/animations/hurt/hurt1.png",
+  "source_sha256": "f7fdffeccd93d0b3d5456ee241a5251a40da93753fff3871da37d5e42990c1cf",
+  "frame_size": [
+    163,
+    234
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/enemies/enemie1/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 24
+}

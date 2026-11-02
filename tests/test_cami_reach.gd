@@ -23,7 +23,7 @@ func run() -> void:
 				hero.combo_connected = true
 				hero.position = Vector2(350, 390)
 				hero.facing = direction
-				var reach := 178.0 if combo_index == 3 else 140.0
+				var reach := 89.0 if combo_index == 3 else 70.0
 				enemy.position = hero.position + Vector2(direction * (reach + (1 if outside else -1)), 0)
 				enemy.hp = 1000
 				enemy.invincible = 0
@@ -35,8 +35,8 @@ func run() -> void:
 				assert(hero.attack_is_active())
 				hero.strike()
 				hero.strike()
-				assert(enemy.hp == (1000 if outside else (971 if combo_index == 3 else 981)), "Cami hit %d direction %s outside %s obeys doubled reach and hits once" % [combo_index + 1, direction, outside])
-	print("CAMI REACH PASSED: all four hits, both facings, inside/outside doubled reach, single damage")
+				assert(enemy.hp == (1000 if outside else (971 if combo_index == 3 else 981)), "Cami hit %d direction %s outside %s obeys halved reach and hits once" % [combo_index + 1, direction, outside])
+	print("CAMI REACH PASSED: all four hits, both facings, inside/outside halved reach, single damage")
 	game.queue_free()
 	await process_frame
 	await create_timer(0.1).timeout

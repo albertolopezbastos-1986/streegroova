@@ -6,6 +6,12 @@ const REQUIRED = ["idle", "walk", "attack_01", "attack_02", "attack_03", "jump",
 static var cache: Dictionary = {}
 static var roster: Dictionary = ROSTER.data.duplicate(true)
 
+static func enemy(kind: int) -> Dictionary:
+	var id := "enemie%d" % (clampi(kind, 0, 2) + 1)
+	if not cache.has(id):
+		cache[id] = load_pack("res://assets/enemies/%s/character.json" % id)
+	return cache[id]
+
 static func slots() -> Array:
 	return roster["characters"]
 

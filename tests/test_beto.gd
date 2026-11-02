@@ -119,12 +119,9 @@ func run() -> void:
 	hero.height = 65
 	game.charge = 100
 	game.use_ultimate()
-	check(hero.ultimate_airborne and hero.visual.motion == "ultimate_air", "ultimate activated mid-jump selects a distinct aerial animation")
-	check(hero.visual.sheets["ultimate_air"] != hero.visual.sheets["ultimate"] and not hero.visual.definition("ultimate_air")["placeholder"], "aerial ultimate uses its dedicated supplied sheet")
-	game.ult_time = 0.6
+	check(game.charge == 100 and game.ult_time == 0, "Beto cannot spend ultimate charge in the air")
 	hero.height = 0
-	hero.update_visual(0.01)
-	check(hero.visual.motion == "ultimate_air" and hero.visual.source_frame >= 5, "aerial variant retains its identity and impact timing throughout ultimate")
+	hero.jump_speed = 0
 	game.ult_time = 0
 	hero.ultimate_pose = 0
 	game.charge = 100

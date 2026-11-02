@@ -32,13 +32,13 @@ func run() -> void:
 	hero.height = 65
 	game.charge = 100
 	game.use_ultimate()
-	assert(hero.visual.motion == "ultimate_air")
-	assert(hero.visual.material == hero.ultimate_air_material)
+	assert(game.ult_time == 0 and game.charge == 100)
+	assert(hero.visual.material.shader == hero.visual.OLIVE_GUITAR)
 	game.ult_time = 0
 	hero.ultimate_pose = 0
 	hero.height = 0
 	hero.update_visual(0)
-	assert(hero.visual.material == null)
+	assert(hero.visual.material.shader == hero.visual.OLIVE_GUITAR)
 	hero.victory_time = 5
 	hero.update_visual(0)
 	assert(hero.visual.motion == "victory" and hero.visual.source_frame == 8)
@@ -46,7 +46,21 @@ func run() -> void:
 	hero.victory_time = 10
 	hero.update_visual(0)
 	assert(hero.visual.source_frame == 8)
-	print("SUPPLIED MOVES PASSED: third grab punch hits once and launches, aerial gold material resets, victory holds final pose")
+	game.active_character_id = "alito"
+	game.new_run(true)
+	await process_frame
+	hero = game.player
+	for airborne in [true, false]:
+		hero.height = 50 if airborne else 0
+		hero.jump_speed = 0 if airborne else 200
+		game.charge = 100
+		game.use_ultimate()
+		assert(game.charge == 100 and game.ult_time == 0, "Alito cannot use ultimate in flight or at takeoff")
+	hero.height = 0
+	hero.jump_speed = 0
+	game.use_ultimate()
+	assert(game.charge == 0 and game.ult_time > 0, "Alito can still use ultimate on the ground")
+	print("SUPPLIED MOVES PASSED: third grab punch hits once and launches, grounded ultimate restriction and olive guitar, victory holds final pose")
 	game.queue_free()
 	await process_frame
 	quit()

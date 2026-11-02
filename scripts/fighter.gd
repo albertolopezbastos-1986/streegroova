@@ -103,12 +103,13 @@ func setup(owner_game: Node2D, type: int, at: Vector2, character_pack: Dictionar
 	kind = type
 	position = at
 	visual = CharacterVisual.new()
-	visual.configure(character_pack if not character_pack.is_empty() else Catalog.character("beto"))
+	visual.configure(character_pack if not character_pack.is_empty() else (Catalog.enemy(kind) if kind >= 0 else Catalog.character("beto")))
 	if kind == -1:
 		max_hp = 100.0 * float(visual.character_data.get("max_health_multiplier", 1.0))
 		hp = max_hp
 		ultimate_air_material = ShaderMaterial.new()
 		ultimate_air_material.shader = ULTIMATE_AIR_GOLD
+		ultimate_air_material.set_shader_parameter("aura_color", ultimate_color())
 	add_child(visual)
 	if kind >= 0:
 		facing = 1 if game.player.position.x >= position.x else -1
@@ -117,10 +118,6 @@ func setup(owner_game: Node2D, type: int, at: Vector2, character_pack: Dictionar
 		ai_wait = randf_range(0.2, 0.8)
 		ai_jump_cooldown = ENEMY_JUMP_INTERVALS[kind] * randf_range(0.75, 1.2)
 		ai_slide_cooldown = ENEMY_SLIDE_INTERVALS[kind] * randf_range(0.75, 1.2)
-		var palette := ShaderMaterial.new()
-		palette.shader = ENEMY_PALETTE
-		palette.set_shader_parameter("outfit_color", ENEMY_COLORS[kind])
-		visual.material = palette
 		visual.scale = Vector2.ONE * [1.0, 0.94, 1.113][kind]
 	update_visual(0)
 	queue_redraw()
@@ -130,7 +127,6 @@ func make_boss() -> void:
 	max_hp = 520.0
 	hp = max_hp
 	visual.scale = Vector2.ONE * 1.25
-	visual.material.set_shader_parameter("outfit_color", Color("a347ce"))
 	ai_wait = 0.08
 	ai_special_cooldown = 1.0
 	ai_slide_cooldown = 2.0
@@ -321,6 +317,8 @@ func reset_running() -> void:
 	rush_time = 0
 
 func takeoff(momentum: Vector2, impulse := 420.0) -> bool:
+	if kind >= 0:
+		return false
 	if dead or stun > 0 or height > 0 or thrown_time > 0 or getup_time > 0 or attack_time > 0 or is_instance_valid(grabbed_by) or grapple.active():
 		return false
 	reset_running()
@@ -336,7 +334,15 @@ func takeoff(momentum: Vector2, impulse := 420.0) -> bool:
 	update_visual(0)
 	return true
 
+func ultimate_color() -> Color:
+	match str(visual.character_data.get("id", "beto")):
+		"cami": return Color("ff28bd")
+		"alito": return Color("ff303b")
+	return Color("ffd15c")
+
 func can_use_ultimate() -> bool:
+	if visual.character_data.get("id", "") in ["beto", "alito"] and (height > 0 or jump_speed > 0):
+		return false
 	return kind == -1 and not dead and thrown_time <= 0 and getup_time <= 0 and not is_instance_valid(grabbed_by)
 
 func enemy_control(dt: float) -> void:
@@ -356,7 +362,7 @@ func enemy_control(dt: float) -> void:
 		ai_returning = true
 		moving = true
 		facing = 1
-		position.x = move_toward(position.x, game.camera_x + 48, RUN_SPEED * 1.2 * dt)
+		position.x = move_toward(position.x, game.camera_x + 48, ENEMY_SPEEDS[kind] * dt)
 		position.y = move_toward(position.y, target.position.y, game.DEPTH_SPEED * dt)
 		return
 	if is_boss and boss_dodge_time > 0:
@@ -368,31 +374,6 @@ func enemy_control(dt: float) -> void:
 		return
 	var committed: bool = game.combat_director.allowed(self)
 	var on_flank: bool = (position.x - target.position.x) * game.combat_director.side_for(self) > 18
-	if (running or rush_windup > 0) and not committed:
-		reset_running()
-	if rush_windup > 0:
-		rush_windup = maxf(0, rush_windup - dt)
-		if rush_windup == 0:
-			running = true
-			rush_time = 0.9
-		return
-	if running:
-		rush_time -= dt
-		if rush_time <= 0 or absf(delta.y) >= game.MELEE_DEPTH:
-			reset_running()
-			ai_wait = 0.5
-			return
-		if absf(delta.x) <= 75:
-			begin_attack()
-			return
-		position.x += facing * RUN_SPEED * dt
-		moving = true
-		return
-	if height > 0:
-		position += velocity * dt
-		if committed and not air_attack and jump_elapsed > 0.12 and cooldown <= 0 and absf(delta.x) < 105 and absf(delta.y) < game.MELEE_DEPTH:
-			begin_attack()
-		return
 	if windup > 0 and not committed:
 		windup = 0
 	if windup > 0:
@@ -422,22 +403,6 @@ func enemy_control(dt: float) -> void:
 		moving = true
 		ai_wait = 0
 		return
-	if committed and on_flank and cooldown <= 0 and ai_wait <= 0 and ai_special_cooldown <= 0 and in_lane and target.invincible <= 0:
-		var prefer_jump := kind == 1 and ai_jump_cooldown <= 0 and absf(delta.x) <= 175
-		if ai_slide_cooldown <= 0 and not prefer_jump and absf(delta.x) >= 100 and absf(delta.x) <= 220 and target.height == 0:
-			rush_windup = 0.22 if is_boss else 0.4
-			ai_slide_cooldown = 4.0 if is_boss else ENEMY_SLIDE_INTERVALS[kind]
-			ai_special_cooldown = 2.2 if is_boss else 5.0
-			velocity = Vector2.ZERO
-			return
-	if committed and on_flank and ai_jump_cooldown <= 0 and cooldown <= 0 and ai_wait <= 0 and in_lane:
-		var chase_jump := absf(delta.x) >= 85 and absf(delta.x) <= 175
-		var dodge_jump: bool = target.attack_time > 0 and absf(delta.x) < 75
-		if chase_jump or dodge_jump:
-			var momentum := Vector2(facing * speed * 1.25, clampf(delta.y * 2, -16, 16)) if chase_jump else Vector2.ZERO
-			takeoff(momentum, [250.0, 260.0, 240.0][kind])
-			ai_jump_cooldown = 4.5 if is_boss else ENEMY_JUMP_INTERVALS[kind]
-			return
 	var range_x: float = 90 if not weapon.is_empty() else (65 if kind == 2 or is_boss else 50)
 	if committed and on_flank and absf(delta.x) < range_x and in_lane:
 		if cooldown <= 0 and ai_wait <= 0:
@@ -467,7 +432,7 @@ func begin_attack() -> void:
 		if item != null:
 			begin_pickup(item)
 			return
-	run_attack = running and height == 0
+	run_attack = kind == -1 and running and height == 0
 	weapon_attack = false
 	prop_attack = false
 	if kind == -1 and height == 0 and not run_attack:
@@ -480,7 +445,7 @@ func begin_attack() -> void:
 	tap_time = 0
 	air_attack = height > 0
 	weapon_attack = not weapon.is_empty() and not air_attack and not run_attack and not prop_attack
-	combo = 0 if run_attack else ((combo + 1) % (PLAYER_COMBO.size() if kind == -1 else 3) if combo_window > 0 and combo_connected else 0)
+	combo = 0 if run_attack else ((combo + 1) % (player_combo().size() if kind == -1 else 3) if combo_window > 0 and combo_connected else 0)
 	if run_attack:
 		velocity = Vector2(facing * SLIDE_SPEED, 0)
 		moving = false
@@ -508,10 +473,13 @@ func attack_motion() -> String:
 		return "runslide"
 	if weapon_attack:
 		return "punch_weapon"
-	return "jump_attack" if air_attack else "attack_%02d" % (PLAYER_COMBO[combo] if kind == -1 else combo + 1)
+	return "jump_attack" if air_attack else "attack_%02d" % (player_combo()[combo] if kind == -1 else combo + 1)
+
+func player_combo() -> Array:
+	return visual.character_data.get("combo_sequence", PLAYER_COMBO)
 
 func is_combo_finisher() -> bool:
-	return combo == (PLAYER_COMBO.size() - 1 if kind == -1 else 2)
+	return combo == (player_combo().size() - 1 if kind == -1 else 2)
 
 func begin_pickup(item: Node2D) -> void:
 	if not item.weapon.is_empty() and not game.weapons_allowed():
@@ -646,7 +614,8 @@ func update_visual(dt: float) -> void:
 		visual.modulate.a = clampf((1.65 - death_time) / 0.35, 0, 1)
 	visual.weapon = weapon
 	if kind == -1:
-		visual.material = ultimate_air_material if motion == "ultimate_air" else null
+		if visual.character_data.get("id", "") != "beto":
+			visual.material = ultimate_air_material if motion == "ultimate_air" else null
 	visual.update_pose(motion, dt, facing, progress)
 	if not dead and is_instance_valid(grabbed_by):
 		visual.source_frame = 3
@@ -782,7 +751,7 @@ func break_equipped_weapon() -> void:
 
 func launches_on_special() -> bool:
 	if kind == -1:
-		return run_attack or air_attack
+		return run_attack or air_attack or (not weapon_attack and not prop_attack and is_combo_finisher() and visual.definition(attack_motion()).get("launches_enemies", false))
 	if is_boss:
 		return run_attack or air_attack
 	return (air_attack and kind >= 1) or (run_attack and kind == 2)
