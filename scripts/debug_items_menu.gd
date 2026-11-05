@@ -1,11 +1,24 @@
 extends CanvasLayer
 
 signal spawn_requested(kind: String)
+signal action_requested(action: String)
 var open := false
 var screen: Control
 var buttons: Array[Button] = []
 var selected := 0
-const ITEMS := ["barrel", "crate", "wood", "pipe"]
+const ACTIONS := [
+	{"label": "ENEMIGO AMARILLO", "action": "enemy_0"},
+	{"label": "ENEMIGO ROSA", "action": "enemy_1"},
+	{"label": "ENEMIGO ROJO", "action": "enemy_2"},
+	{"label": "JEFE", "action": "boss"},
+	{"label": "ULTI MAX", "action": "ultimate"},
+	{"label": "OLEADA ALEATORIA", "action": "wave"},
+	{"label": "MATAR TODOS", "action": "kill_all"},
+	{"label": "BARRIL / COMIDA", "action": "barrel"},
+	{"label": "CAJA / COMIDA", "action": "crate"},
+	{"label": "TABLON DE MADERA", "action": "wood"},
+	{"label": "CAÑO GRIS", "action": "pipe"}
+]
 
 func _ready() -> void:
 	layer = 25
@@ -16,21 +29,21 @@ func _ready() -> void:
 	backdrop.size = Vector2(960, 640)
 	screen.add_child(backdrop)
 	var title := Label.new()
-	title.text = "DEBUG / CREAR OBJETO"
-	title.position = Vector2(285, 130)
+	title.text = "DEBUG / OPCIONES"
+	title.position = Vector2(350, 56)
 	screen.add_child(title)
-	for i in range(ITEMS.size()):
+	for i in range(ACTIONS.size()):
 		var button := Button.new()
-		button.text = ["1  BARRIL / COMIDA ALEATORIA", "2  CAJA / COMIDA ALEATORIA", "3  TABLON DE MADERA", "4  CAÑO GRIS"][i]
-		button.position = Vector2(270, 190 + i * 60)
-		button.size = Vector2(420, 48)
+		button.text = str(ACTIONS[i]["label"])
+		button.position = Vector2(130 + (i % 2) * 360, 105 + (i / 2) * 66)
+		button.size = Vector2(340, 48)
 		button.add_theme_font_size_override("font_size", 12)
 		button.pressed.connect(choose.bind(i))
 		screen.add_child(button)
 		buttons.append(button)
 	var back := Button.new()
-	back.text = "O / ESC  VOLVER"
-	back.position = Vector2(330, 450)
+	back.text = "0 / ESC  VOLVER"
+	back.position = Vector2(330, 520)
 	back.size = Vector2(300, 42)
 	back.pressed.connect(close)
 	screen.add_child(back)
@@ -51,7 +64,11 @@ func select(index: int) -> void:
 	buttons[selected].grab_focus()
 
 func choose(index: int) -> void:
-	spawn_requested.emit(ITEMS[index])
+	var action: String = ACTIONS[index]["action"]
+	if action in ["barrel", "crate", "wood", "pipe"]:
+		spawn_requested.emit(action)
+	else:
+		action_requested.emit(action)
 	close()
 
 func handle_input(event: InputEvent) -> void:
@@ -60,9 +77,8 @@ func handle_input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
-			KEY_O, KEY_ESCAPE: close()
+			KEY_0, KEY_ESCAPE: close()
 			KEY_UP, KEY_W: select(selected - 1)
 			KEY_DOWN, KEY_S: select(selected + 1)
 			KEY_ENTER, KEY_SPACE: choose(selected)
-			KEY_1, KEY_2, KEY_3, KEY_4: choose(event.physical_keycode - KEY_1)
 	get_viewport().set_input_as_handled()

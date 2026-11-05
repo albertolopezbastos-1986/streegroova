@@ -7,14 +7,6 @@ signal selection_changed
 
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const Catalog = preload("res://scripts/character_catalog.gd")
-const PREVIEW_CHARACTERS = ["meli", "malu", "pato", "dami", "vampi"]
-const PREVIEW_PORTRAITS = {
-	"dami": preload("res://assets/characters_40_frames/dami/portraits/damiportrait.png"),
-	"malu": preload("res://assets/characters_40_frames/malu/portraits/Maluportrait.png"),
-	"meli": preload("res://assets/characters_40_frames/meli/portraits/Meliportrait.png"),
-	"pato": preload("res://assets/characters_40_frames/pato/portraits/Patoportrait.png"),
-	"vampi": preload("res://assets/characters_40_frames/vampi/portraits/vampiportrait.png")
-}
 
 var screen: Control
 var cards: Array[Button] = []
@@ -44,22 +36,13 @@ func _ready() -> void:
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	screen.add_child(background)
 	add_label("ELIGE TU PERSONAJE", Rect2(70, 44, 820, 40), 26, Color.WHITE)
-	for i in range(Catalog.slots().size() + PREVIEW_CHARACTERS.size()):
-		var playable := i < Catalog.slots().size()
-		var pack: Dictionary
-		if playable:
-			pack = Catalog.character_for_slot(i)
-		else:
-			var id: String = PREVIEW_CHARACTERS[i - Catalog.slots().size()]
-			pack = {"display_name": id.capitalize(), "portrait": PREVIEW_PORTRAITS[id]}
+	for i in range(Catalog.slots().size()):
+		var pack: Dictionary = Catalog.character_for_slot(i)
 		var card := Button.new()
 		card.position = Vector2(72 + (i % 4) * 208, 130 + (i / 4) * 190)
 		card.size = Vector2(192, 180)
 		card.toggle_mode = true
-		card.set_meta("playable", playable)
-		if not playable:
-			card.focus_mode = Control.FOCUS_NONE
-			card.mouse_default_cursor_shape = Control.CURSOR_ARROW
+		card.set_meta("playable", true)
 		card.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		var normal := StyleBoxFlat.new()
 		normal.bg_color = Color("192034")
@@ -92,10 +75,7 @@ func _ready() -> void:
 		name_label.add_theme_color_override("font_color", Color.WHITE)
 		name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.add_child(name_label)
-		if playable:
-			card.pressed.connect(on_card_pressed.bind(i))
-		else:
-			card.toggle_mode = false
+		card.pressed.connect(on_card_pressed.bind(i))
 		cards.append(card)
 	confirm_button = Button.new()
 	confirm_button.text = "ENTER / A  -  ELEGIR"

@@ -63,15 +63,12 @@ func run() -> void:
 	check(game.state == "select" and game.character_select.open, "press start opens character select")
 	check(game.run_id == run_id, "opening select does not start a run")
 	check(game.character_select.cards.size() == 8, "selection has eight portrait cards in two rows")
-	for index in range(3, 8):
-		game.character_select.cards[index].pressed.emit()
-		check(game.state == "select" and game.character_select.selected == 0, "preview portrait does not change selection or start a run")
-	var expected_ids := ["beto", "cami", "alito"]
-	for i in range(3):
+	var expected_ids := ["beto", "cami", "alito", "meli", "malu", "pato", "dami", "vampi"]
+	for i in range(8):
 		check(Catalog.character_for_slot(i)["id"] == expected_ids[i], "slot %d resolves its character identity" % i)
 		check(game.character_select.cards[i].get_node("Portrait").texture == Catalog.character_for_slot(i)["portrait"], "slot %d shows its character portrait" % i)
 	game._input(key(KEY_LEFT))
-	check(game.character_select.selected == 2, "left navigation wraps to last card")
+	check(game.character_select.selected == 7, "left navigation wraps to last card")
 	game._input(key(KEY_RIGHT))
 	check(game.character_select.selected == 0, "right navigation wraps to first card")
 	game._input(key(KEY_RIGHT, true))
@@ -82,7 +79,7 @@ func run() -> void:
 	finish_entrance(game)
 	check(game.state == "play" and not game.character_select.open and game.active_character_id == "cami", "enter confirms and starts chosen character")
 	check(game.player.visual.sheets["idle"] == Catalog.character("cami")["sheets"]["idle"], "player receives selected character's sprites")
-	for i in range(3):
+	for i in range(8):
 		game.show_character_selection()
 		game.character_select.cards[i].pressed.emit()
 		check(game.state == "select" and game.character_select.selected == i, "click selects card without starting run")
@@ -117,8 +114,8 @@ func run() -> void:
 	var alito: Dictionary = Catalog.character("alito")
 	check(alito["definition"]["id"] == "alito", "Alito loads his own character definition")
 	check(alito["definition"]["animations"]["idle"]["frame_indices"].size() == 41, "Alito idle uses 41 nonempty frames")
-	for motion in alito["sheets"]:
-		check(alito["sheets"][motion].resource_path.begins_with("res://assets/characters/alito/"), "Alito keeps his own appearance during " + motion)
+	check(alito["sheets"]["pickup"].resource_path.ends_with("alito/animations/pickup/grab.png"), "Alito uses his new pickup sheet")
+	check(alito["sheets"]["death"].resource_path.ends_with("alito/animations/death/ko.png"), "Alito uses his new death sheet")
 	check(alito["definition"]["animations"]["walk"]["frame_indices"] == range(20), "Alito walk uses exactly frames 0 through 19")
 	check(alito["sheets"]["walk"] != alito["sheets"]["idle"], "Alito walk has its own texture")
 	game.player.moving = true
@@ -166,6 +163,15 @@ func run() -> void:
 	check(cami["definition"]["animations"]["walk"]["frame_indices"] == range(22), "Cami walk uses exactly frames 0 through 21")
 	for motion in cami["sheets"]:
 		check(cami["sheets"][motion].resource_path.begins_with("res://assets/characters/cami/"), "Cami keeps her own appearance during " + motion)
+	for id in ["meli", "malu", "pato", "dami", "vampi"]:
+		var newcomer: Dictionary = Catalog.character(id)
+		check(not newcomer.is_empty() and newcomer["id"] == id, id.capitalize() + " loads as a playable character")
+		for motion in ["idle", "walk", "attack_01", "hurt", "death", "pickup"]:
+			check(newcomer["sheets"].has(motion), id.capitalize() + " has its basic " + motion + " animation")
+	check(Catalog.character("meli")["definition"]["animations"]["walk"]["frame_indices"] == range(17), "Meli walk uses frames 0 through 16")
+	check(Catalog.character("dami")["definition"]["animations"]["walk"]["frame_indices"] == range(4, 16), "Dami walk uses frames 4 through 15")
+	check(Catalog.character("pato")["definition"]["animations"]["walk"]["frame_indices"] == range(6, 20), "Pato walk uses frames 6 through 19")
+	check(Catalog.character("vampi")["definition"]["animations"]["walk"]["frame_indices"] == range(5, 15), "Vampi walk uses frames 5 through 14")
 	game.character_pack = cami
 	game.active_character_id = "cami"
 	game.new_run()

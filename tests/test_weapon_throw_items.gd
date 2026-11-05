@@ -14,12 +14,12 @@ func run() -> void:
 	root.add_child(game)
 	game.set_process(false)
 	game.new_run(true)
-	game._input(key(KEY_O))
-	assert(game.debug_items_menu.open and game.debug_items_menu.buttons.size() == 4)
-	game._input(key(KEY_1))
+	game._input(key(KEY_0))
+	assert(game.debug_items_menu.open and game.debug_items_menu.buttons.size() == 11)
+	game.debug_items_menu.choose(7)
 	assert(not game.debug_items_menu.open and game.props.size() == 1 and game.props[0].barrel)
-	game._input(key(KEY_O))
-	game._input(key(KEY_2))
+	game._input(key(KEY_0))
+	game.debug_items_menu.choose(8)
 	assert(game.props.size() == 2 and not game.props[1].barrel)
 	var types := {}
 	seed(423)
@@ -29,15 +29,15 @@ func run() -> void:
 		assert(game.food.size() == i + 1)
 		types[game.food[-1].beer] = true
 	assert(types.size() == 2)
-	game._input(key(KEY_O))
-	game._input(key(KEY_4))
+	game._input(key(KEY_0))
+	game.debug_items_menu.choose(10)
 	assert(game.weapons[-1].weapon == "pipe")
-	game._input(key(KEY_O))
+	game._input(key(KEY_0))
 	game._input(key(KEY_ESCAPE))
 	assert(not game.debug_items_menu.open and game.state == "play")
-	game._input(key(KEY_O))
+	game._input(key(KEY_0))
 	await process_frame
-	var center: Vector2 = game.debug_items_menu.buttons[2].get_global_rect().get_center()
+	var center: Vector2 = game.debug_items_menu.buttons[9].get_global_rect().get_center()
 	var motion := InputEventMouseMotion.new()
 	motion.position = center
 	root.push_input(motion, true)
@@ -49,7 +49,7 @@ func run() -> void:
 		root.push_input(click, true)
 	await process_frame
 	assert(not game.debug_items_menu.open and game.weapons[-1].weapon == "wood")
-	print("PASS: O item menu, barrel/crate, both random food drops and weapons")
+	print("PASS: 0 debug options menu, barrel/crate, both random food drops and weapons")
 	game.new_run(true)
 	await process_frame
 	var hero = game.player

@@ -25,12 +25,20 @@ func run() -> void:
 	assert(game.enemies.is_empty())
 	game.update_game(0.04)
 	assert(game.transition == 0 and game.stage == 0)
-	for code in [KEY_1, KEY_2, KEY_3]:
+	var character_ids := ["beto", "cami", "alito", "meli", "malu", "pato", "dami", "vampi"]
+	for code in [KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8]:
 		game._input(key(code))
-		assert(game.active_character_id == ["beto", "cami", "alito"][code - KEY_1])
+		assert(game.active_character_id == character_ids[code - KEY_1])
 		assert(game.player.hp == game.player.max_hp)
-	for code in [KEY_4, KEY_5, KEY_6, KEY_7]:
-		game._input(key(code))
+	game._input(key(KEY_0))
+	assert(game.debug_items_menu.open and game.debug_items_menu.buttons.size() == 11)
+	game.debug_items_menu.choose(0)
+	game._input(key(KEY_0))
+	game.debug_items_menu.choose(1)
+	game._input(key(KEY_0))
+	game.debug_items_menu.choose(2)
+	game._input(key(KEY_0))
+	game.debug_items_menu.choose(3)
 	assert(game.enemies.size() == 4)
 	assert(game.enemies[0].kind == 0 and game.enemies[1].kind == 1 and game.enemies[2].kind == 2)
 	assert(game.enemies[3].is_boss and game.enemies[3].hp == 520)
@@ -49,13 +57,13 @@ func run() -> void:
 	game._input(key(KEY_4, true))
 	assert(game.enemies.size() == 4)
 	for i in range(30):
-		game._input(key(KEY_7))
+		game.debug_menu_action("boss")
 	assert(game.enemies.size() == 34)
-	game._input(key(KEY_8))
+	game.debug_menu_action("ultimate")
 	assert(game.charge == 100)
-	game._input(key(KEY_9))
+	game.debug_menu_action("wave")
 	assert(game.enemies.size() >= 37 and game.enemies.size() <= 41)
-	game._input(key(KEY_0))
+	game.debug_menu_action("kill_all")
 	assert(game.enemies.all(func(enemy): return enemy.dead))
 	game.freeze = 0
 	game.update_game(0.04)

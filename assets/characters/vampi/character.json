@@ -1,0 +1,16 @@
+{
+  "id": "vampi", "display_name": "Vampi", "status": "playable", "default_facing": "right",
+  "relative_size": {"definition": "res://assets/characters/beto/character.json", "ratio": 1.0},
+  "portrait_file": "../../characters_40_frames/vampi/portraits/vampiportrait.png",
+  "animations": {
+    "idle": {"path":"../../characters_20_frames/vampi/animations/idle","file":"idle.png","format":"sheet","fps":8,"loop":true,"frame_size":[180,240],"frame_count":9,"sheet_columns":3,"sheet_rows":3,"frame_indices":[0,1,2,3,4,5,6,7,8]},
+    "walk": {"path":"../../characters_20_frames/vampi/animations/walk","file":"walk.png","format":"sheet","fps":10,"loop":true,"frame_size":[180,240],"frame_count":10,"sheet_columns":5,"sheet_rows":5,"frame_indices":[5,6,7,8,9,10,11,12,13,14]},
+    "attack_01": {"path":"../../characters_20_frames/vampi/animations/attack_01","file":"attack1.png","format":"sheet","fps":18,"loop":false,"frame_size":[180,240],"frame_count":9,"sheet_columns":3,"sheet_rows":3,"frame_indices":[0,1,2,3,4,5,6,7,8],"active_hit_frames":[4,5]},
+    "attack_02": {"source_animation":"attack_01"}, "attack_03": {"source_animation":"attack_01"},
+    "jump": {"source_animation":"idle"}, "jump_attack": {"source_animation":"attack_01"},
+    "hurt": {"path":"../../characters_20_frames/vampi/animations/hurt","file":"hurt.png","format":"sheet","fps":18,"loop":false,"frame_size":[180,240],"frame_count":9,"sheet_columns":3,"sheet_rows":3,"frame_indices":[0,1,2,3,4,5,6,7,8]},
+    "death": {"path":"../../characters_20_frames/vampi/animations/death","file":"ko.png","format":"sheet","fps":18,"loop":false,"frame_size":[180,240],"frame_count":20,"sheet_columns":5,"sheet_rows":5,"frame_indices":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]},
+    "pickup": {"path":"../../characters_20_frames/vampi/animations/pickup","file":"pickup.png","format":"sheet","fps":18,"loop":false,"frame_size":[180,240],"frame_count":9,"sheet_columns":3,"sheet_rows":3,"frame_indices":[0,1,2,3,4,5,6,7,8]},
+    "run": {"source_animation":"walk"}, "runslide": {"source_animation":"attack_01"}
+  }
+}

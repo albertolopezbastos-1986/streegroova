@@ -15,6 +15,31 @@
       "id": "alito",
       "enabled": true,
       "definition": "res://assets/characters/alito/character.json"
+    },
+    {
+      "id": "meli",
+      "enabled": true,
+      "definition": "res://assets/characters/meli/character.json"
+    },
+    {
+      "id": "malu",
+      "enabled": true,
+      "definition": "res://assets/characters/malu/character.json"
+    },
+    {
+      "id": "pato",
+      "enabled": true,
+      "definition": "res://assets/characters/pato/character.json"
+    },
+    {
+      "id": "dami",
+      "enabled": true,
+      "definition": "res://assets/characters/dami/character.json"
+    },
+    {
+      "id": "vampi",
+      "enabled": true,
+      "definition": "res://assets/characters/vampi/character.json"
     }
   ]
 }

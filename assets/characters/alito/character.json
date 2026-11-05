@@ -235,10 +235,18 @@
       "loop": false
     },
     "death": {
-      "source_animation": "idle",
-      "placeholder": true,
-      "fps": 8,
-      "loop": false
+      "path": "../../characters_20_frames/alito/animations/death",
+      "file": "ko.png",
+      "format": "sheet",
+      "fps": 18,
+      "loop": false,
+      "frame_size": [170, 254],
+      "frame_count": 20,
+      "sheet_columns": 5,
+      "sheet_rows": 5,
+      "frame_indices": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+      "active_hit_frames": [],
+      "placeholder": false
     },
     "punch_weapon": {
       "source_animation": "idle",
@@ -246,9 +254,18 @@
       "loop": false
     },
     "pickup": {
-      "source_animation": "idle",
-      "placeholder": true,
-      "loop": false
+      "path": "animations/pickup",
+      "file": "grab.png",
+      "format": "sheet",
+      "fps": 18,
+      "loop": false,
+      "frame_size": [170, 254],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_indices": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+      "active_hit_frames": [],
+      "placeholder": false
     },
     "ultimate": {
       "path": "animations/ultimate",

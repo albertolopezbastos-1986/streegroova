@@ -190,6 +190,7 @@ func _ready() -> void:
 	debug_items_menu = preload("res://scripts/debug_items_menu.gd").new()
 	add_child(debug_items_menu)
 	debug_items_menu.spawn_requested.connect(debug_spawn_item)
+	debug_items_menu.action_requested.connect(debug_menu_action)
 	mobile_controls = preload("res://scripts/mobile_controls.gd").new()
 	add_child(mobile_controls)
 	touch_visible = simulate_mobile or mobile_controls.is_mobile()
@@ -498,21 +499,23 @@ func setup_debug_panel() -> void:
 	var rows := VBoxContainer.new()
 	panel.add_child(rows)
 	debug_status = Label.new()
-	debug_status.text = "DEBUG / O: objetos / TAB: seleccion / vidas infinitas"
+	debug_status.text = "DEBUG / 1-8: personajes / 0: opciones / TAB: seleccion / vidas infinitas"
 	debug_status.add_theme_font_size_override("font_size", 10)
 	rows.add_child(debug_status)
-	var actions := ["1 Beto", "2 Cami*", "3 Alito*", "4 Amarillo", "5 Rosa", "6 Rojo", "7 Jefe", "8 Ulti MAX", "9 Oleada random", "0 Matar todos"]
+	var actions := ["1 Beto", "2 Cami", "3 Alito", "4 Meli", "5 Malu", "6 Pato", "7 Dami", "8 Vampi", "0 OPCIONES"]
 	for row_index in range(2):
 		var row := HBoxContainer.new()
 		rows.add_child(row)
 		for column in range(5):
 			var index := row_index * 5 + column
+			if index >= actions.size():
+				continue
 			var button := Button.new()
 			button.text = actions[index]
 			button.custom_minimum_size = Vector2(182, 28)
 			button.add_theme_font_size_override("font_size", 10)
 			button.focus_mode = Control.FOCUS_NONE
-			button.pressed.connect(debug_action.bind((index + 1) % 10))
+			button.pressed.connect(open_debug_items if index == 8 else debug_action.bind(index + 1))
 			row.add_child(button)
 	var back := Button.new()
 	back.text = "VOLVER A SELECCION"
@@ -572,14 +575,9 @@ func debug_action(number: int) -> void:
 	if not debug_room or state != "play":
 		return
 	match number:
-		1, 2, 3:
-			var id: String = ["beto", "cami", "alito"][number - 1]
-			var pack := CharacterCatalog.load_pack("res://assets/characters/%s/character.json" % id)
-			var placeholder := pack.is_empty()
-			if placeholder:
-				pack = CharacterCatalog.character(id).duplicate(true)
-				pack["id"] = id
-				pack["display_name"] = id.capitalize() + " (grafica Beto)"
+		1, 2, 3, 4, 5, 6, 7, 8:
+			var id: String = str(CharacterCatalog.slots()[number - 1]["id"])
+			var pack := CharacterCatalog.character(id)
 			var at: Vector2 = player.position
 			var direction: float = player.facing
 			player.grapple.release()
@@ -606,17 +604,22 @@ func debug_action(number: int) -> void:
 			respawn_time = 0
 			freeze = 0
 			combat_director.reset()
-			debug_status.text = "DEBUG / %s / TAB: seleccion%s" % [id.capitalize(), " / * Graficos temporales de Beto" if placeholder else ""]
-		4, 5, 6:
-			debug_spawn_enemy(number - 4)
-		7:
+			debug_status.text = "DEBUG / %s / 1-8: personajes / 0: opciones" % id.capitalize()
+
+func debug_menu_action(action: String) -> void:
+	if not debug_room or state != "play":
+		return
+	match action:
+		"enemy_0", "enemy_1", "enemy_2":
+			debug_spawn_enemy(int(action.get_slice("_", 1)))
+		"boss":
 			debug_spawn_enemy(0, true)
-		8:
+		"ultimate":
 			charge = 100
-		9:
+		"wave":
 			for i in range(randi_range(3, 7)):
 				debug_spawn_enemy(randi_range(0, 2))
-		0:
+		"kill_all":
 			player.grapple.release()
 			combat_director.reset()
 			for enemy in enemies:
@@ -755,7 +758,7 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 	if debug_room and event is InputEventKey and event.pressed and not event.echo:
-		if state == "play" and event.physical_keycode == KEY_O:
+		if state == "play" and event.physical_keycode in [KEY_0, KEY_KP_0]:
 			open_debug_items()
 			get_viewport().set_input_as_handled()
 			return
@@ -763,7 +766,7 @@ func _input(event: InputEvent) -> void:
 			show_character_selection()
 			get_viewport().set_input_as_handled()
 			return
-		if state == "play" and event.physical_keycode >= KEY_0 and event.physical_keycode <= KEY_9:
+		if state == "play" and event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_8:
 			debug_action(event.physical_keycode - KEY_0)
 			get_viewport().set_input_as_handled()
 			return
@@ -1202,12 +1205,6 @@ func draw_overlay() -> void:
 		canvas.draw_arc(center, wave_radius, 0, TAU, 96, aura, 5)
 		# Draw the posed hero above the darkened scene.
 		player.z_index = 1001
-		canvas.draw_set_transform(interface_origin(), 0, Vector2.ONE * interface_scale())
-		var title := "G R O O V A   B R E A K"
-		var title_at := Vector2(235, 172)
-		for glow_offset in [Vector2(-3, 0), Vector2(3, 0), Vector2(0, -3), Vector2(0, 3), Vector2(-1, -1), Vector2(1, 1)]:
-			canvas.draw_string(font, title_at + glow_offset, title, HORIZONTAL_ALIGNMENT_LEFT, -1, ArcadeUI.font_size(32), Color(aura, 0.16))
-		overlay_text(canvas, title, title_at, 32, aura)
 	else:
 		player.z_index = int(player.position.y)
 	var hud_scale := interface_scale() * (1.18 if touch_visible else 1.0)
@@ -1231,8 +1228,6 @@ func draw_overlay() -> void:
 		if combo_hits > 1:
 			overlay_text(canvas, "%02d HITS" % combo_hits, Vector2(70, 300), 46, Color.WHITE)
 			overlay_text(canvas, "SCORE x%.2f" % score_rules.multiplier(charge, lives, combo_hits, ult_time > 0), Vector2(70, 330), 20, Color.WHITE)
-		if respawn_time > 0:
-			overlay_text(canvas, "LEVANTATE. LA NOCHE SIGUE.", Vector2(273, 253), 24, CREAM)
 	if state in ["stage_clear", "victory"] or (state == "fade_out" and not starting_campaign):
 		draw_stage_presentation(canvas)
 	if state == "start":
@@ -1240,8 +1235,11 @@ func draw_overlay() -> void:
 	if state in ["title", "pause", "over", "won"] or show_help:
 		canvas.draw_set_transform(Vector2.ZERO)
 		canvas.draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color.BLACK)
-		canvas.draw_set_transform(interface_origin() + Vector2(0, (VIEW_HEIGHT - 540.0 * interface_scale()) / 2), 0, Vector2.ONE * interface_scale())
-		if state == "title":
+		if state == "title" and touch_visible:
+			draw_mobile_title(canvas)
+		else:
+			canvas.draw_set_transform(interface_origin() + Vector2(0, (VIEW_HEIGHT - 540.0 * interface_scale()) / 2), 0, Vector2.ONE * interface_scale())
+		if state == "title" and not touch_visible:
 			var logo_scale := minf(180.0 / START_LOGO.get_width(), 80.0 / START_LOGO.get_height())
 			var logo_size := START_LOGO.get_size() * logo_scale
 			canvas.draw_texture_rect(START_LOGO, Rect2(Vector2((960 - logo_size.x) / 2, 8), logo_size), false)
@@ -1249,17 +1247,32 @@ func draw_overlay() -> void:
 			var title_size := TITLE_LOGO.get_size() * title_scale
 			canvas.draw_texture_rect(TITLE_LOGO, Rect2(Vector2((960 - title_size.x) / 2, 250 - title_size.y / 2), title_size), false)
 			overlay_centered(canvas, "PRESS START", 500, 42 if touch_visible else 30, Color.WHITE)
-		elif state == "pause" or show_help:
+		elif state != "title" and (state == "pause" or show_help):
 			overlay_text(canvas, "PAUSA" if not show_help else "COMO JUGAR", Vector2(335, 173), 48, MINT)
 			draw_controls(canvas, 240)
 			overlay_text(canvas, "TOCA SEGUIR PARA VOLVER" if touch_visible else "ESC / START para seguir   -   H cierra ayuda", Vector2(261, 424), 18, CREAM)
-		else:
+		elif state != "title":
 			overlay_text(canvas, "CONGRATULATIONS!" if state == "won" else "FIN DE LA RONDA", Vector2(220, 197), 46, MINT if state == "won" else Color("f187a5"))
 			overlay_text(canvas, "La noche vuelve a tener ritmo." if state == "won" else "Una caida mas. Una revancha mas.", Vector2(316, 246), 20, CREAM)
 			overlay_text(canvas, "PUNTOS  %06d     RECORD  %06d" % [score, best], Vector2(272, 307), 22, Color("ffc785"))
 			overlay_text(canvas, "ENTER / A / CLIC PARA REINTENTAR", Vector2(283, 402), 22, CREAM)
 
 		canvas.draw_set_transform(Vector2.ZERO)
+
+func draw_mobile_title(canvas: Node2D) -> void:
+	canvas.draw_set_transform(Vector2.ZERO)
+	var area := get_viewport_rect().size
+	var logo_max := Vector2(area.x * 0.48, 105)
+	var logo_scale := minf(logo_max.x / START_LOGO.get_width(), logo_max.y / START_LOGO.get_height())
+	var logo_size := START_LOGO.get_size() * logo_scale
+	canvas.draw_texture_rect(START_LOGO, Rect2(Vector2((area.x - logo_size.x) / 2, area.y * 0.17), logo_size), false)
+	var title_max := Vector2(area.x * 0.82, area.y * 0.30)
+	var title_scale := minf(title_max.x / TITLE_LOGO.get_width(), title_max.y / TITLE_LOGO.get_height())
+	var title_size := TITLE_LOGO.get_size() * title_scale
+	canvas.draw_texture_rect(TITLE_LOGO, Rect2(Vector2((area.x - title_size.x) / 2, area.y * 0.28), title_size), false)
+	var start_size := 34
+	var start_width := font.get_string_size("PRESS START", HORIZONTAL_ALIGNMENT_LEFT, -1, ArcadeUI.font_size(start_size)).x
+	overlay_text(canvas, "PRESS START", Vector2((area.x - start_width) / 2, area.y * 0.61), start_size, Color.WHITE)
 
 func draw_stage_presentation(canvas: Node2D) -> void:
 	var final := state == "victory"
@@ -1268,7 +1281,7 @@ func draw_stage_presentation(canvas: Node2D) -> void:
 	canvas.draw_set_transform(Vector2.ZERO)
 	canvas.draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.025, 0.035, 0.08, 0.20))
 	if touch_visible:
-		canvas.draw_set_transform(interface_origin() + Vector2(0, 310 - top * interface_scale()), 0, Vector2.ONE * interface_scale())
+		canvas.draw_set_transform(interface_origin() + Vector2(0, 225 - top * interface_scale()), 0, Vector2.ONE * interface_scale())
 	else:
 		canvas.draw_set_transform(interface_origin() + Vector2(168, 20) * interface_scale(), 0, Vector2.ONE * 0.65 * interface_scale())
 	canvas.draw_rect(Rect2(62, top, 836, 225), Color("101322").lerp(accent, 0.12))

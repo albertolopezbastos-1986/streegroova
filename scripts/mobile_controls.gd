@@ -29,7 +29,10 @@ static func is_mobile() -> bool:
 	if OS.has_feature("android") or OS.has_feature("ios"):
 		return true
 	if OS.has_feature("web"):
-		return bool(JavaScriptBridge.eval("Boolean(navigator.userAgentData?.mobile || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))"))
+		# Prefer explicit browser/OS signals. The coarse-pointer fallback catches
+		# mobile browsers that request a desktop user agent without turning a
+		# resized desktop browser (or a large touch monitor) into mobile mode.
+		return bool(JavaScriptBridge.eval("Boolean(navigator.userAgentData?.mobile === true || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || (navigator.maxTouchPoints > 0 && matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) <= 820))"))
 	return false
 
 func setup(owner_game: Node2D, mobile: bool) -> void:
