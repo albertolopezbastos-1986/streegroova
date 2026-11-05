@@ -216,3 +216,11 @@ Alito tiene un combo de dos movimientos (`combo_sequence: [1, 2]`): embestida y 
 Los rivales usan tres personajes propios en `assets/enemies/enemie{1,2,3}/`, con hojas de idle, caminata, dos ataques, daño y KO. El tercer ataque reutiliza el primero; los enemigos no saltan ni hacen deslizantes. Los jefes de calle, shopping y bar son respectivamente Malo 1, Malo 3 y Malo 2, con escala de jefe 1,25 y sus colores originales.
 
 Los tres enemigos sólo caminan y atacan en el suelo: no corren, no saltan y no hacen deslizantes. Sus assets están organizados en `assets/enemies/enemie1`, `enemie2` y `enemie3`; cada animación incluye hoja original, `frames.json` y cuadros individuales en `frames/` (234 cuadros en total). Los jefes mantienen el orden 1, 3, 2 y su tamaño grande.
+
+## Puntaje arcade
+
+Los multiplicadores se multiplican entre sí: Groova Break llena ×1,1; impactos de ulti ×2; combo +5% por hit desde el segundo, hasta ×3; dos vidas restantes ×0,85 y una ×0,65. Sushi y cerveza agregan cada uno ×1,25 durante diez segundos de juego activo. Repetir el mismo consumible renueva su duración; combinar ambos acumula sus efectos. El combo vence tras 2,5 segundos sin impactos o al recibir daño.
+
+Cada golpe da diez puntos base por unidad de daño real, sin premiar el daño excedente al KO. El KO de un jefe duplica su bonus base. Completar un nivel entrega 250 puntos base, o 1000 si no se recibió daño; este bonus usa barra, consumibles y penalización por vidas, sin multiplicador de combo. El HUD muestra el multiplicador y los segundos restantes de cada consumible. El puntaje se redondea a decenas, con máximo 9.999.990 para mantener compatibilidad con el ranking; Debug Room no genera puntos. Las reglas están en `scripts/score_rules.gd` y la prueba en `tests/test_score_system.gd`.
+
+Los jefes ya no reciben el bloqueo adicional de impactos (`hit_lock`) que facilita completar combos contra rivales comunes. Conservan daño, reacción normal y sus resistencias a agarres/lanzamientos.

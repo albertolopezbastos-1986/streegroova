@@ -1,7 +1,8 @@
 extends Node2D
 
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
-const MOBILE_STAGE_PATH := "res://assets/endingmobile.png"
+const MOBILE_STAGE = preload("res://assets/endingmobile.png")
+const DESKTOP_STAGE = preload("res://assets/environment/ending/concert-stage.png")
 var elapsed := 0.0
 var win_label: Label
 
@@ -29,8 +30,7 @@ func update_layout() -> void:
 	var frame := get_viewport_rect().size
 	get_node("BlackBackdrop").size = frame
 	var background := get_node("Background") as Sprite2D
-	if mobile_layout() and ResourceLoader.exists(MOBILE_STAGE_PATH):
-		background.texture = load(MOBILE_STAGE_PATH) as Texture2D
+	background.texture = MOBILE_STAGE if mobile_layout() else DESKTOP_STAGE
 	var image_size := background.texture.get_size()
 	var mobile := mobile_layout()
 	var area := frame if mobile else Vector2(960, 640)

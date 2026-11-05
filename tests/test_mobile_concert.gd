@@ -16,6 +16,7 @@ func run() -> void:
 		viewport.size = size
 		concert.restart()
 		var background = concert.get_node("Background")
+		assert(background.texture.resource_path == "res://assets/endingmobile.png", "mobile ending uses the supplied portrait image")
 		var rendered: Vector2 = background.texture.get_size() * background.scale
 		assert(rendered.x >= size.x - 0.01 and rendered.y >= size.y - 0.01, "stage covers mobile viewport")
 		assert(is_equal_approx(background.scale.x, background.scale.y), "image keeps its aspect ratio")
@@ -24,6 +25,7 @@ func run() -> void:
 	game.touch_visible = false
 	concert.update_layout()
 	var background = concert.get_node("Background")
+	assert(background.texture.resource_path == "res://assets/environment/ending/concert-stage.png", "desktop restores its landscape image")
 	var rendered: Vector2 = background.texture.get_size() * background.scale
 	assert(rendered.x <= 960.01 and rendered.y <= 640.01, "desktop retains complete stage")
 	print("MOBILE CONCERT PASSED: portrait, landscape, proportional fill, centered crop, responsive title, desktop layout")

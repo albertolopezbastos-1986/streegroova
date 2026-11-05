@@ -188,3 +188,33 @@ func setup_mobile() -> void:
 	for card in cards:
 		var label := card.get_child(1) as Label
 		label.add_theme_font_size_override("font_size", 20)
+	setup_mobile_layout(get_viewport().get_visible_rect().size)
+
+func setup_mobile_layout(area: Vector2) -> void:
+	transform = Transform2D.IDENTITY
+	screen.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	screen.size = area
+	var background := screen.get_child(0) as ColorRect
+	background.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	background.position = Vector2.ZERO
+	background.size = area
+	background.color = Color.BLACK
+	var heading := screen.get_child(1) as Label
+	heading.position = Vector2(12, 16)
+	heading.size = Vector2(area.x - 24, 38)
+	heading.add_theme_font_size_override("font_size", mini(18, int((area.x - 24) / 18)))
+	var gap := 12.0
+	var row_height := (area.y - 116.0) / 4.0
+	var card_width := minf((area.x - 36.0) / 2.0, row_height - gap)
+	var origin_x := (area.x - card_width * 2 - gap) / 2
+	for i in range(cards.size()):
+		var card := cards[i]
+		card.position = Vector2(origin_x + (i % 2) * (card_width + gap), 64 + floori(i / 2.0) * row_height)
+		card.size = Vector2(card_width, row_height - gap)
+		var portrait := card.get_node("Portrait") as TextureRect
+		portrait.position = Vector2(6, 6)
+		portrait.size = Vector2(card_width - 12, card.size.y - 32)
+		var label := card.get_child(1) as Label
+		label.position = Vector2(4, card.size.y - 24)
+		label.size = Vector2(card_width - 8, 20)
+		label.add_theme_font_size_override("font_size", 14)

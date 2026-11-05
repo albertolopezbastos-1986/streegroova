@@ -509,6 +509,8 @@ func tick_pickup(dt: float) -> void:
 		if pickup_elapsed >= duration * collect_progress:
 			if pickup_target.weapon.is_empty():
 				hp = minf(max_hp, hp + max_hp * (0.5 if pickup_target.beer else 0.75))
+				if kind == -1:
+					game.score_rules.consume(pickup_target.beer)
 			else:
 				weapon = pickup_target.weapon
 				weapon_durability = pickup_target.weapon_durability
@@ -764,7 +766,7 @@ func launch_away(damage: float, direction: float, can_hit_others := true, throwe
 		hurt(damage, direction, true)
 		return hp < before
 	release_weapon(direction)
-	hurt(damage, direction, true)
+	hurt(damage, direction, true, false, from_ultimate)
 	if dead:
 		return true
 	velocity = Vector2(direction * THROW_SPEED, 0)
@@ -801,7 +803,7 @@ func update_flight_impacts(from: Vector2) -> void:
 			flight_hits.append(target)
 
 func lock_on_hit() -> void:
-	if kind < 0:
+	if kind < 0 or is_boss:
 		return
 	hit_shake = HIT_SHAKE_DURATION
 	if not dead and thrown_time <= 0:
@@ -810,8 +812,8 @@ func lock_on_hit() -> void:
 		moving = false
 	update_visual(0)
 
-func hurt(damage: float, direction: float, heavy := false, from_grab := false) -> void:
-	if dead or invincible > 0 or thrown_time > 0 or (getup_time > 0 and kind == -1):
+func hurt(damage: float, direction: float, heavy := false, from_grab := false, from_ultimate := false) -> void:
+	if damage <= 0 or dead or invincible > 0 or thrown_time > 0 or (getup_time > 0 and kind == -1):
 		return
 	if kind >= 0:
 		getup_time = 0
@@ -821,6 +823,7 @@ func hurt(damage: float, direction: float, heavy := false, from_grab := false) -
 		if is_instance_valid(grabbed_by):
 			grabbed_by.grapple.release()
 	reset_running()
+	var actual_damage := minf(hp, maxf(0, damage))
 	hp = maxf(0, hp - damage)
 	stun = (0.44 if heavy else 0.36) if kind == -1 else (0.38 if heavy else 0.25)
 	hurt_duration = stun
@@ -835,10 +838,10 @@ func hurt(damage: float, direction: float, heavy := false, from_grab := false) -
 	game.sound("hit")
 	if kind == -1:
 		game.combo_hits = 0
+		game.combo_timer = 0
+		game.score_rules.level_unhurt = false
 	else:
-		game.score += int(damage * 10)
-		game.combo_hits += 1
-		game.combo_timer = 2.0
+		game.register_scoring_hit(actual_damage, from_ultimate)
 	if hp <= 0:
 		release_weapon(direction)
 		dead = true
@@ -855,7 +858,7 @@ func hurt(damage: float, direction: float, heavy := false, from_grab := false) -
 		air_attack = false
 		moving = false
 		if kind != -1:
-			game.score += [250, 350, 600][kind]
+			game.award_score([250, 350, 600][kind] * (2 if is_boss else 1), from_ultimate)
 	update_visual(0)
 
 func _draw() -> void:

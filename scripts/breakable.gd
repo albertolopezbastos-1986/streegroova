@@ -37,7 +37,7 @@ func hurt(damage: float, direction: float, _heavy := false) -> void:
 	hide()
 	game.sound("hit")
 	game.impact(position - Vector2(0, 16), direction, false)
-	game.score += 50
+	game.award_score(50)
 	game.drop_food(position)
 	for i in range(8):
 		game.particles.append({"pos": position - Vector2(0, 16), "vel": Vector2(randf_range(-100, 100), randf_range(-130, -30)), "life": 0.45, "color": Color("8899a6" if barrel else "be8846"), "size": 3.0})

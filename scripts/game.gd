@@ -6,11 +6,12 @@ const Breakable = preload("res://scripts/breakable.gd")
 const CombatDirector = preload("res://scripts/combat_director.gd")
 const Fighter = preload("res://scripts/fighter.gd")
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
+const ScoreRules = preload("res://scripts/score_rules.gd")
 const START_LOGO: Texture2D = preload("res://assets/branding/groovaipa-logo.png")
 const TITLE_LOGO: Texture2D = preload("res://assets/branding/street-groova-fighter-logo.png")
 const CharacterCatalog = preload("res://scripts/character_catalog.gd")
 const CAMPAIGN_MAP = preload("res://assets/mapadesktop.png")
-const MOBILE_CAMPAIGN_MAP_PATH := "res://assets/mapamobile.png"
+const MOBILE_CAMPAIGN_MAP = preload("res://assets/mapamobile.png")
 const MAP_DURATION := 3.0
 const MAP_STATIONS = [Vector2(515, 473), Vector2(862, 435), Vector2(1263, 425)]
 const MAP_STATIONS_DESKTOP_NEW = [Vector2(367, 420), Vector2(919, 430), Vector2(1437, 420)]
@@ -75,6 +76,8 @@ var lives := 3
 var charge := 0.0
 var combo_hits := 0
 var combo_timer := 0.0
+var score_rules := ScoreRules.new()
+var level_score_bonus := 0
 var stage := 0
 var level_index := 0
 var campaign_backgrounds: Array = CAMPAIGN_BACKGROUNDS.duplicate()
@@ -113,6 +116,8 @@ var current_music := ""
 var music: AudioStreamPlayer
 var muted := false
 var best := 0
+var online_high_score := 0
+var high_score_loaded := false
 var font: Font
 var world: Node2D
 var online_scores: Node
@@ -164,6 +169,13 @@ func _ready() -> void:
 	add_child(overlay)
 	online_scores = preload("res://scripts/online_scores.gd").new()
 	add_child(online_scores)
+	online_scores.scores_loaded.connect(func(success: bool, _message: String):
+		if success:
+			online_high_score = 0
+			for entry in online_scores.scores:
+				online_high_score = maxi(online_high_score, int(entry.get("score", 0)))
+			high_score_loaded = true
+	)
 	online_scores.load_scores()
 	ranking_panel = preload("res://scripts/ranking_panel.gd").new()
 	add_child(ranking_panel)
@@ -249,6 +261,7 @@ func new_run(as_debug := false) -> void:
 	run_id = online_scores.new_run_id()
 	show_help = false
 	score = 0
+	score_rules.reset()
 	lives = 3
 	charge = 0
 	level_index = 0
@@ -259,6 +272,8 @@ func choose_backgrounds() -> Array:
 	return CAMPAIGN_BACKGROUNDS.duplicate()
 
 func load_level(remaining_health := -1.0) -> void:
+	score_rules.level_unhurt = true
+	level_score_bonus = 0
 	background_index = int(campaign_backgrounds[level_index])
 	mobile_controls.release_all()
 	if is_instance_valid(player):
@@ -297,7 +312,7 @@ func load_level(remaining_health := -1.0) -> void:
 	shake = 0
 	player = Fighter.new()
 	world.add_child(player)
-	player.setup(self, -1, Vector2(CAMERA_ANCHOR_X * screen_width() / 960.0 / WORLD_ZOOM, START_Y), character_pack)
+	player.setup(self, -1, Vector2(CAMERA_ANCHOR_X * screen_width() / 960.0 / world_zoom(), START_Y), character_pack)
 	player.hp = player.max_hp if remaining_health < 0 else minf(remaining_health, player.max_hp)
 	player.invincible = 1.5
 	if not debug_room:
@@ -421,7 +436,7 @@ func update_level_transition(dt: float) -> void:
 					level_index += 1
 					load_level(health)
 				entrance_target = player.position.x
-				player.position.x = -60.0 / WORLD_ZOOM
+				player.position.x = -60.0 / world_zoom()
 				player.facing = 1
 				player.update_visual(0)
 				fade_screen.color.a = 1
@@ -827,24 +842,32 @@ func interface_scale() -> float:
 func interface_origin() -> Vector2:
 	return Vector2((screen_width() - 960 * interface_scale()) / 2, 0)
 
+func world_zoom() -> float:
+	return WORLD_ZOOM * (0.85 if touch_visible else 1.0)
+
+func world_offset_y() -> float:
+	return (584.0 if touch_visible else VIEW_HEIGHT - 26.0) - WALK_MAX_Y * world_zoom()
+
 func update_world_transform() -> void:
 	var offset := Vector2(randf_range(-shake, shake), randf_range(-shake, shake))
 	var follow_y := 0.0
 	if is_instance_valid(player) and is_instance_valid(player.visual):
 		var data: Dictionary = player.visual.character_data
 		var sprite_height := float(data["pivot_pixels"][1]) * float(data["scale"])
-		var top: float = (player.position.y - player.height - sprite_height) * WORLD_ZOOM + WORLD_OFFSET_Y
+		var top: float = (player.position.y - player.height - sprite_height) * world_zoom() + world_offset_y()
 		# At this close range a full jump exceeds the viewport height. Pan up
 		# with the player while keeping the HUD fixed and the jump physics intact.
 		follow_y = maxf(0, 100.0 - top)
-	world.position = Vector2(-camera_x * WORLD_ZOOM, WORLD_OFFSET_Y + follow_y) + offset
+	world.scale = Vector2.ONE * world_zoom()
+	world.position = Vector2(-camera_x * world_zoom(), world_offset_y() + follow_y) + offset
 
 func world_to_screen(point: Vector2) -> Vector2:
-	return world.position + point * WORLD_ZOOM
+	return world.position + point * world_zoom()
 
 func update_game(dt: float) -> void:
 	if state != "play" or debug_items_menu.open:
 		return
+	score_rules.tick(dt)
 	banner_time = maxf(0, banner_time - dt)
 	combo_timer = maxf(0, combo_timer - dt)
 	if combo_timer == 0:
@@ -937,10 +960,10 @@ func update_camera(dt: float) -> void:
 			camera_direction = signf(player.velocity.x)
 	var target_anchor := (CAMERA_LEFT_ANCHOR_X if camera_direction < 0 else CAMERA_ANCHOR_X) * screen_width() / 960.0
 	camera_anchor_x = move_toward(camera_anchor_x, target_anchor, dt * 720)
-	var view_width := screen_width() / WORLD_ZOOM
+	var view_width := screen_width() / world_zoom()
 	var max_camera := INF if debug_room else maxf(0, minf(LEVEL_WIDTH, right_bound) - view_width)
 	var min_camera := minf(max_camera, maxf(0, camera_peak_x - BACKTRACK_DISTANCE))
-	var target_x := clampf(player.position.x - camera_anchor_x / WORLD_ZOOM, min_camera, max_camera)
+	var target_x := clampf(player.position.x - camera_anchor_x / world_zoom(), min_camera, max_camera)
 	camera_x = clampf(lerpf(camera_x, target_x, 1.0 - exp(-dt * 8)), min_camera, max_camera)
 	camera_peak_x = maxf(camera_peak_x, camera_x)
 	left_bound = maxf(left_bound, maxf(30, camera_peak_x - BACKTRACK_DISTANCE + 12))
@@ -967,6 +990,10 @@ func skip_current_level() -> void:
 	complete_level()
 
 func complete_level() -> void:
+	if state != "play":
+		return
+	if not debug_room:
+		level_score_bonus = award_score(1000 if score_rules.level_unhurt else 250, false, false)
 	mobile_controls.release_all()
 	combat_director.reset()
 	player.grapple.release()
@@ -992,7 +1019,7 @@ func complete_level() -> void:
 	else:
 		state = "victory"
 		# Bring the winner into view for the celebration, independent of stage edges.
-		player.position.x = camera_x + screen_width() * 0.5 / WORLD_ZOOM
+		player.position.x = camera_x + screen_width() * 0.5 / world_zoom()
 		player.position.y = START_Y
 		player.facing = 1
 		player.victory_time = 0
@@ -1019,6 +1046,19 @@ func finish(result: String) -> void:
 		save.set_value("score", "best", best)
 		save.save("user://record.cfg")
 	ranking_panel.show_result(result, score, run_id)
+
+func award_score(base: float, ultimate := false, use_combo := true) -> int:
+	if debug_room:
+		return 0
+	var points: int = score_rules.points(base, charge, lives, combo_hits if use_combo else 1, ultimate)
+	var previous := score
+	score = mini(ScoreRules.MAX_SCORE, score + points)
+	return score - previous
+
+func register_scoring_hit(damage: float, ultimate := false) -> void:
+	combo_hits += 1
+	combo_timer = ScoreRules.COMBO_WINDOW
+	award_score(damage * 10, ultimate)
 
 func use_ultimate(actor: Node2D = null) -> void:
 	if actor != null and actor != player:
@@ -1069,11 +1109,11 @@ func _draw() -> void:
 
 func draw_city() -> void:
 	rect(0, 0, screen_width(), VIEW_HEIGHT, Color("151b29"))
-	draw_set_transform(world.position, 0, Vector2.ONE * WORLD_ZOOM)
+	draw_set_transform(world.position, 0, Vector2.ONE * world_zoom())
 	var tile_width := ENVIRONMENT_TILE_WIDTH
 	var tile_step := tile_width if background_index == 0 else ENVIRONMENT_TILE_STEP
 	var first := floori((camera_x + 80) / tile_step) - 1
-	var last := ceili((camera_x + screen_width() / WORLD_ZOOM + 80) / tile_step)
+	var last := ceili((camera_x + screen_width() / world_zoom() + 80) / tile_step)
 	for i in range(first, last + 1):
 		var x := -80.0 + i * tile_step
 		if background_index == 0:
@@ -1081,7 +1121,7 @@ func draw_city() -> void:
 		else:
 			draw_environment_tile(x, tile_width, i)
 	if enemies.filter(func(e): return not e.dead).size() > 0:
-		var visible_width := screen_width() / WORLD_ZOOM
+		var visible_width := screen_width() / world_zoom()
 		if right_bound >= camera_x and right_bound < camera_x + visible_width:
 			for j in range(4):
 				rect(right_bound, 409 + j * 6, 1, 3, Color("e17e8a"))
@@ -1141,17 +1181,19 @@ func neon_sign(x: float, y: float, words: String, color: Color, size: int) -> vo
 
 func draw_overlay() -> void:
 	var canvas: Node2D = get_node("Overlay")
+	if state == "concert":
+		return
 	if state in ["map_in", "map_hold", "map_out"]:
 		draw_campaign_map(canvas)
 		return
 	for p in particles:
-		canvas.draw_rect(Rect2(world_to_screen(p.pos), Vector2.ONE * p.size * WORLD_ZOOM), p.color)
+		canvas.draw_rect(Rect2(world_to_screen(p.pos), Vector2.ONE * p.size * world_zoom()), p.color)
 	if ult_time > 0:
 		canvas.draw_rect(Rect2(0, 0, screen_width(), VIEW_HEIGHT), Color(0.015, 0.02, 0.08, 0.72))
 		var center: Vector2 = world_to_screen(player.position - Vector2(0, 45 + player.height))
 		var aura: Color = player.ultimate_color()
-		var radius := (85 + sin(time * 30) * 8) * WORLD_ZOOM
-		var wave_radius := maxf(1, (1.6 - ult_time) * 600 * WORLD_ZOOM)
+		var radius := (85 + sin(time * 30) * 8) * world_zoom()
+		var wave_radius := maxf(1, (1.6 - ult_time) * 600 * world_zoom())
 		for glow in range(4, 0, -1):
 			canvas.draw_circle(center, radius + glow * 7, Color(aura, 0.025))
 			canvas.draw_arc(center, wave_radius, 0, TAU, 96, Color(aura, 0.035 * (5 - glow)), 5 + glow * 5)
@@ -1187,7 +1229,8 @@ func draw_overlay() -> void:
 			canvas.draw_rect(Rect2(330, 176, 300, 8), Color("30344c"))
 			canvas.draw_rect(Rect2(330, 176, 300.0 * grip.escape_presses / grip.ESCAPE_REQUIRED, 8), MINT)
 		if combo_hits > 1:
-			overlay_text(canvas, "%02d HITS" % combo_hits, Vector2(779, 142), 27, Color.WHITE)
+			overlay_text(canvas, "%02d HITS" % combo_hits, Vector2(70, 300), 46, Color.WHITE)
+			overlay_text(canvas, "SCORE x%.2f" % score_rules.multiplier(charge, lives, combo_hits, ult_time > 0), Vector2(70, 330), 20, Color.WHITE)
 		if respawn_time > 0:
 			overlay_text(canvas, "LEVANTATE. LA NOCHE SIGUE.", Vector2(273, 253), 24, CREAM)
 	if state in ["stage_clear", "victory"] or (state == "fade_out" and not starting_campaign):
@@ -1224,7 +1267,10 @@ func draw_stage_presentation(canvas: Node2D) -> void:
 	var top := 155.0 if final else 205.0
 	canvas.draw_set_transform(Vector2.ZERO)
 	canvas.draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.025, 0.035, 0.08, 0.20))
-	canvas.draw_set_transform(interface_origin() + Vector2(168, 20) * interface_scale(), 0, Vector2.ONE * 0.65 * interface_scale())
+	if touch_visible:
+		canvas.draw_set_transform(interface_origin() + Vector2(0, 310 - top * interface_scale()), 0, Vector2.ONE * interface_scale())
+	else:
+		canvas.draw_set_transform(interface_origin() + Vector2(168, 20) * interface_scale(), 0, Vector2.ONE * 0.65 * interface_scale())
 	canvas.draw_rect(Rect2(62, top, 836, 225), Color("101322").lerp(accent, 0.12))
 	canvas.draw_rect(Rect2(70, top + 8, 820, 209), accent, false, 3)
 	canvas.draw_line(Vector2(90, top + 49), Vector2(870, top + 49), accent.darkened(0.45), 2)
@@ -1236,6 +1282,8 @@ func draw_stage_presentation(canvas: Node2D) -> void:
 	overlay_centered(canvas, "CONGRATULATIONS!" if final else "STAGE CLEAR", heading_baseline, heading_size, color)
 	if final:
 		overlay_centered(canvas, "PUNTOS  %06d" % score, top + 192, 18, Color("f7c47e"))
+	elif level_score_bonus > 0:
+		overlay_centered(canvas, "%s +%d" % ["SIN DANO" if score_rules.level_unhurt else "NIVEL", level_score_bonus], top + 192, 18, Color.WHITE)
 	for i in range(18):
 		var x := 90.0 + i * 46
 		var glow := accent if (i + int(presentation_time * 8)) % 3 == 0 else accent.darkened(0.7)
@@ -1305,15 +1353,20 @@ func draw_hud(canvas: Node2D) -> void:
 			canvas.draw_rect(Rect2(spark.floor(), Vector2(2, 2)), Color(charge_color, 1.0 - phase))
 	canvas.draw_rect(charge_rect, Color("30344c"))
 	canvas.draw_rect(Rect2(108, 54, 260 * clampf(charge / 100, 0, 1), 6), gold)
-	var high_score := maxi(best, score)
-	for entry in online_scores.scores:
-		high_score = maxi(high_score, int(entry.get("score", 0)))
 	var score_x := 480.0 if touch_visible else 610.0
 	var high_score_x := 650.0 if touch_visible else 780.0
 	overlay_text(canvas, "SCORE", Vector2(score_x, 28), 16, Color.WHITE)
 	overlay_text(canvas, "%06d" % score, Vector2(score_x, 57), 29, Color.WHITE)
+	overlay_text(canvas, "x%.2f" % score_rules.multiplier(charge, lives, combo_hits, ult_time > 0), Vector2(score_x, 80), 16, Color.WHITE)
+	if score_rules.sushi_time > 0 or score_rules.beer_time > 0:
+		var boosts := ""
+		if score_rules.sushi_time > 0:
+			boosts += "SUSHI %ds " % ceili(score_rules.sushi_time)
+		if score_rules.beer_time > 0:
+			boosts += "CERVEZA %ds" % ceili(score_rules.beer_time)
+		overlay_text(canvas, boosts, Vector2(400, 101), 12, Color.WHITE)
 	overlay_text(canvas, "HIGH SCORE", Vector2(high_score_x, 28), 16, Color.WHITE)
-	overlay_text(canvas, "%06d" % high_score, Vector2(high_score_x, 57), 29, Color.WHITE)
+	overlay_text(canvas, "%06d" % online_high_score if high_score_loaded else "------", Vector2(high_score_x, 57), 29, Color.WHITE)
 	for enemy in enemies:
 		if enemy.is_boss and not enemy.dead and state == "play":
 			canvas.draw_rect(Rect2(270, 122, 420, 20), Color("241b2c"))
@@ -1405,7 +1458,7 @@ func draw_campaign_map(canvas: Node2D) -> void:
 	canvas.draw_set_transform(Vector2.ZERO)
 	var map_area := get_viewport_rect().size if touch_visible else Vector2(960, VIEW_HEIGHT)
 	canvas.draw_rect(Rect2(Vector2.ZERO, map_area), Color.BLACK)
-	var map_texture: Texture2D = load(MOBILE_CAMPAIGN_MAP_PATH) as Texture2D if touch_visible and ResourceLoader.exists(MOBILE_CAMPAIGN_MAP_PATH) else CAMPAIGN_MAP
+	var map_texture: Texture2D = MOBILE_CAMPAIGN_MAP if touch_visible else CAMPAIGN_MAP
 	var map_size := map_texture.get_size()
 	var map_scale := minf(map_area.x / map_size.x, map_area.y / map_size.y)
 	var origin := (map_area - map_size * map_scale) / 2

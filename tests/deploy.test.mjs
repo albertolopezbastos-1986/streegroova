@@ -14,7 +14,7 @@ test('placeholder permits local work but cannot be used as a deploy target', () 
     writeFileSync(join(root, 'deploy.config.json'), JSON.stringify({ site: 'placeholdernetlify', url: 'https://placeholdernetlify.netlify.app' }));
     assert.throws(() => deploymentConfig(root, {}), /placeholdernetlify/);
   } finally { rmSync(root, { recursive: true, force: true }); }
-  assert.deepEqual(deploymentConfig('.', {}), { site: 'streetgroovafighter', url: 'https://streetgroovafighter.netlify.app' });
+  assert.deepEqual(deploymentConfig('.', {}), { site: 'efe900f0-d87b-46e3-a878-44c518d81672', url: 'https://streetgroovafighter.netlify.app' });
   assert.deepEqual(deploymentConfig('.', { NETLIFY_SITE_ID: 'streetgroovafighter', DEPLOY_URL: 'https://streetgroovafighter.netlify.app/' }), {
     site: 'streetgroovafighter', url: 'https://streetgroovafighter.netlify.app'
   });

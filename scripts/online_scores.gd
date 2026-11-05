@@ -55,7 +55,7 @@ func submit(player_name: String, points: int, run_id: String) -> void:
 
 
 func cancel_pending() -> void:
-	fetch_request.cancel_request()
+	# The shared ranking read also supplies the HUD high score at startup.
 	submit_request.cancel_request()
 	pending_id = ""
 

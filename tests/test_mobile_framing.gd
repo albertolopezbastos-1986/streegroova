@@ -11,6 +11,7 @@ func run() -> void:
 	game.new_run(true)
 	await process_frame
 	var controls = game.mobile_controls
+	assert(is_equal_approx(game.world_zoom(), game.WORLD_ZOOM * 0.85), "mobile zoom is fifteen percent farther out")
 	assert(root.content_scale_aspect == Window.CONTENT_SCALE_ASPECT_IGNORE)
 	assert(controls.BUTTON_RADIUS > 43)
 	for size in [Vector2i(390, 844), Vector2i(360, 900), Vector2i(844, 390), Vector2i(768, 1024)]:
@@ -18,6 +19,7 @@ func run() -> void:
 		await process_frame
 		await process_frame
 		controls.refresh_layout()
+		assert(game.concert_layer.transform == Transform2D.IDENTITY, "concert fills the viewport without menu scaling")
 		var viewport: Vector2 = game.get_viewport_rect().size
 		assert(absf(viewport.y - 820) < 1)
 		assert(absf(viewport.x / viewport.y - float(size.x) / size.y) < 0.01, "viewport fills the device without letterboxing")

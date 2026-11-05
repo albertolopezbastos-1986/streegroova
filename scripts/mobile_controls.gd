@@ -8,7 +8,7 @@ const DEADZONE := 0.18
 const BUTTON_RADIUS := 48.0
 const BUTTONS = {"attack": Vector2(795, 690), "jump": Vector2(905, 690), "ultimate": Vector2(850, 770)}
 const PAUSE_RECT := Rect2(435, 666, 90, 48)
-const MINT := Color("62efd4")
+const MINT := Color.WHITE
 
 var stick_radius := STICK_RADIUS
 var stick_center := CENTER
@@ -77,6 +77,12 @@ func refresh_layout() -> void:
 	for key in ["character_select", "ranking_panel", "debug_environment_select", "debug_items_menu", "concert_layer"]:
 		var menu = game.get(key)
 		if is_instance_valid(menu):
+			if key == "character_select":
+				menu.setup_mobile_layout(size)
+				continue
+			if key == "concert_layer":
+				menu.transform = Transform2D.IDENTITY
+				continue
 			if key == "ranking_panel":
 				menu.setup_mobile_layout(size)
 				continue
@@ -194,16 +200,16 @@ func text_at(value: String, at: Vector2, size: int, color: Color) -> void:
 	drawer.draw_string(font, at - Vector2(width / 2, 0), value, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
 
 func draw_controls() -> void:
-	drawer.draw_rect(Rect2(0, 640, layout_size.x, 180), Color.BLACK)
-	drawer.draw_line(Vector2(0, 641), Vector2(layout_size.x, 641), Color("38505b"), 2)
+	drawer.draw_rect(Rect2(0, 600, layout_size.x, 220), Color.BLACK)
+	drawer.draw_line(Vector2(0, 601), Vector2(layout_size.x, 601), Color("626873"), 2)
 	drawer.draw_circle(stick_center, stick_radius + 8, Color("0a101d"))
 	drawer.draw_arc(stick_center, stick_radius, 0, TAU, 64, Color(MINT, 0.45), 3)
 	drawer.draw_line(stick_center - Vector2(45, 0), stick_center + Vector2(45, 0), Color("2a3b4b"), 2)
 	drawer.draw_line(stick_center - Vector2(0, 45), stick_center + Vector2(0, 45), Color("2a3b4b"), 2)
 	var knob := stick_center + stick * 40
-	drawer.draw_line(stick_center, knob, Color("47636d"), 8)
+	drawer.draw_line(stick_center, knob, Color("737780"), 8)
 	drawer.draw_circle(knob + Vector2(0, 4), 25, Color("080d17"))
-	drawer.draw_circle(knob, 25, Color("345560") if stick_finger >= 0 else Color("263d4b"))
+	drawer.draw_circle(knob, 25, Color("656975") if stick_finger >= 0 else Color("303541"))
 	drawer.draw_arc(knob, 25, 0, TAU, 40, MINT, 2)
 	if layout_size.x >= 700:
 		text_at("MOVER", Vector2(265, 697), 10, Color.WHITE)
