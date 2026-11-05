@@ -26,6 +26,10 @@ export function checkWeb(root = '.') {
   }
   copyFileSync(join(root, 'scripts/mobile-name.js'), join(web, 'mobile-name.js'));
   copyFileSync(join(root, 'assets/fonts/PressStart2P-Regular.ttf'), join(web, 'arcade-name.ttf'));
+  if (!html.includes('id="desktop-loading-logo"')) {
+    html = html.replace('</head>', '<style id="desktop-loading-logo">@media (hover: hover) and (pointer: fine) { #status-splash { transform: scale(0.5); } }</style>\n</head>');
+    writeFileSync(join(web, 'index.html'), html);
+  }
   if (!html.includes('src="mobile-name.js"')) {
     if (!html.includes('</head>')) throw new Error('Falta </head> en la exportacion HTML.');
     html = html.replace('</head>', '<script src="mobile-name.js" defer></script>\n</head>');

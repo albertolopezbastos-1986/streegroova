@@ -7,6 +7,14 @@ signal selection_changed
 
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const Catalog = preload("res://scripts/character_catalog.gd")
+const PREVIEW_CHARACTERS = ["meli", "malu", "pato", "dami", "vampi"]
+const PREVIEW_PORTRAITS = {
+	"dami": preload("res://assets/characters_40_frames/dami/portraits/damiportrait.png"),
+	"malu": preload("res://assets/characters_40_frames/malu/portraits/Maluportrait.png"),
+	"meli": preload("res://assets/characters_40_frames/meli/portraits/Meliportrait.png"),
+	"pato": preload("res://assets/characters_40_frames/pato/portraits/Patoportrait.png"),
+	"vampi": preload("res://assets/characters_40_frames/vampi/portraits/vampiportrait.png")
+}
 
 var screen: Control
 var cards: Array[Button] = []
@@ -15,6 +23,8 @@ var open := false
 var stick_latched := false
 var locked := false
 var blink_time := 0.0
+var mobile_direct_confirm := false
+var confirm_button: Button
 
 func _process(dt: float) -> void:
 	if not open:
@@ -33,13 +43,23 @@ func _ready() -> void:
 	background.color = Color("0c1020")
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	screen.add_child(background)
-	add_label("ELIGE TU PERSONAJE", Rect2(70, 44, 820, 40), 26, Color("62efd4"))
-	for i in range(Catalog.slots().size()):
-		var pack: Dictionary = Catalog.character_for_slot(i)
+	add_label("ELIGE TU PERSONAJE", Rect2(70, 44, 820, 40), 26, Color.WHITE)
+	for i in range(Catalog.slots().size() + PREVIEW_CHARACTERS.size()):
+		var playable := i < Catalog.slots().size()
+		var pack: Dictionary
+		if playable:
+			pack = Catalog.character_for_slot(i)
+		else:
+			var id: String = PREVIEW_CHARACTERS[i - Catalog.slots().size()]
+			pack = {"display_name": id.capitalize(), "portrait": PREVIEW_PORTRAITS[id]}
 		var card := Button.new()
-		card.position = Vector2(112 + i * 250, 149)
-		card.size = Vector2(236, 249)
+		card.position = Vector2(72 + (i % 4) * 208, 130 + (i / 4) * 190)
+		card.size = Vector2(192, 180)
 		card.toggle_mode = true
+		card.set_meta("playable", playable)
+		if not playable:
+			card.focus_mode = Control.FOCUS_NONE
+			card.mouse_default_cursor_shape = Control.CURSOR_ARROW
 		card.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		var normal := StyleBoxFlat.new()
 		normal.bg_color = Color("192034")
@@ -56,8 +76,8 @@ func _ready() -> void:
 		screen.add_child(card)
 		var portrait := TextureRect.new()
 		portrait.name = "Portrait"
-		portrait.position = Vector2(16, 13)
-		portrait.size = Vector2(204, 182)
+		portrait.position = Vector2(16, 8)
+		portrait.size = Vector2(160, 144)
 		portrait.texture = pack["portrait"]
 		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -65,21 +85,25 @@ func _ready() -> void:
 		card.add_child(portrait)
 		var name_label := Label.new()
 		name_label.text = str(pack["display_name"]).to_upper()
-		name_label.position = Vector2(8, 211)
-		name_label.size = Vector2(220, 25)
+		name_label.position = Vector2(8, 154)
+		name_label.size = Vector2(176, 22)
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_label.add_theme_font_size_override("font_size", 16)
+		name_label.add_theme_color_override("font_color", Color.WHITE)
 		name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.add_child(name_label)
-		card.pressed.connect(select.bind(i))
+		if playable:
+			card.pressed.connect(on_card_pressed.bind(i))
+		else:
+			card.toggle_mode = false
 		cards.append(card)
-	var confirm := Button.new()
-	confirm.text = "ENTER / A  -  ELEGIR"
-	confirm.position = Vector2(294, 427)
-	confirm.size = Vector2(372, 43)
-	confirm.add_theme_font_size_override("font_size", 12)
-	confirm.pressed.connect(func(): confirmed.emit(selected))
-	screen.add_child(confirm)
+	confirm_button = Button.new()
+	confirm_button.text = "ENTER / A  -  ELEGIR"
+	confirm_button.position = Vector2(294, 510)
+	confirm_button.size = Vector2(372, 43)
+	confirm_button.add_theme_font_size_override("font_size", 12)
+	confirm_button.pressed.connect(func(): confirmed.emit(selected))
+	screen.add_child(confirm_button)
 	for child in screen.get_children():
 		if child != background:
 			child.position.y += 50
@@ -115,12 +139,19 @@ func select(index: int) -> void:
 	if locked:
 		return
 	var previous := selected
-	selected = posmod(index, cards.size())
+	selected = posmod(index, Catalog.slots().size())
 	for i in range(cards.size()):
 		cards[i].set_pressed_no_signal(i == selected)
 	cards[selected].grab_focus()
 	if selected != previous:
 		selection_changed.emit()
+
+func on_card_pressed(index: int) -> void:
+	if index < 0 or index >= Catalog.slots().size() or locked:
+		return
+	select(index)
+	if mobile_direct_confirm and not locked:
+		confirmed.emit(selected)
 
 func handle_input(event: InputEvent) -> void:
 	if locked:
@@ -150,17 +181,10 @@ func handle_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 func setup_mobile() -> void:
-	var back := Button.new()
-	back.text = "VOLVER"
-	back.position = Vector2(294, 628)
-	back.size = Vector2(180, 48)
-	back.add_theme_font_size_override("font_size", 12)
-	back.pressed.connect(func(): cancelled.emit())
-	screen.add_child(back)
-	var debug := Button.new()
-	debug.text = "DEBUG ROOM"
-	debug.position = Vector2(486, 628)
-	debug.size = Vector2(180, 48)
-	debug.add_theme_font_size_override("font_size", 12)
-	debug.pressed.connect(func(): debug_requested.emit())
-	screen.add_child(debug)
+	mobile_direct_confirm = true
+	confirm_button.hide()
+	var background := screen.get_child(0) as ColorRect
+	background.color = Color.BLACK
+	for card in cards:
+		var label := card.get_child(1) as Label
+		label.add_theme_font_size_override("font_size", 20)

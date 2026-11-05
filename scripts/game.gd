@@ -9,9 +9,12 @@ const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const START_LOGO: Texture2D = preload("res://assets/branding/groovaipa-logo.png")
 const TITLE_LOGO: Texture2D = preload("res://assets/branding/street-groova-fighter-logo.png")
 const CharacterCatalog = preload("res://scripts/character_catalog.gd")
-const CAMPAIGN_MAP = preload("res://assets/environment/campaign-map.png")
+const CAMPAIGN_MAP = preload("res://assets/mapadesktop.png")
+const MOBILE_CAMPAIGN_MAP_PATH := "res://assets/mapamobile.png"
 const MAP_DURATION := 3.0
 const MAP_STATIONS = [Vector2(515, 473), Vector2(862, 435), Vector2(1263, 425)]
+const MAP_STATIONS_DESKTOP_NEW = [Vector2(367, 420), Vector2(919, 430), Vector2(1437, 420)]
+const MAP_STATIONS_MOBILE = [Vector2(423, 453), Vector2(456, 860), Vector2(457, 1248)]
 const MAP_NAMES = ["MORÓN", "CIUDADELA", "LINIERS"]
 
 const PIXEL_STREET = preload("res://assets/environment/neighborhood-pixel.png")
@@ -142,7 +145,7 @@ var concert_layer: CanvasLayer
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	RenderingServer.set_default_clear_color(INK)
+	RenderingServer.set_default_clear_color(Color.BLACK)
 	font = ArcadeUI.FONT
 	font.antialiasing = TextServer.FONT_ANTIALIASING_NONE
 	setup_inputs()
@@ -161,6 +164,7 @@ func _ready() -> void:
 	add_child(overlay)
 	online_scores = preload("res://scripts/online_scores.gd").new()
 	add_child(online_scores)
+	online_scores.load_scores()
 	ranking_panel = preload("res://scripts/ranking_panel.gd").new()
 	add_child(ranking_panel)
 	ranking_panel.setup(online_scores)
@@ -185,6 +189,9 @@ func _ready() -> void:
 	character_select.debug_requested.connect(open_debug_environment_selection)
 	if touch_visible:
 		character_select.setup_mobile()
+		ranking_panel.entry_button.position.y = 700
+		ranking_panel.entry_button.size = Vector2(200, 52)
+		ranking_panel.entry_button.add_theme_font_size_override("font_size", ArcadeUI.font_size(22))
 	var fade_layer := CanvasLayer.new()
 	fade_layer.layer = 100
 	add_child(fade_layer)
@@ -1161,8 +1168,11 @@ func draw_overlay() -> void:
 		overlay_text(canvas, title, title_at, 32, aura)
 	else:
 		player.z_index = int(player.position.y)
-	canvas.draw_set_transform(interface_origin(), 0, Vector2.ONE * interface_scale())
+	var hud_scale := interface_scale() * (1.18 if touch_visible else 1.0)
+	var hud_origin := Vector2.ZERO if touch_visible else Vector2((screen_width() - 960 * hud_scale) / 2, 0)
+	canvas.draw_set_transform(hud_origin, 0, Vector2.ONE * hud_scale)
 	draw_hud(canvas)
+	canvas.draw_set_transform(interface_origin(), 0, Vector2.ONE * interface_scale())
 	if state == "play":
 		if transition > 0 and stage < WAVE_COUNT - 1 and int(transition / 0.5) % 2 == 0:
 			var go_size := 72
@@ -1186,7 +1196,7 @@ func draw_overlay() -> void:
 		overlay_centered(canvas, "START", VIEW_HEIGHT * 0.45, 76, MINT)
 	if state in ["title", "pause", "over", "won"] or show_help:
 		canvas.draw_set_transform(Vector2.ZERO)
-		canvas.draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.025, 0.035, 0.08, 0.90))
+		canvas.draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color.BLACK)
 		canvas.draw_set_transform(interface_origin() + Vector2(0, (VIEW_HEIGHT - 540.0 * interface_scale()) / 2), 0, Vector2.ONE * interface_scale())
 		if state == "title":
 			var logo_scale := minf(180.0 / START_LOGO.get_width(), 80.0 / START_LOGO.get_height())
@@ -1195,7 +1205,7 @@ func draw_overlay() -> void:
 			var title_scale := minf(420.0 / TITLE_LOGO.get_width(), 270.0 / TITLE_LOGO.get_height())
 			var title_size := TITLE_LOGO.get_size() * title_scale
 			canvas.draw_texture_rect(TITLE_LOGO, Rect2(Vector2((960 - title_size.x) / 2, 250 - title_size.y / 2), title_size), false)
-			overlay_centered(canvas, "PRESS START", 500, 30, CREAM if sin(time * 4) > -0.4 else Color("818799"))
+			overlay_centered(canvas, "PRESS START", 500, 42 if touch_visible else 30, Color.WHITE)
 		elif state == "pause" or show_help:
 			overlay_text(canvas, "PAUSA" if not show_help else "COMO JUGAR", Vector2(335, 173), 48, MINT)
 			draw_controls(canvas, 240)
@@ -1210,15 +1220,16 @@ func draw_overlay() -> void:
 
 func draw_stage_presentation(canvas: Node2D) -> void:
 	var final := state == "victory"
+	var accent := character_health_color(active_character_id)
 	var top := 155.0 if final else 205.0
 	canvas.draw_set_transform(Vector2.ZERO)
 	canvas.draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.025, 0.035, 0.08, 0.20))
 	canvas.draw_set_transform(interface_origin() + Vector2(168, 20) * interface_scale(), 0, Vector2.ONE * 0.65 * interface_scale())
-	canvas.draw_rect(Rect2(62, top, 836, 225), Color("101322"))
-	canvas.draw_rect(Rect2(70, top + 8, 820, 209), MINT, false, 3)
-	canvas.draw_line(Vector2(90, top + 49), Vector2(870, top + 49), Color("3b5660"), 2)
+	canvas.draw_rect(Rect2(62, top, 836, 225), Color("101322").lerp(accent, 0.12))
+	canvas.draw_rect(Rect2(70, top + 8, 820, 209), accent, false, 3)
+	canvas.draw_line(Vector2(90, top + 49), Vector2(870, top + 49), accent.darkened(0.45), 2)
 	overlay_centered(canvas, "STREET GROOVA / ALL STAGES CLEAR" if final else "STREET GROOVA / NIVEL %02d" % (level_index + 1), top + 34, 17, Color("f7c47e"))
-	var color := MINT if sin(presentation_time * 8) > -0.5 else Color("f7c47e")
+	var color := Color.WHITE
 	var heading_size := 65 if final else 76
 	var heading_pixels := ArcadeUI.font_size(heading_size)
 	var heading_baseline := top + 133 + (font.get_ascent(heading_pixels) - font.get_descent(heading_pixels)) * 0.5
@@ -1227,7 +1238,7 @@ func draw_stage_presentation(canvas: Node2D) -> void:
 		overlay_centered(canvas, "PUNTOS  %06d" % score, top + 192, 18, Color("f7c47e"))
 	for i in range(18):
 		var x := 90.0 + i * 46
-		var glow := MINT if (i + int(presentation_time * 8)) % 3 == 0 else Color("34434e")
+		var glow := accent if (i + int(presentation_time * 8)) % 3 == 0 else accent.darkened(0.7)
 		canvas.draw_rect(Rect2(x, top - 8, 9, 4), glow)
 		canvas.draw_rect(Rect2(x, top + 229, 9, 4), glow)
 	canvas.draw_set_transform(Vector2.ZERO)
@@ -1235,13 +1246,13 @@ func draw_stage_presentation(canvas: Node2D) -> void:
 		for i in range(44):
 			var x := fposmod(i * 137.0 + sin(presentation_time * 2 + i) * 18, 940) + 10
 			var y := fposmod(i * 71.0 + presentation_time * (42 + i % 4 * 12), VIEW_HEIGHT - 110) + 100
-			var colors := [MINT, Color("f7c47e"), Color("f187a5")]
+			var colors := [accent, accent.lightened(0.4), accent.darkened(0.3)]
 			canvas.draw_rect(Rect2(x, y, 4 if i % 2 else 7, 5), colors[i % 3])
 
 func overlay_text(canvas: Node2D, value: String, at: Vector2, size: int, color: Color) -> void:
 	var pixels := ArcadeUI.font_size(size)
 	canvas.draw_string(font, at.round() + Vector2(2, 2), value, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels, INK)
-	canvas.draw_string(font, at.round(), value, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels, color)
+	canvas.draw_string(font, at.round(), value, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels, Color.WHITE)
 
 func overlay_centered(canvas: Node2D, value: String, y: float, size: int, color: Color) -> void:
 	var width := font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, ArcadeUI.font_size(size)).x
@@ -1258,30 +1269,30 @@ func draw_controls(canvas: Node2D, y: float) -> void:
 		overlay_text(canvas, lines[i], Vector2(219 if i < 4 else 190, y + i * 23), 16 if i < 4 else 14, CREAM if i < 3 else Color("98a3b9"))
 
 func draw_hud(canvas: Node2D) -> void:
-	canvas.draw_rect(Rect2(0, 0, 960, 92), Color(0.04, 0.06, 0.12, 0.95))
-	canvas.draw_line(Vector2(24, 91), Vector2(936, 91), Color("3b4059"), 1)
-	canvas.draw_rect(Rect2(24, 19, 47, 51), Color("2c4b58"))
+	canvas.draw_rect(Rect2(0, 0, 960, 112), Color(0.04, 0.06, 0.12, 0.95))
+	canvas.draw_line(Vector2(24, 111), Vector2(936, 111), Color("3b4059"), 1)
+	canvas.draw_rect(Rect2(24, 17, 68, 78), Color("2c4b58"))
 	var portrait: Texture2D = character_pack["portrait"]
 	var portrait_size := portrait.get_size()
-	var portrait_scale := minf(43.0 / portrait_size.x, 47.0 / portrait_size.y)
-	var portrait_rect := Rect2(Vector2(47.5, 44.5) - portrait_size * portrait_scale / 2, portrait_size * portrait_scale)
+	var portrait_scale := minf(64.0 / portrait_size.x, 74.0 / portrait_size.y)
+	var portrait_rect := Rect2(Vector2(58, 56) - portrait_size * portrait_scale / 2, portrait_size * portrait_scale)
 	canvas.draw_texture_rect(portrait, portrait_rect, false)
-	canvas.draw_rect(Rect2(24, 19, 47, 51), Color("527684"), false, 1)
-	overlay_text(canvas, str(character_pack["display_name"]).to_upper(), Vector2(85, 28), 16, CREAM)
-	canvas.draw_rect(Rect2(85, 36, 264, 16), Color("393044"))
-	canvas.draw_rect(Rect2(87, 38, 260 * player.hp / player.max_hp, 12), MINT if player.hp > 30 else Color("f187a5"))
+	canvas.draw_rect(Rect2(24, 17, 68, 78), Color("527684"), false, 1)
+	overlay_text(canvas, str(character_pack["display_name"]).to_upper(), Vector2(108, 28), 16, CREAM)
+	canvas.draw_rect(Rect2(106, 36, 264, 16), Color("393044"))
+	canvas.draw_rect(Rect2(108, 38, 260 * player.hp / player.max_hp, 12), character_health_color(active_character_id))
 	for i in range(3):
 		var life_color := Color("f187a5") if i < lives else Color("34374c")
 		for row in range(LIFE_PIXELS.size()):
 			for col in range(LIFE_PIXELS[row].length()):
 				if LIFE_PIXELS[row][col] == "1":
-					canvas.draw_rect(Rect2(85 + i * 20 + col * 2, 62 + row * 2, 2, 2), life_color)
+					canvas.draw_rect(Rect2(108 + i * 20 + col * 2, 80 + row * 2, 2, 2), life_color)
 	if not player.weapon.is_empty():
-		overlay_text(canvas, "%s %d/100" % ["CANO" if player.weapon == "pipe" else "PALO", player.weapon_durability], Vector2(245, 74), 11, Color("f7c47e"))
+		overlay_text(canvas, "%s %d/100" % ["CANO" if player.weapon == "pipe" else "PALO", player.weapon_durability], Vector2(245, 92), 11, Color("f7c47e"))
 	var ready := charge >= 100
 	var gold := Color("ffd15c")
 	var charge_color := MINT
-	var charge_rect := Rect2(474, 36, 192, 14)
+	var charge_rect := Rect2(108, 54, 260, 6)
 	if ready:
 		var flash_colors := [gold, Color("ff303b"), gold, Color.WHITE]
 		charge_color = flash_colors[int(time / 0.075) % flash_colors.size()]
@@ -1290,19 +1301,33 @@ func draw_hud(canvas: Node2D) -> void:
 			canvas.draw_rect(charge_rect.grow(glow * 2), Color(charge_color, (0.04 + pulse * 0.035) * (5 - glow)))
 		for i in range(8):
 			var phase := fposmod(time * 1.8 + i * 0.137, 1.0)
-			var spark := Vector2(477 + fposmod(i * 29.0 + time * 25, 184), 37 - phase * 12)
+			var spark := Vector2(108 + fposmod(i * 29.0 + time * 25, 260), 54 - phase * 12)
 			canvas.draw_rect(Rect2(spark.floor(), Vector2(2, 2)), Color(charge_color, 1.0 - phase))
-	overlay_text(canvas, "GROOVA BREAK", Vector2(474, 28), 14, gold if ready else MINT)
-	canvas.draw_rect(charge_rect, gold if ready else Color("30344c"))
-	canvas.draw_rect(Rect2(476, 38, 188 * clampf(charge / 100, 0, 1), 10), charge_color)
-	overlay_text(canvas, "%06d" % score, Vector2(778, 38), 29, CREAM)
+	canvas.draw_rect(charge_rect, Color("30344c"))
+	canvas.draw_rect(Rect2(108, 54, 260 * clampf(charge / 100, 0, 1), 6), gold)
+	var high_score := maxi(best, score)
+	for entry in online_scores.scores:
+		high_score = maxi(high_score, int(entry.get("score", 0)))
+	var score_x := 480.0 if touch_visible else 610.0
+	var high_score_x := 650.0 if touch_visible else 780.0
+	overlay_text(canvas, "SCORE", Vector2(score_x, 28), 16, Color.WHITE)
+	overlay_text(canvas, "%06d" % score, Vector2(score_x, 57), 29, Color.WHITE)
+	overlay_text(canvas, "HIGH SCORE", Vector2(high_score_x, 28), 16, Color.WHITE)
+	overlay_text(canvas, "%06d" % high_score, Vector2(high_score_x, 57), 29, Color.WHITE)
 	for enemy in enemies:
 		if enemy.is_boss and not enemy.dead and state == "play":
-			canvas.draw_rect(Rect2(270, 102, 420, 20), Color("241b2c"))
-			canvas.draw_rect(Rect2(272, 104, 416 * enemy.hp / enemy.max_hp, 16), Color("d45c79"))
-			overlay_centered(canvas, "JEFE DEL BARRIO  %d / %d" % [enemy.hp, enemy.max_hp], 115, 12, CREAM)
+			canvas.draw_rect(Rect2(270, 122, 420, 20), Color("241b2c"))
+			canvas.draw_rect(Rect2(272, 124, 416 * enemy.hp / enemy.max_hp, 16), Color("d45c79"))
+			overlay_centered(canvas, "JEFE DEL BARRIO  %d / %d" % [enemy.hp, enemy.max_hp], 135, 12, CREAM)
 	if not touch_visible and state == "play":
 		canvas.draw_rect(Rect2(0, VIEW_HEIGHT - 26, 960, 26), Color(0.04, 0.06, 0.12, 0.94))
+
+func character_health_color(character_id: String) -> Color:
+	return {
+		"alito": Color("43d17a"), "cami": Color("f238a5"), "beto": Color("d9aa2b"),
+		"malu": Color("62efd4"), "meli": Color("328cff"), "vampi": Color.WHITE,
+		"pato": Color("8d929c"), "dami": Color("8d55e8")
+	}.get(character_id, Color.WHITE)
 
 func setup_audio() -> void:
 	for i in range(8):
@@ -1378,18 +1403,25 @@ func play_music(track: String) -> void:
 
 func draw_campaign_map(canvas: Node2D) -> void:
 	canvas.draw_set_transform(Vector2.ZERO)
-	canvas.draw_rect(Rect2(0, 0, screen_width(), VIEW_HEIGHT), Color.BLACK)
-	var map_size := CAMPAIGN_MAP.get_size()
-	var map_scale := minf(screen_width() / map_size.x, VIEW_HEIGHT / map_size.y)
-	var origin := (Vector2(screen_width(), VIEW_HEIGHT) - map_size * map_scale) / 2
-	canvas.draw_texture_rect(CAMPAIGN_MAP, Rect2(origin, map_size * map_scale), false)
+	var map_area := get_viewport_rect().size if touch_visible else Vector2(960, VIEW_HEIGHT)
+	canvas.draw_rect(Rect2(Vector2.ZERO, map_area), Color.BLACK)
+	var map_texture: Texture2D = load(MOBILE_CAMPAIGN_MAP_PATH) as Texture2D if touch_visible and ResourceLoader.exists(MOBILE_CAMPAIGN_MAP_PATH) else CAMPAIGN_MAP
+	var map_size := map_texture.get_size()
+	var map_scale := minf(map_area.x / map_size.x, map_area.y / map_size.y)
+	var origin := (map_area - map_size * map_scale) / 2
+	canvas.draw_texture_rect(map_texture, Rect2(origin, map_size * map_scale), false)
 	var station := clampi(level_index, 0, 2)
-	var center: Vector2 = origin + MAP_STATIONS[station] * map_scale
+	var station_points: Array = MAP_STATIONS_MOBILE if touch_visible else MAP_STATIONS_DESKTOP_NEW
 	var color := Color("ffd15c") if int(time / 0.3) % 2 == 0 else Color("ed1835")
-	canvas.draw_circle(center, 24 * map_scale, Color.BLACK)
-	canvas.draw_circle(center, 19 * map_scale, Color.WHITE)
-	canvas.draw_circle(center, 14 * map_scale, color)
-	canvas.draw_arc(center, 29 * map_scale, 0, TAU, 48, color, 3 * map_scale)
+	# Animate only the active level; the other stations stay as painted in the map.
+	for index in [station]:
+		var center: Vector2 = origin + station_points[index] * map_scale
+		var pulse := 1.0 + sin(time * 7.0 + index * 1.7) * 0.13
+		var dot_color := color if index == station else Color("ed1835")
+		canvas.draw_circle(center, 24 * map_scale * pulse, Color.BLACK)
+		canvas.draw_circle(center, 19 * map_scale * pulse, Color.WHITE)
+		canvas.draw_circle(center, 14 * map_scale * pulse, dot_color)
+		canvas.draw_arc(center, 29 * map_scale * pulse, 0, TAU, 48, dot_color, 3 * map_scale)
 	canvas.draw_set_transform(interface_origin(), 0, Vector2.ONE * interface_scale())
 	canvas.draw_rect(Rect2(270, 22, 420, 48), Color(0, 0, 0, 0.85))
 	overlay_text(canvas, "NIVEL %d · %s" % [station + 1, MAP_NAMES[station]], Vector2(295, 55), 26, color)

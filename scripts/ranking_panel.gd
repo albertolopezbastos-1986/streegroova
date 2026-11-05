@@ -8,7 +8,7 @@ var service: Node
 var screen: Control
 var heading: Label
 var subtitle: Label
-var name_row: HBoxContainer
+var name_row: BoxContainer
 var name_input: LineEdit
 var save_button: Button
 var status: Label
@@ -24,6 +24,8 @@ var saved := false
 var submitted_name := ""
 var is_result := false
 var open := false
+var panel: VBoxContainer
+var mobile_layout := false
 
 func setup(online_service: Node) -> void:
 	service = online_service
@@ -40,17 +42,17 @@ func setup(online_service: Node) -> void:
 	backdrop.color = Color(0.025, 0.035, 0.08, 1.0)
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	screen.add_child(backdrop)
-	var panel := VBoxContainer.new()
+	panel = VBoxContainer.new()
 	panel.position = Vector2(100, 74)
 	panel.size = Vector2(760, 490)
 	panel.add_theme_constant_override("separation", 8)
 	screen.add_child(panel)
 	heading = make_label("TOP 10 / STREET GROOVA", 30)
-	heading.add_theme_color_override("font_color", Color("62efd4"))
+	heading.add_theme_color_override("font_color", Color.WHITE)
 	panel.add_child(heading)
 	subtitle = make_label("Ranking online del barrio", 16)
 	panel.add_child(subtitle)
-	name_row = HBoxContainer.new()
+	name_row = BoxContainer.new()
 	name_row.add_theme_constant_override("separation", 12)
 	panel.add_child(name_row)
 	name_input = LineEdit.new()
@@ -76,7 +78,7 @@ func setup(online_service: Node) -> void:
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel.add_child(spacer)
-	var buttons := HBoxContainer.new()
+	var buttons := BoxContainer.new()
 	buttons.add_theme_constant_override("separation", 12)
 	panel.add_child(buttons)
 	refresh_button = make_button("ACTUALIZAR TOP 10", refresh)
@@ -96,8 +98,8 @@ func setup(online_service: Node) -> void:
 func make_label(value: String, size: int) -> Label:
 	var item := Label.new()
 	item.text = value
-	item.add_theme_font_size_override("font_size", ArcadeUI.font_size(size))
-	item.add_theme_color_override("font_color", Color("f5e9d0"))
+	item.add_theme_font_size_override("font_size", 13 if mobile_layout else ArcadeUI.font_size(size))
+	item.add_theme_color_override("font_color", Color.WHITE)
 	return item
 
 func make_button(value: String, callback: Callable) -> Button:
@@ -107,6 +109,36 @@ func make_button(value: String, callback: Callable) -> Button:
 	button.add_theme_font_size_override("font_size", ArcadeUI.font_size(16))
 	button.pressed.connect(callback)
 	return button
+
+func setup_mobile_layout(area: Vector2) -> void:
+	mobile_layout = true
+	transform = Transform2D.IDENTITY
+	screen.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	screen.size = area
+	panel.position = Vector2(16, 40)
+	panel.size = Vector2(maxf(260, area.x - 32), 680)
+	panel.add_theme_constant_override("separation", 14)
+	heading.add_theme_font_size_override("font_size", 18)
+	heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	subtitle.add_theme_font_size_override("font_size", 12)
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_row.vertical = true
+	name_input.custom_minimum_size = Vector2(0, 44)
+	name_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_input.add_theme_font_size_override("font_size", 16)
+	status.add_theme_font_size_override("font_size", 12)
+	status.custom_minimum_size.y = 32
+	table.add_theme_constant_override("h_separation", 10)
+	table.add_theme_constant_override("v_separation", 12)
+	for item in table.get_children():
+		item.add_theme_font_size_override("font_size", 13)
+	var buttons := refresh_button.get_parent() as BoxContainer
+	buttons.vertical = true
+	for button in [save_button, refresh_button, replay_button, close_button]:
+		button.custom_minimum_size.y = 42
+		button.add_theme_font_size_override("font_size", 11)
+	entry_button.position = Vector2(maxf(16, area.x - 180), 700)
+	entry_button.size = Vector2(164, 48)
 
 func show_ranking() -> void:
 	is_result = false
@@ -210,7 +242,7 @@ func render_scores() -> void:
 		child.queue_free()
 	for title in ["PUESTO", "JUGADOR", "PUNTOS"]:
 		var item := make_label(title, 13)
-		item.add_theme_color_override("font_color", Color("98a3b9"))
+		item.add_theme_color_override("font_color", Color.WHITE)
 		if title == "JUGADOR":
 			item.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		table.add_child(item)
@@ -219,7 +251,7 @@ func render_scores() -> void:
 		for value in ["%02d" % (i + 1), str(entry.get("name", "---")), "%06d" % int(entry.get("score", 0)) if not entry.is_empty() else "---"]:
 			var item := make_label(value, 17)
 			if entry.get("id", "") == pending_id and not pending_id.is_empty():
-				item.add_theme_color_override("font_color", Color("62efd4"))
+				item.add_theme_color_override("font_color", Color.WHITE)
 			table.add_child(item)
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -234,7 +266,7 @@ func hide_browser_input() -> void:
 func _process(_dt: float) -> void:
 	if not OS.has_feature("web") or not DisplayServer.is_touchscreen_available():
 		return
-	var area := name_input.get_global_rect()
+	var area: Rect2 = name_input.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, name_input.size)
 	var shown := open and is_result and name_input.editable
 	var viewport_size := get_viewport().get_visible_rect().size
 	var data := {"session": pending_id, "value": name_input.text, "visible": shown, "x": area.position.x, "y": area.position.y, "w": area.size.x, "h": area.size.y, "width": viewport_size.x, "height": viewport_size.y}

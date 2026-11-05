@@ -24,7 +24,7 @@ func _ready() -> void:
 	title.size = Vector2(800, 50)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color("62efd4"))
+	title.add_theme_color_override("font_color", Color.WHITE)
 	screen.add_child(title)
 	var back := Button.new()
 	back.text = "ESC / VOLVER A PERSONAJES"

@@ -62,7 +62,10 @@ func run() -> void:
 	game.update_screen_transition(game.FADE_DURATION)
 	check(game.state == "select" and game.character_select.open, "press start opens character select")
 	check(game.run_id == run_id, "opening select does not start a run")
-	check(game.character_select.cards.size() == 3, "selection has three portrait cards")
+	check(game.character_select.cards.size() == 8, "selection has eight portrait cards in two rows")
+	for index in range(3, 8):
+		game.character_select.cards[index].pressed.emit()
+		check(game.state == "select" and game.character_select.selected == 0, "preview portrait does not change selection or start a run")
 	var expected_ids := ["beto", "cami", "alito"]
 	for i in range(3):
 		check(Catalog.character_for_slot(i)["id"] == expected_ids[i], "slot %d resolves its character identity" % i)

@@ -15,8 +15,8 @@
   input.setAttribute('aria-label', 'Tu nombre para el ranking, maximo 12 caracteres');
   Object.assign(input.style, {
     display: 'none', position: 'fixed', zIndex: '2147483646', boxSizing: 'border-box',
-    margin: '0', border: '2px solid #5ceaff', borderRadius: '3px', padding: '8px',
-    background: '#090a20', color: '#5ceaff', caretColor: '#ffffff', textAlign: 'center',
+    margin: '0', border: '1px solid #ffffff', borderRadius: '3px', padding: '6px',
+    background: '#090a20', color: '#ffffff', caretColor: '#ffffff', textAlign: 'left',
     fontFamily: 'GroovaArcade, monospace', fontSize: '16px', outline: 'none',
     touchAction: 'manipulation', userSelect: 'text', webkitUserSelect: 'text'
   });

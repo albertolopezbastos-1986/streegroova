@@ -1,6 +1,7 @@
 extends Node2D
 
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
+const MOBILE_STAGE_PATH := "res://assets/endingmobile.png"
 var elapsed := 0.0
 var win_label: Label
 
@@ -28,6 +29,8 @@ func update_layout() -> void:
 	var frame := get_viewport_rect().size
 	get_node("BlackBackdrop").size = frame
 	var background := get_node("Background") as Sprite2D
+	if mobile_layout() and ResourceLoader.exists(MOBILE_STAGE_PATH):
+		background.texture = load(MOBILE_STAGE_PATH) as Texture2D
 	var image_size := background.texture.get_size()
 	var mobile := mobile_layout()
 	var area := frame if mobile else Vector2(960, 640)
@@ -48,7 +51,7 @@ func _process(dt: float) -> void:
 	if not is_visible_in_tree():
 		return
 	elapsed += dt
-	win_label.modulate = Color.WHITE if int(elapsed * 3) % 2 == 0 else Color("62efd4")
+	win_label.modulate = Color.WHITE
 	queue_redraw()
 
 func _draw() -> void:

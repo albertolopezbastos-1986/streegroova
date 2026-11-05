@@ -51,10 +51,10 @@ func setup(owner_game: Node2D, mobile: bool) -> void:
 static func layout_for_size(size: Vector2) -> Dictionary:
 	var width := size.x
 	return {
-		"stick": Vector2(minf(130, width * 0.20), 730),
+		"stick": Vector2(minf(130, width * 0.20), 700),
 		"stick_radius": minf(64, width * 0.16),
-		"buttons": {"attack": Vector2(width - 165, 690), "jump": Vector2(width - 55, 690), "ultimate": Vector2(width - 110, 770)},
-		"pause": Rect2(Vector2(minf(130, width * 0.20) - 32, 794), Vector2(64, 24))
+		"buttons": {"attack": Vector2(width - 165, 660), "jump": Vector2(width - 55, 660), "ultimate": Vector2(width - 110, 740)},
+		"pause": Rect2(Vector2(minf(130, width * 0.20) - 32, 764), Vector2(64, 24))
 	}
 
 func refresh_layout() -> void:
@@ -77,11 +77,19 @@ func refresh_layout() -> void:
 	for key in ["character_select", "ranking_panel", "debug_environment_select", "debug_items_menu", "concert_layer"]:
 		var menu = game.get(key)
 		if is_instance_valid(menu):
+			if key == "ranking_panel":
+				menu.setup_mobile_layout(size)
+				continue
 			var screen = menu.get("screen") if key != "concert_layer" else null
 			if screen is Control:
 				screen.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 				screen.size = Vector2(960, 820)
 			menu.transform = Transform2D(0, Vector2.ONE * menu_scale, 0, Vector2((size.x - 960 * menu_scale) / 2, (640 - 640 * menu_scale) / 2))
+			if key == "character_select" and screen is Control and screen.get_child_count() > 0:
+				var backdrop := screen.get_child(0) as ColorRect
+				backdrop.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+				backdrop.position = -menu.transform.origin / menu_scale
+				backdrop.size = size / menu_scale
 
 func sync_visibility() -> void:
 	var active: bool = enabled and game.state in ["play", "pause"] and not game.show_help and not game.ranking_panel.open
@@ -186,7 +194,7 @@ func text_at(value: String, at: Vector2, size: int, color: Color) -> void:
 	drawer.draw_string(font, at - Vector2(width / 2, 0), value, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
 
 func draw_controls() -> void:
-	drawer.draw_rect(Rect2(0, 640, layout_size.x, 180), Color("101827"))
+	drawer.draw_rect(Rect2(0, 640, layout_size.x, 180), Color.BLACK)
 	drawer.draw_line(Vector2(0, 641), Vector2(layout_size.x, 641), Color("38505b"), 2)
 	drawer.draw_circle(stick_center, stick_radius + 8, Color("0a101d"))
 	drawer.draw_arc(stick_center, stick_radius, 0, TAU, 64, Color(MINT, 0.45), 3)
@@ -198,12 +206,12 @@ func draw_controls() -> void:
 	drawer.draw_circle(knob, 25, Color("345560") if stick_finger >= 0 else Color("263d4b"))
 	drawer.draw_arc(knob, 25, 0, TAU, 40, MINT, 2)
 	if layout_size.x >= 700:
-		text_at("MOVER", Vector2(265, 727), 10, MINT)
-		text_at("DOBLE TOQUE", Vector2(285, 750), 8, Color("98a3b9"))
-		text_at("PARA CORRER", Vector2(285, 766), 8, Color("98a3b9"))
+		text_at("MOVER", Vector2(265, 697), 10, Color.WHITE)
+		text_at("DOBLE TOQUE", Vector2(285, 720), 8, Color.WHITE)
+		text_at("PARA CORRER", Vector2(285, 736), 8, Color.WHITE)
 	for action in buttons:
 		var point: Vector2 = buttons[action]
-		var color := MINT if action != "ultimate" else Color("f7c47e")
+		var color := Color.WHITE
 		var held: bool = pressed_actions.has(action)
 		drawer.draw_circle(point, BUTTON_RADIUS, Color("345560") if held else Color("1c2a3d"))
 		drawer.draw_arc(point, BUTTON_RADIUS - 2, 0, TAU, 48, color, 4 if held else 2)
@@ -212,7 +220,7 @@ func draw_controls() -> void:
 		if action == "ultimate":
 			drawer.draw_arc(point, BUTTON_RADIUS - 7, -PI / 2, -PI / 2 + TAU * maxf(0.001, game.charge / 100), 48, color, 3)
 	drawer.draw_style_box(pause_style(), pause_rect)
-	text_at("SEGUIR" if game.state == "pause" else "PAUSA", pause_rect.get_center() + Vector2(0, 4), 9, MINT)
+	text_at("SEGUIR" if game.state == "pause" else "PAUSA", pause_rect.get_center() + Vector2(0, 4), 9, Color.WHITE)
 
 func pause_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()

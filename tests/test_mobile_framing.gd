@@ -22,6 +22,8 @@ func run() -> void:
 		assert(absf(viewport.y - 820) < 1)
 		assert(absf(viewport.x / viewport.y - float(size.x) / size.y) < 0.01, "viewport fills the device without letterboxing")
 		assert(is_equal_approx(game.screen_width(), viewport.x))
+		assert(game.ranking_panel.transform == Transform2D.IDENTITY, "mobile ranking uses viewport coordinates")
+		assert(game.ranking_panel.name_input.custom_minimum_size.x == 0, "name input fits the mobile panel")
 		for card in game.character_select.cards:
 			var bounds: Rect2 = card.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, card.size)
 			assert(bounds.position.x >= 0 and bounds.end.x <= viewport.x, "selection cards fit the mobile width")
@@ -32,7 +34,7 @@ func run() -> void:
 		for action in buttons:
 			var point: Vector2 = buttons[action]
 			assert(point.x - controls.BUTTON_RADIUS >= 0 and point.x + controls.BUTTON_RADIUS <= viewport.x)
-			assert(point.y - controls.BUTTON_RADIUS >= 640 and point.y + controls.BUTTON_RADIUS <= viewport.y)
+			assert(point.y - controls.BUTTON_RADIUS >= 610 and point.y + controls.BUTTON_RADIUS <= viewport.y)
 			assert(point.distance_to(controls.stick_center) > controls.BUTTON_RADIUS + controls.stick_radius)
 			for other in buttons:
 				if other != action:
