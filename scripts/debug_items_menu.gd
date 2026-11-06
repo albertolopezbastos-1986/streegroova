@@ -12,6 +12,7 @@ const ACTIONS := [
 	{"label": "ENEMIGO ROJO", "action": "enemy_2"},
 	{"label": "JEFE", "action": "boss"},
 	{"label": "ULTI MAX", "action": "ultimate"},
+	{"label": "CONCIERTO FINAL", "action": "concert"},
 	{"label": "OLEADA ALEATORIA", "action": "wave"},
 	{"label": "MATAR TODOS", "action": "kill_all"},
 	{"label": "BARRIL / COMIDA", "action": "barrel"},

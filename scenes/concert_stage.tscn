@@ -21,5 +21,4 @@ texture = ExtResource("1_stage")
 centered = false
 
 [node name="Performers" type="Node2D" parent="."]
-position = Vector2(0, 560)
 z_index = 1

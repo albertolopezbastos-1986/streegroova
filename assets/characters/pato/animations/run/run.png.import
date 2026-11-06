@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cfefeemipsmll"
-path="res://.godot/imported/03.png-af3ab762ece8a1394b059e58b6e45cce.ctex"
+uid="uid://vwabgkoh283d"
+path="res://.godot/imported/run.png-6ff872bb70ab6e15c8257bf0e2c01ab3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/environment/tiles/docks-night/03.png"
-dest_files=["res://.godot/imported/03.png-af3ab762ece8a1394b059e58b6e45cce.ctex"]
+source_file="res://assets/characters/pato/animations/run/run.png"
+dest_files=["res://.godot/imported/run.png-6ff872bb70ab6e15c8257bf0e2c01ab3.ctex"]
 
 [params]
 

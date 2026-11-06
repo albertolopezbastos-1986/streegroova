@@ -842,5 +842,6 @@
     120
   ],
   "portrait_file": "portraits/portrait.png",
+  "combo_duration_multiplier": 0.5,
   "jump_height_multiplier": 0.85
 }

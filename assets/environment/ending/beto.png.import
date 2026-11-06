@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bjfn6b5ihxxhh"
-path="res://.godot/imported/01.png-5afea084a47fc82f8be81efc8808c3e1.ctex"
+uid="uid://4jnb1rgsyy8j"
+path="res://.godot/imported/beto.png-8ad8e720614e0baeee729420f34a19d8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/environment/tiles/docks-night/01.png"
-dest_files=["res://.godot/imported/01.png-5afea084a47fc82f8be81efc8808c3e1.ctex"]
+source_file="res://assets/environment/ending/beto.png"
+dest_files=["res://.godot/imported/beto.png-8ad8e720614e0baeee729420f34a19d8.ctex"]
 
 [params]
 

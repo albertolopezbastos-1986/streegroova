@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://31hfgua2ltr2"
-path="res://.godot/imported/05.png-235b007f84aa3f968238550e28397b72.ctex"
+uid="uid://be7th41qx2uyo"
+path="res://.godot/imported/run.png-5a79cded8d82251e34422b89ce5897b2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/environment/tiles/docks-night/05.png"
-dest_files=["res://.godot/imported/05.png-235b007f84aa3f968238550e28397b72.ctex"]
+source_file="res://assets/characters/meli/animations/run/run.png"
+dest_files=["res://.godot/imported/run.png-5a79cded8d82251e34422b89ce5897b2.ctex"]
 
 [params]
 

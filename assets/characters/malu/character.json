@@ -7,10 +7,10 @@
     "walk": {"path":"animations/walk","file":"walking.png","format":"sheet","fps":10,"loop":true,"frame_size":[168,256],"frame_count":20,"sheet_columns":5,"sheet_rows":5,"frame_indices":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]},
     "attack_01": {"path":"animations/attack_01","file":"attack1.png","format":"sheet","fps":18,"loop":false,"frame_size":[168,256],"frame_count":9,"sheet_columns":3,"sheet_rows":3,"frame_indices":[0,1,2,3,4,5,6,7,8],"active_hit_frames":[4,5]},
     "attack_02": {"source_animation":"attack_01"}, "attack_03": {"source_animation":"attack_01"},
-    "jump": {"source_animation":"idle"}, "jump_attack": {"source_animation":"attack_01"},
+    "jump": {"path":"animations/jump","file":"jump.png","format":"sheet","fps":18,"loop":false,"frame_size":[168,256],"frame_count":16,"sheet_columns":4,"sheet_rows":4,"frame_indices":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]}, "jump_attack": {"source_animation":"attack_01"},
     "hurt": {"path":"animations/hurt","file":"hurt.png","format":"sheet","fps":18,"loop":false,"frame_size":[168,256],"frame_count":9,"sheet_columns":3,"sheet_rows":3,"frame_indices":[0,1,2,3,4,5,6,7,8]},
     "death": {"path":"animations/death","file":"ko.png","format":"sheet","fps":18,"loop":false,"frame_size":[168,256],"frame_count":20,"sheet_columns":5,"sheet_rows":5,"frame_indices":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]},
     "pickup": {"path":"animations/pickup","file":"pickup.png","format":"sheet","fps":18,"loop":false,"frame_size":[168,256],"frame_count":9,"sheet_columns":3,"sheet_rows":3,"frame_indices":[0,1,2,3,4,5,6,7,8]},
-    "run": {"source_animation":"walk"}, "runslide": {"source_animation":"attack_01"}
+    "run": {"path":"animations/run","file":"run.png","format":"sheet","fps":14,"loop":true,"frame_size":[168,256],"frame_count":20,"sheet_columns":5,"sheet_rows":5,"frame_indices":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]}, "runslide": {"source_animation":"attack_01"}
   }
 }

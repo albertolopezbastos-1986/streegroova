@@ -22,12 +22,18 @@ func run() -> void:
 		assert(is_equal_approx(background.scale.x, background.scale.y), "image keeps its aspect ratio")
 		assert(background.position.is_equal_approx((Vector2(size) - rendered) / 2), "crop stays centered")
 		assert(concert.win_label.size.x == size.x, "victory text follows viewport width")
+		assert(concert.performers.size() == 8, "all eight musicians appear")
+		assert(concert.performers["vampi"].flip_h and concert.performers["meli"].flip_h, "mobile mirrors Vampi and Meli")
+		assert(concert.performers["pato"].position.y < concert.performers["beto"].position.y, "mobile back row stays behind center row")
+		assert(concert.performers["beto"].position.y < concert.performers["malu"].position.y, "mobile front row stays in front")
 	game.touch_visible = false
 	concert.update_layout()
 	var background = concert.get_node("Background")
 	assert(background.texture.resource_path == "res://assets/environment/ending/concert-stage.png", "desktop restores its landscape image")
 	var rendered: Vector2 = background.texture.get_size() * background.scale
 	assert(rendered.x <= 960.01 and rendered.y <= 640.01, "desktop retains complete stage")
+	assert(concert.performers["vampi"].flip_h and concert.performers["cami"].flip_h and concert.performers["malu"].flip_h, "desktop mirrors requested musicians")
+	assert(not concert.performers["meli"].flip_h, "desktop Meli keeps her original orientation")
 	print("MOBILE CONCERT PASSED: portrait, landscape, proportional fill, centered crop, responsive title, desktop layout")
 	viewport.queue_free()
 	await process_frame

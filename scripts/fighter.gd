@@ -867,8 +867,6 @@ func _draw() -> void:
 	if kind < 0:
 		return
 	var color: Color = ENEMY_COLORS[kind]
-	# Colored pixel marker identifies clones without changing the player's art.
-	draw_rect(Rect2(-13, 1, 26, 2), Color(color, 0.7))
 	if not is_instance_valid(visual) or dead:
 		return
 	var data: Dictionary = visual.character_data

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c6cpw12h0wjc1"
-path="res://.godot/imported/02.png-25d6b05137ce16229cf86b862aa7f5f3.ctex"
+uid="uid://c1mchf5q0ohkv"
+path="res://.godot/imported/jump.png-c29bec3162a05fae14acc9f7ad0dbdbd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/environment/tiles/docks-night/02.png"
-dest_files=["res://.godot/imported/02.png-25d6b05137ce16229cf86b862aa7f5f3.ctex"]
+source_file="res://assets/characters/dami/animations/jump/jump.png"
+dest_files=["res://.godot/imported/jump.png-c29bec3162a05fae14acc9f7ad0dbdbd.ctex"]
 
 [params]
 

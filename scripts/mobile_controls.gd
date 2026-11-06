@@ -2,18 +2,16 @@ extends CanvasLayer
 
 const ArcadeUI = preload("res://scripts/arcade_ui.gd")
 const ACTIONS = ["left", "right", "up", "down", "attack", "jump", "ultimate"]
-const CENTER := Vector2(130, 730)
+const CENTER := Vector2(130, 710)
 const STICK_RADIUS := 64.0
 const DEADZONE := 0.18
 const BUTTON_RADIUS := 48.0
-const BUTTONS = {"attack": Vector2(795, 690), "jump": Vector2(905, 690), "ultimate": Vector2(850, 770)}
-const PAUSE_RECT := Rect2(435, 666, 90, 48)
+const BUTTONS = {"attack": Vector2(795, 670), "jump": Vector2(905, 670), "ultimate": Vector2(850, 750)}
 const MINT := Color.WHITE
 
 var stick_radius := STICK_RADIUS
 var stick_center := CENTER
 var buttons: Dictionary = BUTTONS.duplicate()
-var pause_rect := PAUSE_RECT
 var layout_size := Vector2.ZERO
 var window_size := Vector2i.ZERO
 
@@ -54,10 +52,9 @@ func setup(owner_game: Node2D, mobile: bool) -> void:
 static func layout_for_size(size: Vector2) -> Dictionary:
 	var width := size.x
 	return {
-		"stick": Vector2(minf(130, width * 0.20), 700),
+		"stick": Vector2(minf(130, width * 0.20), 680),
 		"stick_radius": minf(64, width * 0.16),
-		"buttons": {"attack": Vector2(width - 165, 660), "jump": Vector2(width - 55, 660), "ultimate": Vector2(width - 110, 740)},
-		"pause": Rect2(Vector2(minf(130, width * 0.20) - 32, 764), Vector2(64, 24))
+		"buttons": {"attack": Vector2(width - 165, 640), "jump": Vector2(width - 55, 640), "ultimate": Vector2(width - 110, 720)}
 	}
 
 func refresh_layout() -> void:
@@ -74,7 +71,6 @@ func refresh_layout() -> void:
 	stick_center = layout["stick"]
 	stick_radius = layout["stick_radius"]
 	buttons = layout["buttons"]
-	pause_rect = layout["pause"]
 	# Existing menu controls keep their proportions and transformed touch targets.
 	var menu_scale := minf(1, size.x / 960.0)
 	for key in ["character_select", "ranking_panel", "debug_environment_select", "debug_items_menu", "concert_layer"]:
@@ -154,15 +150,6 @@ func handle_input(event: InputEvent) -> bool:
 	sync_visibility()
 	if not drawer.visible:
 		return false
-	if event is InputEventScreenTouch and event.pressed and pause_rect.has_point(event.position):
-		release_all()
-		game.player.reset_running()
-		if game.state == "pause":
-			game.state = game.previous_state
-		else:
-			game.previous_state = game.state
-			game.state = "pause"
-		return true
 	if game.state != "play":
 		return true
 	if event is InputEventScreenTouch:
@@ -203,8 +190,9 @@ func text_at(value: String, at: Vector2, size: int, color: Color) -> void:
 	drawer.draw_string(font, at - Vector2(width / 2, 0), value, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
 
 func draw_controls() -> void:
-	drawer.draw_rect(Rect2(0, 600, layout_size.x, 220), Color.BLACK)
-	drawer.draw_line(Vector2(0, 601), Vector2(layout_size.x, 601), Color("626873"), 2)
+	var deck_width := maxf(layout_size.x, get_viewport().get_visible_rect().size.x)
+	drawer.draw_rect(Rect2(0, 580, deck_width, 240), Color.BLACK)
+	drawer.draw_line(Vector2(0, 581), Vector2(deck_width, 581), Color("626873"), 2)
 	drawer.draw_circle(stick_center, stick_radius + 8, Color("0a101d"))
 	drawer.draw_arc(stick_center, stick_radius, 0, TAU, 64, Color(MINT, 0.45), 3)
 	drawer.draw_line(stick_center - Vector2(45, 0), stick_center + Vector2(45, 0), Color("2a3b4b"), 2)
@@ -215,9 +203,9 @@ func draw_controls() -> void:
 	drawer.draw_circle(knob, 25, Color("656975") if stick_finger >= 0 else Color("303541"))
 	drawer.draw_arc(knob, 25, 0, TAU, 40, MINT, 2)
 	if layout_size.x >= 700:
-		text_at("MOVER", Vector2(265, 697), 10, Color.WHITE)
-		text_at("DOBLE TOQUE", Vector2(285, 720), 8, Color.WHITE)
-		text_at("PARA CORRER", Vector2(285, 736), 8, Color.WHITE)
+		text_at("MOVER", Vector2(265, 677), 10, Color.WHITE)
+		text_at("DOBLE TOQUE", Vector2(285, 700), 8, Color.WHITE)
+		text_at("PARA CORRER", Vector2(285, 716), 8, Color.WHITE)
 	for action in buttons:
 		var point: Vector2 = buttons[action]
 		var color := Color.WHITE
@@ -228,15 +216,6 @@ func draw_controls() -> void:
 		text_at(names[action], point + Vector2(0, 5), 12, color)
 		if action == "ultimate":
 			drawer.draw_arc(point, BUTTON_RADIUS - 7, -PI / 2, -PI / 2 + TAU * maxf(0.001, game.charge / 100), 48, color, 3)
-	drawer.draw_style_box(pause_style(), pause_rect)
-	text_at("SEGUIR" if game.state == "pause" else "PAUSA", pause_rect.get_center() + Vector2(0, 4), 9, Color.WHITE)
-
-func pause_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("1c2a3d")
-	style.border_color = Color("38505b")
-	style.set_border_width_all(2)
-	return style
 
 func _exit_tree() -> void:
 	release_all()

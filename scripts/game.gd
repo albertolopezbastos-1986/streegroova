@@ -139,7 +139,7 @@ var fade_screen: ColorRect
 var cinematic_time := 0.0
 var starting_campaign := false
 var entrance_target := 0.0
-const CONCERT_DURATION := 10.0
+const CONCERT_DURATION := 20.0
 const CONCERT_SKIP_AFTER := 4.0
 var screen_transition_phase := ""
 var screen_transition_target := ""
@@ -616,6 +616,8 @@ func debug_menu_action(action: String) -> void:
 			debug_spawn_enemy(0, true)
 		"ultimate":
 			charge = 100
+		"concert":
+			begin_screen_transition("concert")
 		"wave":
 			for i in range(randi_range(3, 7)):
 				debug_spawn_enemy(randi_range(0, 2))
@@ -1017,6 +1019,11 @@ func complete_level() -> void:
 	show_help = false
 	if level_index < LEVEL_COUNT - 1:
 		state = "stage_clear"
+		if not touch_visible:
+			# Use the same centered winner composition on every desktop level.
+			player.position.x = camera_x + screen_width() * 0.5 / world_zoom()
+			player.position.y = START_Y
+			player.facing = 1
 		player.victory_time = 0
 		player.update_visual(0)
 	else:
@@ -1205,6 +1212,9 @@ func draw_overlay() -> void:
 		canvas.draw_arc(center, wave_radius, 0, TAU, 96, aura, 5)
 		# Draw the posed hero above the darkened scene.
 		player.z_index = 1001
+	elif state in ["stage_clear", "victory"]:
+		# The winner remains visible in front of the presentation card.
+		player.z_index = 1001
 	else:
 		player.z_index = int(player.position.y)
 	var hud_scale := interface_scale() * (1.18 if touch_visible else 1.0)
@@ -1226,8 +1236,9 @@ func draw_overlay() -> void:
 			canvas.draw_rect(Rect2(330, 176, 300, 8), Color("30344c"))
 			canvas.draw_rect(Rect2(330, 176, 300.0 * grip.escape_presses / grip.ESCAPE_REQUIRED, 8), MINT)
 		if combo_hits > 1:
-			overlay_text(canvas, "%02d HITS" % combo_hits, Vector2(70, 300), 46, Color.WHITE)
-			overlay_text(canvas, "SCORE x%.2f" % score_rules.multiplier(charge, lives, combo_hits, ult_time > 0), Vector2(70, 330), 20, Color.WHITE)
+			var combo_y := 300.0 if touch_visible else 155.0
+			overlay_text(canvas, "%02d HITS" % combo_hits, Vector2(70, combo_y), 46, Color.WHITE)
+			overlay_text(canvas, "SCORE x%.2f" % score_rules.multiplier(charge, lives, combo_hits, ult_time > 0), Vector2(70, combo_y + 30), 20, Color.WHITE)
 	if state in ["stage_clear", "victory"] or (state == "fade_out" and not starting_campaign):
 		draw_stage_presentation(canvas)
 	if state == "start":
@@ -1265,43 +1276,51 @@ func draw_mobile_title(canvas: Node2D) -> void:
 	var logo_max := Vector2(area.x * 0.48, 105)
 	var logo_scale := minf(logo_max.x / START_LOGO.get_width(), logo_max.y / START_LOGO.get_height())
 	var logo_size := START_LOGO.get_size() * logo_scale
-	canvas.draw_texture_rect(START_LOGO, Rect2(Vector2((area.x - logo_size.x) / 2, area.y * 0.17), logo_size), false)
+	canvas.draw_texture_rect(START_LOGO, Rect2(Vector2((area.x - logo_size.x) / 2, area.y * 0.09), logo_size), false)
 	var title_max := Vector2(area.x * 0.82, area.y * 0.30)
 	var title_scale := minf(title_max.x / TITLE_LOGO.get_width(), title_max.y / TITLE_LOGO.get_height())
 	var title_size := TITLE_LOGO.get_size() * title_scale
 	canvas.draw_texture_rect(TITLE_LOGO, Rect2(Vector2((area.x - title_size.x) / 2, area.y * 0.28), title_size), false)
 	var start_size := 34
 	var start_width := font.get_string_size("PRESS START", HORIZONTAL_ALIGNMENT_LEFT, -1, ArcadeUI.font_size(start_size)).x
-	overlay_text(canvas, "PRESS START", Vector2((area.x - start_width) / 2, area.y * 0.61), start_size, Color.WHITE)
+	var start_alpha := lerpf(0.18, 1.0, (sin(time * 4.0) + 1.0) * 0.5)
+	overlay_text(canvas, "PRESS START", Vector2((area.x - start_width) / 2, area.y * 0.72), start_size, Color(1, 1, 1, start_alpha))
 
 func draw_stage_presentation(canvas: Node2D) -> void:
 	var final := state == "victory"
 	var accent := character_health_color(active_character_id)
 	var top := 155.0 if final else 205.0
+	var panel_height := 225.0 if final else 270.0
+	var layout_scale := 1.0 if final else 1.2
 	canvas.draw_set_transform(Vector2.ZERO)
 	canvas.draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color(0.025, 0.035, 0.08, 0.20))
 	if touch_visible:
-		canvas.draw_set_transform(interface_origin() + Vector2(0, 225 - top * interface_scale()), 0, Vector2.ONE * interface_scale())
+		var mobile_panel_y := 225.0 if final else 125.0
+		canvas.draw_set_transform(interface_origin() + Vector2(0, mobile_panel_y - top * interface_scale()), 0, Vector2.ONE * interface_scale())
 	else:
-		canvas.draw_set_transform(interface_origin() + Vector2(168, 20) * interface_scale(), 0, Vector2.ONE * 0.65 * interface_scale())
-	canvas.draw_rect(Rect2(62, top, 836, 225), Color("101322").lerp(accent, 0.12))
-	canvas.draw_rect(Rect2(70, top + 8, 820, 209), accent, false, 3)
-	canvas.draw_line(Vector2(90, top + 49), Vector2(870, top + 49), accent.darkened(0.45), 2)
-	overlay_centered(canvas, "STREET GROOVA / ALL STAGES CLEAR" if final else "STREET GROOVA / NIVEL %02d" % (level_index + 1), top + 34, 17, Color("f7c47e"))
+		var desktop_panel_scale := 0.65 if final else 0.52
+		var desktop_panel_top := 121.0
+		var desktop_panel_x := (960.0 - 836.0 * desktop_panel_scale) * 0.5 - 62.0 * desktop_panel_scale
+		var desktop_panel_origin := Vector2(desktop_panel_x, desktop_panel_top - top * desktop_panel_scale)
+		canvas.draw_set_transform(interface_origin() + desktop_panel_origin * interface_scale(), 0, Vector2.ONE * desktop_panel_scale * interface_scale())
+	canvas.draw_rect(Rect2(62, top, 836, panel_height), Color("101322").lerp(accent, 0.12))
+	canvas.draw_rect(Rect2(70, top + 8, 820, panel_height - 16), accent, false, 3)
+	canvas.draw_line(Vector2(90, top + 49 * layout_scale), Vector2(870, top + 49 * layout_scale), accent.darkened(0.45), 2)
+	overlay_centered(canvas, "STREET GROOVA / ALL STAGES CLEAR" if final else "STREET GROOVA / NIVEL %02d" % (level_index + 1), top + 34 * layout_scale, 17, Color("f7c47e"))
 	var color := Color.WHITE
 	var heading_size := 65 if final else 76
 	var heading_pixels := ArcadeUI.font_size(heading_size)
-	var heading_baseline := top + 133 + (font.get_ascent(heading_pixels) - font.get_descent(heading_pixels)) * 0.5
+	var heading_baseline := top + 133 * layout_scale + (font.get_ascent(heading_pixels) - font.get_descent(heading_pixels)) * 0.5
 	overlay_centered(canvas, "CONGRATULATIONS!" if final else "STAGE CLEAR", heading_baseline, heading_size, color)
 	if final:
 		overlay_centered(canvas, "PUNTOS  %06d" % score, top + 192, 18, Color("f7c47e"))
 	elif level_score_bonus > 0:
-		overlay_centered(canvas, "%s +%d" % ["SIN DANO" if score_rules.level_unhurt else "NIVEL", level_score_bonus], top + 192, 18, Color.WHITE)
+		overlay_centered(canvas, "%s +%d" % ["SIN DANO" if score_rules.level_unhurt else "NIVEL", level_score_bonus], top + 192 * layout_scale, 18, Color.WHITE)
 	for i in range(18):
 		var x := 90.0 + i * 46
 		var glow := accent if (i + int(presentation_time * 8)) % 3 == 0 else accent.darkened(0.7)
 		canvas.draw_rect(Rect2(x, top - 8, 9, 4), glow)
-		canvas.draw_rect(Rect2(x, top + 229, 9, 4), glow)
+		canvas.draw_rect(Rect2(x, top + panel_height + 4, 9, 4), glow)
 	canvas.draw_set_transform(Vector2.ZERO)
 	if final:
 		for i in range(44):
@@ -1488,6 +1507,3 @@ func draw_campaign_map(canvas: Node2D) -> void:
 		canvas.draw_circle(center, 19 * map_scale * pulse, Color.WHITE)
 		canvas.draw_circle(center, 14 * map_scale * pulse, dot_color)
 		canvas.draw_arc(center, 29 * map_scale * pulse, 0, TAU, 48, dot_color, 3 * map_scale)
-	canvas.draw_set_transform(interface_origin(), 0, Vector2.ONE * interface_scale())
-	canvas.draw_rect(Rect2(270, 22, 420, 48), Color(0, 0, 0, 0.85))
-	overlay_text(canvas, "NIVEL %d · %s" % [station + 1, MAP_NAMES[station]], Vector2(295, 55), 26, color)
