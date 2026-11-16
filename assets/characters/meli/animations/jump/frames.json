@@ -1,0 +1,65 @@
+{
+  "sheet": "assets/characters/meli/animations/jump/jump.png",
+  "source_sha256": "f06b9756322a7f9d6dfa39190bf8f4b66efa9c52a0e2e0d827fea91ec7312053",
+  "frame_size": [
+    168,
+    256
+  ],
+  "columns": 4,
+  "rows": 4,
+  "frames": 13,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "empty_cells": [
+    13,
+    14,
+    15
+  ],
+  "declared_frame_count": 16,
+  "runtime_manifest": "assets/characters/meli/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "preview_fps": 18,
+  "preview_durations": [
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.25555555555555554
+  ],
+  "gif": "assets/characters/meli/animations/jump/preview.gif"
+}

@@ -10,7 +10,7 @@ func run() -> void:
 	game.new_run(true)
 	await process_frame
 	var hero = game.player
-	assert(hero.visual.sheets["pickup"] != hero.visual.sheets["crouch"])
+	assert(hero.visual.sheets.has("pickup") and not hero.visual.sheets.has("crouch"))
 	assert(hero.visual.definition("pickup")["frame_count"] == 11)
 	assert(not hero.visual.definition("pickup")["placeholder"])
 	hero.position = Vector2(400, 420)

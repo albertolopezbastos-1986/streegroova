@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/pato/animations/idle/idle.png",
+  "source_sha256": "07b1b40b833c94d21a567e458e8b8b97c2824d37c8b2a0c4ee9fac2b8c5d17f5",
+  "frame_size": [
+    180,
+    240
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/pato/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 8,
+  "preview_durations": [
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125
+  ],
+  "gif": "assets/characters/pato/animations/idle/preview.gif"
+}

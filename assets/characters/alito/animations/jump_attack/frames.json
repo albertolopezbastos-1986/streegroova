@@ -1,0 +1,57 @@
+{
+  "sheet": "assets/characters/alito/animations/jump_attack/flykick.png",
+  "source_sha256": "b3b8732a046202994e0fa9626589722a6f63d3d6eb12d47646c233549d9e2e1f",
+  "frame_size": [
+    170,
+    254
+  ],
+  "columns": 5,
+  "rows": 5,
+  "frames": 25,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 5,
+  "runtime_manifest": "assets/characters/alito/character.json",
+  "preview_indices": [
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "preview_fps": 15,
+  "preview_durations": [
+    0.06666666666666667,
+    0.06666666666666667,
+    0.06666666666666667,
+    0.06666666666666667,
+    0.26666666666666666
+  ],
+  "gif": "assets/characters/alito/animations/jump_attack/preview.gif"
+}

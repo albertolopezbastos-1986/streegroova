@@ -1,7 +1,6 @@
 {
   "sheet": "assets/characters/cami/animations/grab/grab.png",
-  "source": "assets/characters/cami/animations/grab/source/grab-current.png",
-  "source_sha256": "f6be03e5b8d4f28bc8c3e895ef6ba648f1fd96d458e44d51cd13b6d4fc0e5a55",
+  "source_sha256": "df19597600ed84005a77d19bcc10f686926df0510ec9395efd8e809f0cf3b3c6",
   "frame_size": [
     162,
     245
@@ -24,16 +23,43 @@
     11,
     12
   ],
-  "hold_frame": 2,
-  "release_frame": null,
-  "runtime_fps": 20,
-  "player_speed": 2,
-  "preview_fps": 40,
+  "empty_cells": [
+    13,
+    14,
+    15
+  ],
+  "declared_frame_count": 13,
+  "runtime_manifest": "assets/characters/cami/character.json",
   "preview_indices": [
     0,
     1,
-    2
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
   ],
-  "preview_hold_seconds": 0.5,
+  "preview_fps": 20,
+  "preview_durations": [
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.25
+  ],
   "gif": "assets/characters/cami/animations/grab/preview.gif"
 }

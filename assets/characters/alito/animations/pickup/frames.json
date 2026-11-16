@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/alito/animations/pickup/grab.png",
+  "source_sha256": "9d4ca37405e006592800ed34ac94c967ceac9c6b3bc743516c8c28e4a155cb36",
+  "frame_size": [
+    170,
+    254
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/alito/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 16,
+  "preview_durations": [
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625
+  ],
+  "gif": "assets/characters/alito/animations/pickup/preview.gif"
+}

@@ -4,7 +4,7 @@
   "status": "integrated",
   "default_facing": "right",
   "pivot": "feet_center",
-  "notes": "Idle, walk, run, jump y los tres ataques del combo propios integrados. Los movimientos pendientes usan idle como placeholder. El tama\u00f1o de Cami sigue vinculado al de Beto.",
+  "notes": "Idle, walk, run, jump y los tres ataques del combo propios integrados. Los movimientos pendientes usan idle como placeholder. El tamaño de Cami sigue vinculado al de Beto.",
   "animations": {
     "grab": {
       "path": "animations/grab",
@@ -847,10 +847,6 @@
         40
       ],
       "active_hit_frames": []
-    },
-    "crouch": {
-      "source_animation": "pickup",
-      "placeholder": false
     }
   },
   "pivot_pixels": [

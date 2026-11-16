@@ -9,20 +9,7 @@ func run() -> void:
 	game.set_process(false)
 	game.new_run(true)
 	var hero = game.player
-	assert(hero.visual.sheets.has("crouch") and not InputMap.has_action("crouch"))
-	var sheet: Image = hero.visual.sheets["crouch"].get_image()
-	var idle: Image = hero.visual.sheets["idle"].get_image().get_region(Rect2i(0, 0, 200, 200))
-	sheet.convert(Image.FORMAT_RGBA8)
-	idle.convert(Image.FORMAT_RGBA8)
-	assert(sheet.get_size() == Vector2i(800, 400))
-	assert(sheet.get_region(Rect2i(0, 0, 200, 200)).get_data() == idle.get_data())
-	var top := 0
-	for index in range(8):
-		var frame := sheet.get_region(Rect2i((index % 4) * 200, (index / 4) * 200, 200, 200))
-		var bounds := frame.get_used_rect()
-		assert(bounds.end.y == 189 and bounds.position.y >= top)
-		top = bounds.position.y
-		assert(frame.get_pixel(0, 0).a == 0)
+	assert(not hero.visual.sheets.has("crouch") and not InputMap.has_action("crouch"))
 	var at: Vector2 = hero.position
 	var event := make_key()
 	event.pressed = true
@@ -44,7 +31,7 @@ func run() -> void:
 	assert(game.food[-1].dead and hero.visual.source_frame == 10)
 	hero.tick(hero.visual.duration("pickup") * 0.51)
 	assert(hero.visual.motion == "idle" and hero.position == at)
-	print("ALL CROUCH CHECKS PASSED: aligned artwork, C inactive, attack picks up nearby items only")
+	print("REMOVED CROUCH CHECKS PASSED: C inactive, attack picks up nearby items only")
 	game.queue_free()
 	await process_frame
 	quit()

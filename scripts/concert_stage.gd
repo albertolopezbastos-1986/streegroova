@@ -16,7 +16,7 @@ const PERFORMER_DATA := {
 const DESKTOP_PERFORMERS := [
 	["pato", 0.18, 0.71, false, 248.0], ["dami", 0.31, 0.71, false, 248.0],
 	["alito", 0.54, 0.71, false, 248.0], ["vampi", 0.80, 0.71, true, 248.0],
-	["beto", 0.20, 0.82, false, 296.0], ["cami", 0.46, 0.82, true, 296.0],
+	["beto", 0.23, 0.82, false, 311.0], ["cami", 0.46, 0.82, true, 283.0],
 	["malu", 0.72, 0.82, true, 296.0], ["meli", 0.84, 0.82, false, 296.0]
 ]
 const MOBILE_PERFORMERS := [

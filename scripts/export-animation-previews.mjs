@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { readPng, writePng } from './environment-tiles.mjs';
 
-const roots = ['assets/characters', 'assets/characters_20_frames', 'assets/characters_40_frames'];
+const roots = ['assets/characters'];
 const ffmpeg = process.env.FFMPEG_BIN || '/usr/bin/ffmpeg';
 const checkOnly = process.argv.includes('--check');
 const hash = file => createHash('sha256').update(fs.readFileSync(file)).digest('hex');
@@ -31,7 +31,7 @@ for (const file of files.filter(file => file.endsWith('/character.json'))) {
     }
   }
 }
-const sources = files.filter(file => /\/animations\/[^/]+\/[^/]+\.png$/i.test(slash(file))).sort();
+const sources = [...bindings.keys()].map(file => path.relative(process.cwd(), file)).sort();
 const knownLayouts = [];
 for (const [file, animation] of bindings) {
   const [w, h] = animation.frame_size || [];
@@ -87,14 +87,13 @@ for (const source of sources) {
   let order = animation?.frame_indices?.filter(index => frames.includes(index)) || frames.slice();
   if (!order.length) order = frames.slice();
   let fps = Number(animation?.fps || 12), playback = order.slice();
-  // Keep the slower review cycles already supplied with these two new animations.
-  if (motion === 'crouch') { fps = 16; playback = order.concat(order.slice().reverse()); }
+  // Keep the slower review cycles already supplied with the pickup animation.
   if (motion === 'pickup') fps = 16;
   const duration = order.length / fps;
   const times = animation?.frame_times;
   const durations = playback.map((_, index) => Array.isArray(times) && times.length === order.length && playback.length === order.length
     ? Math.max(0.001, ((times[index + 1] ?? 1) - times[index]) * duration) : 1 / fps);
-  if (!animation?.loop && !['crouch', 'pickup'].includes(motion)) durations[durations.length - 1] += 0.2;
+  if (!animation?.loop && motion !== 'pickup') durations[durations.length - 1] += 0.2;
   records.push({ sheet: slash(source), source_sha256: before, frame_size: [w, h], columns, rows,
     frames: frames.length, indices: frames, empty_cells: empty, declared_frame_count: animation?.frame_count ?? null,
     runtime_manifest: animation?.manifest ?? null, preview_indices: playback, preview_fps: Math.min(50, fps),
@@ -144,7 +143,7 @@ try {
   if (!checkOnly) {
     fs.writeFileSync('assets/animation-previews.json', JSON.stringify({ sheets: records.length, frames: records.reduce((sum, row) => sum + row.frames, 0), records }, null, 2) + '\n');
     const table = records.map(row => `| ${row.sheet.replace('assets/', '')} | ${row.frames} | [PNG](${row.sheet.replace('assets/', '')}) | [Cuadros](${path.dirname(row.sheet).replace('assets/', '')}/frames/) | [GIF](${row.gif.replace('assets/', '')}) |`).join('\n');
-    fs.writeFileSync('assets/ANIMATION_PREVIEWS.md', `# Cuadros y vistas previas\n\nCada hoja original se conserva. frames/ contiene PNG individuales con tamaño, transparencia y píxeles exactos de la celda; sus nombres mantienen el índice original. Las celdas completamente vacías se omiten. Los GIF tienen escala 2× con nearest y transparencia; siguen el orden de juego cuando está configurado. Los GIF de crouch y pickup conservan su velocidad de revisión de 16 FPS. Los cuadros PNG adicionales quedan fuera de la exportación web mediante .gdignore.\n\nAlgunas hojas guardadas en el conjunto de 40 cuadros contienen menos cuadros dibujados: se usa la cuadrícula real, sin inventar cuadros. frames.json documenta la extracción, las celdas vacías y la secuencia del GIF.\n\nRegenerar: node scripts/export-animation-previews.mjs. Verificar: node scripts/export-animation-previews.mjs --check. Requiere ffmpeg (FFMPEG_BIN permite cambiar el ejecutable).\n\n| Hoja | Cuadros | Original | Individuales | Vista previa |\n| --- | ---: | --- | --- | --- |\n${table}\n`);
+    fs.writeFileSync('assets/ANIMATION_PREVIEWS.md', `# Cuadros y vistas previas\n\nLas hojas activas se encuentran en assets/characters/. frames/ contiene PNG individuales con tamaño, transparencia y píxeles exactos de la celda; sus nombres mantienen el índice original. Las celdas completamente vacías se omiten. Los GIF tienen escala 2× con nearest y transparencia; siguen el orden de juego cuando está configurado. Los GIF de pickup conservan su velocidad de revisión de 16 FPS. Los cuadros PNG adicionales quedan fuera de la exportación web mediante .gdignore.\n\nCada animación usa su cuadrícula y cantidad de cuadros real, sin carpetas separadas por cantidad. frames.json documenta la extracción, las celdas vacías y la secuencia del GIF.\n\nRegenerar: node scripts/export-animation-previews.mjs. Verificar: node scripts/export-animation-previews.mjs --check. Requiere ffmpeg (FFMPEG_BIN permite cambiar el ejecutable).\n\n| Hoja | Cuadros | Original | Individuales | Vista previa |\n| --- | ---: | --- | --- | --- |\n${table}\n`);
   }
   console.log(`VERIFIED ${records.length} sheets, ${records.reduce((sum, row) => sum + row.frames, 0)} exact PNG frames, ${records.length} GIF previews; original sheets unchanged.`);
 } finally {

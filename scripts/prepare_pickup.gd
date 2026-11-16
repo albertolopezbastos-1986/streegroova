@@ -4,11 +4,11 @@ const ROOT := "res://assets/characters/beto/animations/pickup/"
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
-	var base := Image.load_from_file("res://assets/characters/beto/animations/crouch/frames/07.png")
+	var base := Image.load_from_file(ROOT + "frames/07.png")
 	DirAccess.make_dir_recursive_absolute(ROOT + "frames")
 	if args.is_empty() or args[0] == "reference":
 		base.resize(1024, 1024, Image.INTERPOLATE_NEAREST)
-		base.save_png("res://.godot/pickup-crouch-reference.png")
+		base.save_png("res://.godot/pickup-reference.png")
 	else:
 		assert(args[0] == "pack")
 		var sheet := Image.create(800, 600, false, Image.FORMAT_RGBA8)
@@ -16,7 +16,7 @@ func _initialize() -> void:
 		for index in range(11):
 			var frame: Image
 			if index < 8:
-				frame = Image.load_from_file("res://assets/characters/beto/animations/crouch/frames/%02d.png" % index)
+				frame = Image.load_from_file(ROOT + "frames/%02d.png" % index)
 			else:
 				frame = Image.load_from_file(ROOT + "source/%02d.png" % index)
 				frame.convert(Image.FORMAT_RGBA8)

@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/pato/animations/pickup/pickup.png",
+  "source_sha256": "a60b090ac37311703ec760278e386bbb4e13f41a0d8f2aee7b1d2edf003daed0",
+  "frame_size": [
+    180,
+    240
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/pato/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 16,
+  "preview_durations": [
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625,
+    0.0625
+  ],
+  "gif": "assets/characters/pato/animations/pickup/preview.gif"
+}

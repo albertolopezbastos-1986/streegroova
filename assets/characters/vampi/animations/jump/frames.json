@@ -1,0 +1,65 @@
+{
+  "sheet": "assets/characters/vampi/animations/jump/jump.png",
+  "source_sha256": "0c3e4ca8eaeb849c326f052006ae0645d2063c4adc8ebd1a84f9b7add1a30f99",
+  "frame_size": [
+    180,
+    240
+  ],
+  "columns": 4,
+  "rows": 4,
+  "frames": 13,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "empty_cells": [
+    13,
+    14,
+    15
+  ],
+  "declared_frame_count": 16,
+  "runtime_manifest": "assets/characters/vampi/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "preview_fps": 18,
+  "preview_durations": [
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.25555555555555554
+  ],
+  "gif": "assets/characters/vampi/animations/jump/preview.gif"
+}

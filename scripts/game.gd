@@ -139,7 +139,7 @@ var fade_screen: ColorRect
 var cinematic_time := 0.0
 var starting_campaign := false
 var entrance_target := 0.0
-const CONCERT_DURATION := 20.0
+const CONCERT_DURATION := 40.0
 const CONCERT_SKIP_AFTER := 4.0
 var screen_transition_phase := ""
 var screen_transition_target := ""

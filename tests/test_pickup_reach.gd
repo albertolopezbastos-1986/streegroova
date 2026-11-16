@@ -9,7 +9,7 @@ func run() -> void:
 	var hero = game.player
 	var data: Dictionary = hero.visual.definition("pickup")
 	assert(data["frame_count"] == 11 and data["collect_progress"] == 0.5)
-	assert(hero.visual.sheets["pickup"] != hero.visual.sheets["crouch"])
+	assert(hero.visual.sheets.has("pickup") and not hero.visual.sheets.has("crouch"))
 	var previous_y := 130.0
 	for frame in [8, 9, 10]:
 		var hand: Vector2 = hero.visual.weapon_hand_position("pickup", frame)

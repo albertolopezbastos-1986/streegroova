@@ -1,7 +1,7 @@
 {
   "tool": "image_gen built-in",
   "transparent_background": true,
-  "reference": "../crouch/frames/07.png",
+  "reference": "frames/07.png",
   "records": [
     {
       "frame": 8,

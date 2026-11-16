@@ -82,7 +82,6 @@ Sus hojas se leen directamente: el primer puño usa la versión de **40 cuadros*
 ## Organización
 
 - `assets/characters/`: carpetas para tres personajes pixel art, organizadas por animación. [Guía para colocar los sprites](assets/characters/README.md).
-- `assets/characters_40_frames/`: variantes separadas de Beto, Alito y Cami para probar hojas de 40 cuadros. [Guía de la variante](assets/characters_40_frames/README.md).
 - `scripts/game.gd`: escenario, oleadas, cámara, interfaz, controles, audio y ciclo de partida.
 - `scripts/fighter.gd`: movimiento, animación, combate e inteligencia de los tres enemigos.
 - `scripts/character_select.gd`: pantalla de selección y controles de sus tres casilleros.
@@ -108,7 +107,7 @@ Validación de clones, combos, saltos, patadas aéreas y bloqueo de ulti: `godot
 
 ### Agarre y lanzamiento
 
-Beto agarra automáticamente al caminar hasta quedar pegado a un enemigo de frente y en la misma franja. Se inmoviliza en el cuadro 8 de `grab_throw` y el rival en el cuadro 3 de daño. Golpe solo hace el primer golpe de agarre (hoja provisional del primer puñetazo); atrás + golpe completa el lanzamiento hacia atrás. Un golpe recibido o la ulti liberan el agarre. Las nuevas hojas de 20 cuadros van en `assets/characters_20_frames/{beto,alito,cami}/animations/`; los originales anteriores se conservan. Ver `assets/characters/README.md` para cuadros y configuración, y `tests/test_grapple.gd` para controles de agarre, daño, lanzamiento e interrupción.
+Beto agarra automáticamente al caminar hasta quedar pegado a un enemigo de frente y en la misma franja. Se inmoviliza en el cuadro 8 de `grab_throw` y el rival en el cuadro 3 de daño. Golpe solo hace el primer golpe de agarre (hoja provisional del primer puñetazo); atrás + golpe completa el lanzamiento hacia atrás. Un golpe recibido o la ulti liberan el agarre. Todas las hojas activas van en `assets/characters/{beto,alito,cami}/animations/`. Ver `assets/characters/README.md` para cuadros y configuración, y `tests/test_grapple.gd` para controles de agarre, daño, lanzamiento e interrupción.
 
 Validación de carrera y golpe deslizante: `godot --headless --path . --script tests/test_running.gd`.
 
@@ -169,7 +168,7 @@ El escenario Calle original vuelve a usar `neighborhood-pixel.png`, su ancho de 
 
 La comida y las armas del suelo se recogen pulsando golpe a menos de 32 unidades y en la misma franja. No se recogen al tocarlas. `pickup` usa la animación de agacharse, con bajada y subida, sin desplazamiento ni daño; el objeto se obtiene al 50% de la secuencia, con la mano abajo y un golpe recibido puede interrumpir la recogida. La comida queda si la vida está completa. Palos y caños aparecen en el suelo y también se pueden crear desde los botones PALO/CAÑO de debug; quedan equipados en la mano derecha durante las animaciones hasta recibir un lanzamiento. El agarre visual sigue anclajes por cuadro detectados desde el sprite; `weapon_hand_frames` en la animación permite indicar coordenadas [x,y] exactas para futuros sprites.
 
-El ataque armado usa `punch_weapon`, provisionalmente el primer golpe, con alcance 105 y daño 36 (tablón) / 42 (caño), superior a los golpes comunes de 19/29. Las carpetas `animations/punch_weapon/` existen para Beto, Alito y Cami en los conjuntos original, 20 y 40 cuadros. Reemplazar el alias por la futura hoja permite conectar su animación propia. La recogida usa una hoja `pickup` propia: ocho cuadros de bajada y tres nuevos extendiendo la mano al piso, seguidos de la vuelta en sentido inverso.
+El ataque armado usa `punch_weapon`, provisionalmente el primer golpe, con alcance 105 y daño 36 (tablón) / 42 (caño), superior a los golpes comunes de 19/29. Las carpetas `animations/punch_weapon/` existen para Beto, Alito y Cami en la carpeta unificada. Reemplazar el alias por la futura hoja permite conectar su animación propia. La recogida usa una hoja `pickup` propia: ocho cuadros de bajada y tres nuevos extendiendo la mano al piso, seguidos de la vuelta en sentido inverso.
 
 STAGE CLEAR usa un panel al 65% del tamaño anterior, desplazado hacia arriba y con menos oscurecimiento; el personaje también festeja entre niveles. Validación de recogidas y armas: `godot --headless --path . --script tests/test_pickups_weapons.gd`.
 
@@ -193,9 +192,8 @@ Los jefes no pueden ser agarrados. Reciben daño de patadas, slides, armas lanza
 
 Atajo de prueba: 0 (también numérico) completa el nivel actual con celebración, cartel y cuenta regresiva normales. Se habilita con la propiedad exportada `enable_level_skip` del nodo principal, activada por defecto; al desactivarla la tecla no salta niveles. En debug, 0 conserva su función de matar enemigos sin completar un nivel. Prueba: tests/test_level_skip.gd.
 
-La animación base de agacharse tiene ocho cuadros, con el primero tomado del idle original y los siguientes creados con image_gen. El jugador sólo se agacha al pulsar golpe cerca de comida o de un arma para recogerla. No hay tecla de agachado independiente. [Sprites, GIF y prompts](assets/characters/beto/animations/crouch/README.md). Prueba: tests/test_crouch.gd.
 
-La recogida de comida y armas usa ahora los dibujos de agacharse: baja, obtiene el objeto y vuelve a levantarse. Los conjuntos original, 20 y 40 tienen carpetas crouch y ultimate_air para Beto, Alito y Cami. Beto usa su hoja dedicada `jumpultimate.png` para la ulti aérea, con energía dorada aplicada por shader.
+La recogida de comida y armas usa ahora los dibujos de agacharse: baja, obtiene el objeto y vuelve a levantarse. La carpeta unificada contiene ultimate_air para Beto, Alito y Cami. Beto usa su hoja dedicada `jumpultimate.png` para la ulti aérea, con energía dorada aplicada por shader.
 
 La recogida completa el gesto con tres cuadros nuevos de la mano bajando, abriendo los dedos y cerrándolos junto al suelo. El contacto obtiene el objeto al 50% de la secuencia; después se retira el brazo y Beto se levanta. [Animación y prompts](assets/characters/beto/animations/pickup/README.md).
 

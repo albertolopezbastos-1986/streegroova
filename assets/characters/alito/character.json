@@ -235,7 +235,7 @@
       "loop": false
     },
     "death": {
-      "path": "../../characters_20_frames/alito/animations/death",
+      "path": "animations/death",
       "file": "ko.png",
       "format": "sheet",
       "fps": 18,

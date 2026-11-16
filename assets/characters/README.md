@@ -1,6 +1,6 @@
 # Sprites de Beto, Alito y Cami
 
-**Las nuevas animaciones se preparan en [characters_20_frames](../characters_20_frames/README.md), con 20 cuadros por secuencia.** Las variantes anteriores de **40 cuadros** conservan su propia estructura en [`../characters_40_frames/`](../characters_40_frames/README.md), separada de estos sprites.
+Todas las animaciones activas y los retratos están en `assets/characters/<personaje>/`. Cada movimiento vive en `animations/<movimiento>/`, sin separar carpetas por cantidad de cuadros. `character.json` define la hoja, cuadrícula, secuencia, FPS y puntos de contacto. Las animaciones compartidas pueden referenciar otro personaje dentro de esta misma carpeta.
 
 Cada personaje usa **una hoja completa por movimiento**. Godot podrá leer los cuadros directamente: no hace falta separar las imágenes ni guardar despegue, caída y aterrizaje en carpetas distintas.
 
@@ -10,7 +10,6 @@ assets/characters/
     character.json
     animations/
       idle/idle.png
-      crouch/crouch.png
       pickup/pickup.png
       walk/walk.png
       run/
@@ -57,9 +56,9 @@ Las nueve hojas originales son **PNG de 600 × 600, con 3 columnas y 3 filas**. 
 6  7  8
 ```
 
-Los cuadros y sus dimensiones están anotados en `beto/character.json`. **Beto ya está integrado al jugador:** usa estas hojas para quieto, caminar, tres ataques, salto, patada voladora, daño y KO. La ulti reutiliza el barrido con guitarra. Idle y walk usan las hojas de 20 cuadros de `characters_20_frames`, con índices 0–19 a 20 FPS; omiten la pose extra 20. Idle usa celdas de 200 × 200 y walk de 102 × 231, ambas en cuadrícula 5 × 5. Walk define escala `0.48` y pivote `[51, 226]` para mantener el tamaño y apoyo de Beto. El salto visual sigue la altura real del personaje.
+Los cuadros y sus dimensiones están anotados en `beto/character.json`. **Beto ya está integrado al jugador:** usa estas hojas para quieto, caminar, tres ataques, salto, patada voladora, daño y KO. La ulti reutiliza el barrido con guitarra. Idle y walk usan las hojas de 20 cuadros de `characters`, con índices 0–19 a 20 FPS; omiten la pose extra 20. Idle usa celdas de 200 × 200 y walk de 102 × 231, ambas en cuadrícula 5 × 5. Walk define escala `0.48` y pivote `[51, 226]` para mantener el tamaño y apoyo de Beto. El salto visual sigue la altura real del personaje.
 
-**El primer golpe ahora usa la versión de 40 cuadros** en `../characters_40_frames/beto/animations/attack_01/firstpunch.png`, mediante una referencia desde su manifiesto. La hoja de 9 cuadros se conserva como original. Idle y walk usan las nuevas hojas de 20 cuadros; las demás animaciones conservan sus hojas anteriores.
+**El primer golpe ahora usa la versión de 40 cuadros** en `../characters/beto/animations/attack_01/firstpunch.png`, mediante una referencia desde su manifiesto. Idle y walk usan las nuevas hojas de 20 cuadros; las demás animaciones conservan sus hojas anteriores.
 
 El manifiesto define la escala `0.6`, el pivote `[100, 190]`, las secuencias y los cuadros de impacto. Los ataques usan FPS para su duración; salto, daño, KO y ulti se sincronizan con los tiempos de sus estados. La ulti coloca el barrido cuando se aplica el daño global. Se conservan los PNG originales completos y se espejan al mirar a la izquierda.
 
@@ -106,7 +105,7 @@ Carpetas preparadas para Beto, Alito y Cami dentro de `animations/`:
 | `grab_punch_03/` | Tercer golpe durante el agarre. |
 | `run/` | Correr. |
 
-Colocá una hoja PNG por movimiento en su carpeta, conservando el tamaño original y la transparencia. Estas carpetas también existen en la otra estructura de personajes (originales / 40 cuadros). Son espacios para recibir los sprites: los movimientos y sus metadatos se integrarán cuando estén las imágenes.
+Colocá una hoja PNG por movimiento en su carpeta, conservando el tamaño original y la transparencia. Son espacios para recibir los sprites: los movimientos y sus metadatos se integrarán cuando estén las imágenes.
 
 ## Agarre y lanzamiento de Beto
 
@@ -117,13 +116,13 @@ Al caminar hacia un enemigo por la misma franja y acercarse a menos de 25 unidad
 
 Un golpe de otro rival interrumpe el agarre y libera a ambos. La ulti también lo cancela. El enemigo agarrado no recibe turnos de ataque mientras esté inmovilizado. El rival arrojado usa la animación de caída, vuela, aterriza y se recupera si conserva energía.
 
-La hoja activa es `assets/characters_20_frames/beto/animations/grab_throw/grabthrow.png`: 5 × 5 celdas de 200 × 200, índices 0–19. No se usa la celda adicional 20. Los campos `hold_frame: 8` y `release_frame: 15` del manifiesto sincronizan la mecánica. Para conectar el futuro golpe de agarre, reemplazá su alias `source_animation` por los datos de la hoja (`path`, `file`, cuadrícula, tamaño, secuencia, FPS y `active_hit_frames`), igual que cualquier ataque. El cargador también ofrece este reemplazo provisional cuando un personaje tiene `grab_throw` pero todavía no tiene su primer golpe de agarre.
+La hoja activa es `assets/characters/beto/animations/grab_throw/grabthrow.png`: 5 × 5 celdas de 200 × 200, índices 0–19. No se usa la celda adicional 20. Los campos `hold_frame: 8` y `release_frame: 15` del manifiesto sincronizan la mecánica. Para conectar el futuro golpe de agarre, reemplazá su alias `source_animation` por los datos de la hoja (`path`, `file`, cuadrícula, tamaño, secuencia, FPS y `active_hit_frames`), igual que cualquier ataque. El cargador también ofrece este reemplazo provisional cuando un personaje tiene `grab_throw` pero todavía no tiene su primer golpe de agarre.
 
 El ciclo de `walk` reproduce solo los cuadros 0–16: omite los últimos tres cuadros de la secuencia (17, 18 y 19), además de la pose extra 20, para cerrar el loop. La hoja conserva sus 20 cuadros declarados.
 
 Los tres ataques del combo se reproducen un 15% más rápido: `attack_01` a 112.444444 FPS, `attack_02` a 25.3 FPS y `attack_03` a 20.7 FPS. La duración y el contacto se calculan desde las animaciones, reduciendo la espera entre golpes.
 
-Beto usa `characters_20_frames/beto/animations/run/run.png` al correr: cuadrícula 5 × 5, celdas 200 × 200, cuadros 1–19 a 20 FPS (se excluye permanentemente el cuadro 0 de idle). El segundo golpe del agarre usa `grab_punch_02/grabpunch2.png`: cuadrícula 5 × 5, celdas 183 × 227, cuadros 0–19 a 50 FPS (0.4 segundos), escala 0.52 y pivote [91.5, 217]. La rodilla aplica daño en los cuadros 6–13 y regresa al agarre; primer y tercer golpe conservan el reemplazo de `grab_punch_01`.
+Beto usa `characters/beto/animations/run/run.png` al correr: cuadrícula 5 × 5, celdas 200 × 200, cuadros 1–19 a 20 FPS (se excluye permanentemente el cuadro 0 de idle). El segundo golpe del agarre usa `grab_punch_02/grabpunch2.png`: cuadrícula 5 × 5, celdas 183 × 227, cuadros 0–19 a 50 FPS (0.4 segundos), escala 0.52 y pivote [91.5, 217]. La rodilla aplica daño en los cuadros 6–13 y regresa al agarre; primer y tercer golpe conservan el reemplazo de `grab_punch_01`.
 
 La carpeta `animations/runslide/` de Beto, Alito y Cami está preparada para la hoja del golpe durante la carrera. Colocá allí los sprites; su animación se conectará cuando esté disponible la hoja.
 
@@ -131,4 +130,4 @@ El golpe de carrera de Beto usa `animations/runslide/runslide.png` (600 × 600, 
 
 La comida y las armas del suelo se recogen pulsando golpe a menos de 32 unidades y en la misma franja. No se recogen al tocarlas. `pickup` usa temporalmente slide sin desplazamiento ni daño; el objeto se obtiene al 55% de la secuencia y un golpe recibido puede interrumpir la recogida. La comida queda si la vida está completa. Palos y caños aparecen en el suelo y también se pueden crear desde los botones PALO/CAÑO de debug; quedan equipados en la mano derecha al moverse, saltar, golpear, recibir daño o caer. El agarre visual sigue anclajes por cuadro detectados desde el sprite; `weapon_hand_frames` en la animación permite indicar coordenadas [x,y] exactas para futuros sprites.
 
-El ataque armado usa `punch_weapon`, provisionalmente el primer golpe, con alcance 105 y daño 26 (palo) / 32 (caño). Las carpetas `animations/punch_weapon/` existen para Beto, Alito y Cami en los conjuntos original, 20 y 40 cuadros. Reemplazar el alias por la futura hoja permite conectar su animación propia. La recogida tiene un alias separado `pickup` para sustituir su placeholder después.
+El ataque armado usa `punch_weapon`, provisionalmente el primer golpe, con alcance 105 y daño 26 (palo) / 32 (caño). Las carpetas `animations/punch_weapon/` existen para Beto, Alito y Cami en la carpeta unificada. Reemplazar el alias por la futura hoja permite conectar su animación propia. La recogida tiene un alias separado `pickup` para sustituir su placeholder después.

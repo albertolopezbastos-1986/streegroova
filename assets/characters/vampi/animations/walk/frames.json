@@ -1,0 +1,68 @@
+{
+  "sheet": "assets/characters/vampi/animations/walk/walk.png",
+  "source_sha256": "747ea7d702d3d7ec3ee4ab112778f9dea15acb4f0ce76ea04533f44bf163e24d",
+  "frame_size": [
+    180,
+    240
+  ],
+  "columns": 5,
+  "rows": 5,
+  "frames": 21,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "empty_cells": [
+    21,
+    22,
+    23,
+    24
+  ],
+  "declared_frame_count": 10,
+  "runtime_manifest": "assets/characters/vampi/character.json",
+  "preview_indices": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+  ],
+  "preview_fps": 10,
+  "preview_durations": [
+    0.1,
+    0.1,
+    0.1,
+    0.1,
+    0.1,
+    0.1,
+    0.1,
+    0.1,
+    0.1,
+    0.1
+  ],
+  "gif": "assets/characters/vampi/animations/walk/preview.gif"
+}

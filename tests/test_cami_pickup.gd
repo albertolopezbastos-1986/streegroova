@@ -13,7 +13,7 @@ func run() -> void:
 	var hero = game.player
 	var sequence := range(8) + range(6, 0, -1)
 	assert(hero.visual.definition("pickup")["frame_indices"] == sequence)
-	assert(hero.visual.definition("crouch")["frame_indices"] == sequence)
+	assert(not hero.visual.sheets.has("crouch"))
 	for i in range(sequence.size()):
 		assert(hero.visual.frame_at("pickup", (i + 0.1) / sequence.size()) == sequence[i])
 	game.drop_food(hero.position)
