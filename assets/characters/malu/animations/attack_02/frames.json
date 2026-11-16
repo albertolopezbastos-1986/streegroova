@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/malu/animations/attack_02/attack2.png",
+  "source_sha256": "bb9d0cfc0df59be23093db33b4ed96bf8be0795ad80c353af80eadba9ac6fca9",
+  "frame_size": [
+    168,
+    256
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/malu/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 18,
+  "preview_durations": [
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.25555555555555554
+  ],
+  "gif": "assets/characters/malu/animations/attack_02/preview.gif"
+}

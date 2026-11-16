@@ -168,6 +168,11 @@ func run() -> void:
 		check(not newcomer.is_empty() and newcomer["id"] == id, id.capitalize() + " loads as a playable character")
 		for motion in ["idle", "walk", "attack_01", "hurt", "death", "pickup"]:
 			check(newcomer["sheets"].has(motion), id.capitalize() + " has its basic " + motion + " animation")
+		for motion in ["attack_02", "stomp"]:
+			check(newcomer["sheets"][motion].resource_path.begins_with("res://assets/characters/%s/animations/%s/" % [id, motion]), id.capitalize() + " uses its own " + motion + " sheet")
+			check(newcomer["definition"]["animations"][motion]["frame_indices"] == range(9), id.capitalize() + " uses nine frames for " + motion)
+	for motion in ["runslide", "ultimate"]:
+		check(Catalog.character("vampi")["sheets"][motion].resource_path == "res://assets/characters/vampi/animations/%s/%s.png" % [motion, motion], "Vampi uses his dedicated " + motion)
 	check(Catalog.character("meli")["definition"]["animations"]["walk"]["frame_indices"] == range(17), "Meli walk uses frames 0 through 16")
 	check(Catalog.character("dami")["definition"]["animations"]["walk"]["frame_indices"] == range(4, 16), "Dami walk uses frames 4 through 15")
 	check(Catalog.character("pato")["definition"]["animations"]["walk"]["frame_indices"] == range(6, 20), "Pato walk uses frames 6 through 19")

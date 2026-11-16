@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/malu/animations/stomp/stomp.png",
+  "source_sha256": "e5b51b3f5f2db9eb23169e5a64f2a435b07e4fa58c12b1e3c8815cdbdb9c27fc",
+  "frame_size": [
+    168,
+    256
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/malu/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 18,
+  "preview_durations": [
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.25555555555555554
+  ],
+  "gif": "assets/characters/malu/animations/stomp/preview.gif"
+}

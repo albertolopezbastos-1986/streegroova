@@ -6,6 +6,8 @@
   "scale": 0.47244094488188976,
   "pivot": "feet_center",
   "notes": "Idle, walk, run y jump propios integrados. Run usa los cuadros 5\u201319, excluyendo el \u00faltimo cuadro dibujado (20). Walk usa los cuadros 0\u201319 con escala y pivote propios para conservar altura y apoyo. Los movimientos pendientes usan el idle de Alito como placeholder visual. Victory propio integrado: 13 cuadros, sin bucle y con pose final sostenida. Ulti propia de 9 cuadros con explosi\u00f3n sincronizada al impacto; s\u00f3lo se activa en el suelo. Primer golpe propio de 9 cuadros; contacto durante la embestida (4\u20135). Combo propio de dos golpes: el segundo es la patada que lanza enemigos. Patada a\u00e9rea propia: cuadros 6\u201310 contando desde 1 (\u00edndices 5\u20139), contacto en la extensi\u00f3n final.",
+  "combo_timing_reference": "beto",
+  "combo_timing_multiplier": 2.0,
   "animations": {
     "idle": {
       "path": "animations/idle",
@@ -368,6 +370,36 @@
         12
       ],
       "active_hit_frames": [],
+      "placeholder": false
+    },
+    "stomp": {
+      "path": "animations/stomp",
+      "file": "stomp.png",
+      "format": "sheet",
+      "fps": 18,
+      "loop": false,
+      "frame_size": [
+        170,
+        254
+      ],
+      "frame_count": 9,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "active_hit_frames": [
+        3,
+        4
+      ],
       "placeholder": false
     }
   },

@@ -452,7 +452,14 @@ func begin_attack() -> void:
 		game.dust(position)
 	attack_duration = visual.duration(attack_motion())
 	if kind == -1 and not air_attack and not run_attack and not weapon_attack and not prop_attack:
-		attack_duration *= float(visual.character_data.get("combo_duration_multiplier", 1.0))
+		var timing_reference := str(visual.character_data.get("combo_timing_reference", ""))
+		if timing_reference.is_empty():
+			attack_duration *= float(visual.character_data.get("combo_duration_multiplier", 1.0))
+		else:
+			var reference: Dictionary = Catalog.character(timing_reference)["definition"]
+			var timing: Dictionary = reference["animations"][attack_motion()]
+			attack_duration = float(timing["frame_indices"].size()) / float(timing["fps"])
+			attack_duration *= float(reference.get("combo_duration_multiplier", 1.0)) * float(visual.character_data.get("combo_timing_multiplier", 1.0))
 	if kind >= 0:
 		attack_duration *= 0.8 if is_boss else [1.0, 0.9, 1.22][kind]
 	if run_attack:
@@ -469,6 +476,8 @@ func begin_attack() -> void:
 	update_visual(0)
 
 func attack_motion() -> String:
+	if prop_attack and visual.sheets.has("stomp"):
+		return "stomp"
 	if (run_attack or prop_attack) and visual.sheets.has("runslide"):
 		return "runslide"
 	if weapon_attack:

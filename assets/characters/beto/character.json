@@ -802,6 +802,39 @@
       ],
       "active_hit_frames": [],
       "placeholder": false
+    },
+    "stomp": {
+      "path": "animations/stomp",
+      "file": "stomp.png",
+      "format": "sheet",
+      "fps": 24,
+      "loop": false,
+      "frame_size": [
+        200,
+        200
+      ],
+      "frame_count": 8,
+      "sheet_columns": 3,
+      "sheet_rows": 3,
+      "frame_order": "row_major",
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "active_hit_frames": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "placeholder": false
     }
   },
   "reference": "source/betopixel.png",

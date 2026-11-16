@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/vampi/animations/stomp/stomp.png",
+  "source_sha256": "efed42f18ae45ed9b131fed5f23830898df3d25538b494f62904607acaa8729b",
+  "frame_size": [
+    180,
+    240
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/vampi/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 18,
+  "preview_durations": [
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.25555555555555554
+  ],
+  "gif": "assets/characters/vampi/animations/stomp/preview.gif"
+}

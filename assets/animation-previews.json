@@ -1,6 +1,6 @@
 {
-  "sheets": 91,
-  "frames": 1457,
+  "sheets": 106,
+  "frames": 1600,
   "records": [
     {
       "sheet": "assets/characters/alito/animations/attack_01/punch1.png",
@@ -575,6 +575,55 @@
         0.05
       ],
       "gif": "assets/characters/alito/animations/run/preview.gif"
+    },
+    {
+      "sheet": "assets/characters/alito/animations/stomp/stomp.png",
+      "source_sha256": "59d46c12727ab0662a15f1f1580c79f082d1665a770a71d799298d4a1ff75015",
+      "frame_size": [
+        170,
+        254
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 9,
+      "runtime_manifest": "assets/characters/alito/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/alito/animations/stomp/preview.gif"
     },
     {
       "sheet": "assets/characters/alito/animations/ultimate/ulti.png",
@@ -1853,6 +1902,53 @@
         0.24166666666666667
       ],
       "gif": "assets/characters/beto/animations/runslide/preview.gif"
+    },
+    {
+      "sheet": "assets/characters/beto/animations/stomp/stomp.png",
+      "source_sha256": "ce542783680ddc79eff2e54bb492e531e68c3982de6b63f065b967b27ed16b7a",
+      "frame_size": [
+        200,
+        200
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 8,
+      "runtime_manifest": "assets/characters/beto/character.json",
+      "preview_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 24,
+      "preview_durations": [
+        0.041666666666666664,
+        0.041666666666666664,
+        0.041666666666666664,
+        0.041666666666666664,
+        0.041666666666666664,
+        0.041666666666666664,
+        0.041666666666666664,
+        0.24166666666666667
+      ],
+      "gif": "assets/characters/beto/animations/stomp/preview.gif"
     },
     {
       "sheet": "assets/characters/beto/animations/ultimate/ulti.png",
@@ -3239,6 +3335,55 @@
       "gif": "assets/characters/cami/animations/runslide/preview.gif"
     },
     {
+      "sheet": "assets/characters/cami/animations/stomp/stomp.png",
+      "source_sha256": "fac1dcb7d35c7983548e699d934534bfb932bcbebcd0c9177f97a1cc677f5ca4",
+      "frame_size": [
+        162,
+        245
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 9,
+      "runtime_manifest": "assets/characters/cami/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/cami/animations/stomp/preview.gif"
+    },
+    {
       "sheet": "assets/characters/cami/animations/ultimate/ulti.png",
       "source_sha256": "90bca9323a1491ceb0b765c4882150506d09aed60ef2e1d6df9fa35e3165341a",
       "frame_size": [
@@ -3778,6 +3923,55 @@
       "gif": "assets/characters/dami/animations/attack_01/preview.gif"
     },
     {
+      "sheet": "assets/characters/dami/animations/attack_02/attack2.png",
+      "source_sha256": "fa11f570e5c40012c505a7f0853300ce4735bba8bf7d6f9438bfc7815731afd4",
+      "frame_size": [
+        180,
+        240
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 9,
+      "runtime_manifest": "assets/characters/dami/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/dami/animations/attack_02/preview.gif"
+    },
+    {
       "sheet": "assets/characters/dami/animations/death/ko.png",
       "source_sha256": "fda75bc421ba557d391ee302c4bc53cb68ee628124c3dac2925c3588a0d39703",
       "frame_size": [
@@ -4166,6 +4360,55 @@
       "gif": "assets/characters/dami/animations/run/preview.gif"
     },
     {
+      "sheet": "assets/characters/dami/animations/stomp/stomp.png",
+      "source_sha256": "6764f595ddb7f6adaa7d9fe10d7df18c8e5cb1a7a1223900b6062b97a82b264f",
+      "frame_size": [
+        180,
+        240
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 9,
+      "runtime_manifest": "assets/characters/dami/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/dami/animations/stomp/preview.gif"
+    },
+    {
       "sheet": "assets/characters/dami/animations/walk/walking.png",
       "source_sha256": "198194c8eb6ac02f5e4a39ba33ec6e93bd4d7c723d812b517013cf05df60f468",
       "frame_size": [
@@ -4285,6 +4528,55 @@
         0.25555555555555554
       ],
       "gif": "assets/characters/malu/animations/attack_01/preview.gif"
+    },
+    {
+      "sheet": "assets/characters/malu/animations/attack_02/attack2.png",
+      "source_sha256": "bb9d0cfc0df59be23093db33b4ed96bf8be0795ad80c353af80eadba9ac6fca9",
+      "frame_size": [
+        168,
+        256
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 9,
+      "runtime_manifest": "assets/characters/malu/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/malu/animations/attack_02/preview.gif"
     },
     {
       "sheet": "assets/characters/malu/animations/death/ko.png",
@@ -4675,6 +4967,55 @@
       "gif": "assets/characters/malu/animations/run/preview.gif"
     },
     {
+      "sheet": "assets/characters/malu/animations/stomp/stomp.png",
+      "source_sha256": "e5b51b3f5f2db9eb23169e5a64f2a435b07e4fa58c12b1e3c8815cdbdb9c27fc",
+      "frame_size": [
+        168,
+        256
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 9,
+      "runtime_manifest": "assets/characters/malu/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/malu/animations/stomp/preview.gif"
+    },
+    {
       "sheet": "assets/characters/malu/animations/walk/walking.png",
       "source_sha256": "e80c422b84da9a8ff5ceb398315e520498daf800b1b2f8c6691efbe14ac23a7a",
       "frame_size": [
@@ -4810,6 +5151,55 @@
         0.25555555555555554
       ],
       "gif": "assets/characters/meli/animations/attack_01/preview.gif"
+    },
+    {
+      "sheet": "assets/characters/meli/animations/attack_02/attack2.png",
+      "source_sha256": "cc060656cdff42cf91ce1b6ced6a3f37d0b0254b48cd01b2f210e91bfc82a8a5",
+      "frame_size": [
+        168,
+        256
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 9,
+      "runtime_manifest": "assets/characters/meli/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/meli/animations/attack_02/preview.gif"
     },
     {
       "sheet": "assets/characters/meli/animations/death/ko.png",
@@ -5200,6 +5590,55 @@
       "gif": "assets/characters/meli/animations/run/preview.gif"
     },
     {
+      "sheet": "assets/characters/meli/animations/stomp/stomp.png",
+      "source_sha256": "908c31dd4707b76b84b4f82b6b2bb86f3eac86f79f23411a336bd34801f2b234",
+      "frame_size": [
+        168,
+        256
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 9,
+      "runtime_manifest": "assets/characters/meli/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/meli/animations/stomp/preview.gif"
+    },
+    {
       "sheet": "assets/characters/meli/animations/walk/walk.png",
       "source_sha256": "c6c345d3d981c9f1e7234607b58aecb2f13ab628fe23e9f57f6a2efb7d4b166d",
       "frame_size": [
@@ -5329,6 +5768,55 @@
         0.25555555555555554
       ],
       "gif": "assets/characters/pato/animations/attack_01/preview.gif"
+    },
+    {
+      "sheet": "assets/characters/pato/animations/attack_02/attack2.png",
+      "source_sha256": "12d7e0449e675c5dae6cf907414303a33942f7f41cdfa26ce377bf9bc2b6ff2c",
+      "frame_size": [
+        180,
+        240
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 9,
+      "runtime_manifest": "assets/characters/pato/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/pato/animations/attack_02/preview.gif"
     },
     {
       "sheet": "assets/characters/pato/animations/death/ko.png",
@@ -5719,6 +6207,55 @@
       "gif": "assets/characters/pato/animations/run/preview.gif"
     },
     {
+      "sheet": "assets/characters/pato/animations/stomp/stomp.png",
+      "source_sha256": "716fdec1887e07246ec47fe3c3898c4bd51f6dfd77f9f876b6228ed8cf8c9cf7",
+      "frame_size": [
+        180,
+        240
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 9,
+      "runtime_manifest": "assets/characters/pato/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/pato/animations/stomp/preview.gif"
+    },
+    {
       "sheet": "assets/characters/pato/animations/walk/walk.png",
       "source_sha256": "cae7b5a84b42a3567efc4588de41fe5708288003ad2198a3e5f996c8c9199be6",
       "frame_size": [
@@ -5842,6 +6379,55 @@
         0.25555555555555554
       ],
       "gif": "assets/characters/vampi/animations/attack_01/preview.gif"
+    },
+    {
+      "sheet": "assets/characters/vampi/animations/attack_02/attack2.png",
+      "source_sha256": "3ad2f391b88032ac77cd301aa3c1ddfd42ec8aae87127692b893905bcce3b7a3",
+      "frame_size": [
+        180,
+        240
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 9,
+      "runtime_manifest": "assets/characters/vampi/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/vampi/animations/attack_02/preview.gif"
     },
     {
       "sheet": "assets/characters/vampi/animations/death/ko.png",
@@ -6230,6 +6816,181 @@
         0.07142857142857142
       ],
       "gif": "assets/characters/vampi/animations/run/preview.gif"
+    },
+    {
+      "sheet": "assets/characters/vampi/animations/runslide/runslide.png",
+      "source_sha256": "b3b5dacf4b86e7c0183708d642f06ad49870b0ace70869c5f60ec44618c31c5d",
+      "frame_size": [
+        180,
+        240
+      ],
+      "columns": 5,
+      "rows": 4,
+      "frames": 17,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "empty_cells": [
+        17,
+        18,
+        19
+      ],
+      "declared_frame_count": 17,
+      "runtime_manifest": "assets/characters/vampi/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/vampi/animations/runslide/preview.gif"
+    },
+    {
+      "sheet": "assets/characters/vampi/animations/stomp/stomp.png",
+      "source_sha256": "efed42f18ae45ed9b131fed5f23830898df3d25538b494f62904607acaa8729b",
+      "frame_size": [
+        180,
+        240
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 9,
+      "runtime_manifest": "assets/characters/vampi/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/vampi/animations/stomp/preview.gif"
+    },
+    {
+      "sheet": "assets/characters/vampi/animations/ultimate/ultimate.png",
+      "source_sha256": "bf64c83bff410babd5e85663520e77d352c563e51e4dd8607009cfcd37dd8b80",
+      "frame_size": [
+        180,
+        240
+      ],
+      "columns": 3,
+      "rows": 3,
+      "frames": 9,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "empty_cells": [],
+      "declared_frame_count": 9,
+      "runtime_manifest": "assets/characters/vampi/character.json",
+      "preview_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "preview_fps": 18,
+      "preview_durations": [
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.05555555555555555,
+        0.25555555555555554
+      ],
+      "gif": "assets/characters/vampi/animations/ultimate/preview.gif"
     },
     {
       "sheet": "assets/characters/vampi/animations/walk/walk.png",

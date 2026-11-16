@@ -131,3 +131,11 @@ El golpe de carrera de Beto usa `animations/runslide/runslide.png` (600 × 600, 
 La comida y las armas del suelo se recogen pulsando golpe a menos de 32 unidades y en la misma franja. No se recogen al tocarlas. `pickup` usa temporalmente slide sin desplazamiento ni daño; el objeto se obtiene al 55% de la secuencia y un golpe recibido puede interrumpir la recogida. La comida queda si la vida está completa. Palos y caños aparecen en el suelo y también se pueden crear desde los botones PALO/CAÑO de debug; quedan equipados en la mano derecha al moverse, saltar, golpear, recibir daño o caer. El agarre visual sigue anclajes por cuadro detectados desde el sprite; `weapon_hand_frames` en la animación permite indicar coordenadas [x,y] exactas para futuros sprites.
 
 El ataque armado usa `punch_weapon`, provisionalmente el primer golpe, con alcance 105 y daño 26 (palo) / 32 (caño). Las carpetas `animations/punch_weapon/` existen para Beto, Alito y Cami en la carpeta unificada. Reemplazar el alias por la futura hoja permite conectar su animación propia. La recogida tiene un alias separado `pickup` para sustituir su placeholder después.
+
+## Patada a cajas y barriles
+
+Cada personaje tiene `animations/stomp/`. Beto y Cami reutilizan sus cuadros de `runslide`; Alito usa los de su patada `attack_02`. Las hojas están copiadas a `stomp/stomp.png` y pueden editarse por separado. Dami, Malu, Meli, Pato y Vampi tienen hojas propias de `stomp` y `attack_02`, de nueve cuadros. Vampi también tiene `runslide` (17 cuadros) y `ultimate` (9 cuadros) propios. El ataque a objetos usa `stomp`; correr conserva su animación habitual.
+
+## Velocidad de los combos
+
+Cami, Dami, Pato y Vampi usan la duración de cada golpe de Beto (`combo_timing_reference: "beto"`, `combo_timing_multiplier: 1.0`). Alito, Malu y Meli usan el doble de esa duración (`2.0`), más rápido que sus anteriores golpes de 0,5 segundos. Los cuadros propios y sus contactos se reproducen con el progreso del ataque. La referencia usa los FPS, cuadros y `combo_duration_multiplier` actuales de Beto.

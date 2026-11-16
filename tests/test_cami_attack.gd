@@ -21,7 +21,9 @@ func run() -> void:
 	hero.begin_attack()
 	assert(hero.attack_motion() == "attack_01")
 	assert(hero.visual.sheets["attack_01"].resource_path == "res://assets/characters/cami/animations/attack_01/punch1.png")
-	assert(is_equal_approx(hero.attack_duration, 0.3))
+	var beto: Dictionary = preload("res://scripts/character_catalog.gd").character("beto")["definition"]
+	var timing: Dictionary = beto["animations"]["attack_01"]
+	assert(is_equal_approx(hero.attack_duration, float(timing["frame_indices"].size()) / float(timing["fps"]) * float(beto["combo_duration_multiplier"])))
 	for frame in range(9):
 		hero.attack_time = hero.attack_duration * (1.0 - (frame + 0.1) / 9.0)
 		hero.update_visual(0)

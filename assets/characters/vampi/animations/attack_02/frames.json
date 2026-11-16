@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/vampi/animations/attack_02/attack2.png",
+  "source_sha256": "3ad2f391b88032ac77cd301aa3c1ddfd42ec8aae87127692b893905bcce3b7a3",
+  "frame_size": [
+    180,
+    240
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/vampi/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 18,
+  "preview_durations": [
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.05555555555555555,
+    0.25555555555555554
+  ],
+  "gif": "assets/characters/vampi/animations/attack_02/preview.gif"
+}

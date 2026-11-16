@@ -45,7 +45,7 @@ func run() -> void:
 	hero.position = crate.position - Vector2(40, 0)
 	hero.facing = 1
 	hero.begin_attack()
-	check(hero.attack_motion() == "runslide" and not hero.run_attack, "attacking a nearby supply uses slide art without forcing movement")
+	check(hero.attack_motion() == "stomp" and not hero.run_attack, "attacking a nearby supply uses stomp without forcing movement")
 	hero.strike()
 	check(crate.dead and game.food.size() == 1, "one hit destroys crate and drops food")
 	hero.strike()
