@@ -157,10 +157,14 @@ func tick(dt: float) -> void:
 						var target := victim
 						victim = null
 						target.grabbed_by = null
-						target.launch_away(30 if hero.is_boss else 19, locked_facing, false, hero)
+						if target.launch_away(30 if hero.is_boss else 19, locked_facing, false, hero):
+							hero.apply_hitstop(target)
 						state = "punch_recover"
 					else:
+						var hp_before: float = victim.hp
 						victim.hurt(30 if hero.is_boss else 19, locked_facing, false, true)
+						if victim.hp < hp_before:
+							hero.apply_hitstop(victim)
 						if victim.dead:
 							release()
 							return

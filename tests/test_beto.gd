@@ -78,7 +78,7 @@ func run() -> void:
 	target.invincible = 0
 	hero.strike()
 	hero.begin_attack()
-	check(hero.combo == 3 and hero.visual.motion == "attack_03", "fourth combo move uses guitar sheet")
+	check(hero.combo == 3 and hero.visual.motion == "attack_03", "fourth combo move uses the new finisher")
 	hero.attack_time = 0
 	hero.cooldown = 0
 	hero.combo_window = 0
@@ -126,7 +126,11 @@ func run() -> void:
 	hero.ultimate_pose = 0
 	game.charge = 100
 	game.use_ultimate()
-	check(not hero.ultimate_airborne and hero.visual.motion == "ultimate", "next grounded ultimate resets aerial variant")
+	check(not hero.ultimate_airborne and hero.visual.motion == "ultimate_alt", "second grounded ultimate uses the previous finisher variant")
+	check(hero.visual.sheets["ultimate_alt"].resource_path.ends_with("beto/animations/ultimate_alt/ultimate_alt.png"), "old finisher preserved as an ultimate sheet")
+	game.ult_time = 0.6
+	hero.update_visual(0)
+	check(hero.visual.source_frame >= 6, "alternate ultimate synchronizes its contact frame")
 	game.ult_time = 0
 	hero.ultimate_pose = 0
 	hero.invincible = 0

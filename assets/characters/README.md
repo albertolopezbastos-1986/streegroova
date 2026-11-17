@@ -139,3 +139,17 @@ Cada personaje tiene `animations/stomp/`. Beto y Cami reutilizan sus cuadros de 
 ## Velocidad de los combos
 
 Cami, Dami, Pato y Vampi usan la duración de cada golpe de Beto (`combo_timing_reference: "beto"`, `combo_timing_multiplier: 1.0`). Alito, Malu y Meli usan el doble de esa duración (`2.0`), más rápido que sus anteriores golpes de 0,5 segundos. Los cuadros propios y sus contactos se reproducen con el progreso del ataque. La referencia usa los FPS, cuadros y `combo_duration_multiplier` actuales de Beto.
+
+Alito tiene `runslide/runslide.png`, copia independiente de su patada `attack_02` con contacto en 3–4 a 18 FPS, y `hurt/hurt.png`, hoja propia de daño de nueve cuadros a 10 FPS. Ambas usan celdas de 170 × 254 y cuadrícula 3 × 3.
+
+## Pausa de impacto de todos los personajes
+
+`enable_hitstop` en `scripts/game.gd` activa la pausa para los ocho personajes jugables. Solo los golpes conectados por el jugador contra luchadores disparan la pausa: el remate final del combo, los ataques corriendo y en salto, los ataques con armas y sus puñetazos de agarre. Los golpes intermedios del combo no disparan la pausa. Durante 10/60 segundos se congelan animación, movimiento y temporizadores de ambos, y el sprite del rival vibra horizontalmente 3 píxeles. Al terminar se restaura su posición visual y continúa el combate. Los golpes fallidos no activan la pausa.
+
+Para volver al comportamiento anterior, desmarcar **Enable Hitstop** en el nodo del juego o cambiar `@export var enable_hitstop := true` a `false`. La duración y vibración se ajustan con `HITSTOP_DURATION` y `HITSTOP_SHAKE` en `scripts/fighter.gd`. Prueba de regresión: `tests/test_hitstop.gd`.
+
+## Nuevos terceros ataques
+
+Beto, Dami, Malu, Meli, Pato y Vampi usan sus nuevas hojas de nueve cuadros en `attack_03/`. Pato conserva el nombre de archivo recibido, `attrack3.png`. Beto mantiene la duración anterior de su remate y su pausa de impacto. Cami conserva su tercer ataque propio; Alito mantiene su combo de dos golpes.
+
+El antiguo `thirdpunch.png` de Beto está en `ultimate_alt/ultimate_alt.png`. Sus ultis terrestres alternan entre `ultimate` y `ultimate_alt`, elegidas al activarlas, con la misma duración y daño. `ultimate_variants` en el manifiesto controla la secuencia; dejar solo `["ultimate"]` desactiva la variante.

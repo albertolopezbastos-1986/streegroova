@@ -1,6 +1,9 @@
 extends Node2D
 
 @export var enable_level_skip := true
+@export var enable_weapon_spawns := false
+# Player hitstop: disable this to restore combat without impact pauses.
+@export var enable_hitstop := true
 
 const Breakable = preload("res://scripts/breakable.gd")
 const CombatDirector = preload("res://scripts/combat_director.gd")
@@ -655,7 +658,7 @@ func spawn_wave() -> void:
 		enemies.append(enemy)
 	try_spawn_supply()
 	keep_enemies_in_play_area()
-	if weapons_allowed() and stage in weapon_spawn_waves and stage not in weapon_spawned_waves:
+	if enable_weapon_spawns and weapons_allowed() and stage in weapon_spawn_waves and stage not in weapon_spawned_waves:
 		spawn_weapon(Vector2(minf(right_bound - 45, player.position.x + 320), START_Y), "wood" if randf() < 0.5 else "pipe")
 		weapon_spawned_waves.append(stage)
 	banner_time = 3
@@ -1077,6 +1080,14 @@ func use_ultimate(actor: Node2D = null) -> void:
 		return
 	# Keep the variant chosen at activation for the entire ultimate.
 	player.ultimate_airborne = player.height > 0 or player.jump_speed > 0
+	player.ultimate_ground_motion = "ultimate"
+	if not player.ultimate_airborne:
+		var variants: Array = player.visual.character_data.get("ultimate_variants", ["ultimate"])
+		if not variants.is_empty():
+			var selected := str(variants[player.ultimate_variant_index % variants.size()])
+			if player.visual.sheets.has(selected):
+				player.ultimate_ground_motion = selected
+				player.ultimate_variant_index += 1
 	player.grapple.release()
 	player.reset_running()
 	player.velocity = Vector2.ZERO

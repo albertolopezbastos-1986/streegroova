@@ -6,6 +6,7 @@
   "scale": 0.6,
   "pivot": "feet_center",
   "notes": "Beto integrado al jugador. Idle y walk: hojas de 20 cuadros (5x5, pose extra omitida). Primer golpe: 40 cuadros. Walk usa escala y pivote propios para conservar altura y apoyo. La ulti reutiliza el golpe con guitarra.",
+  "ultimate_variants": ["ultimate", "ultimate_alt"],
   "animations": {
     "grab": {
       "path": "animations/grab",
@@ -217,35 +218,35 @@
       ]
     },
     "attack_03": {
-      "path": "animations/attack_03",
-      "format": "sheet",
-      "fps": 20.7,
-      "loop": false,
-      "frame_size": [
-        200,
-        200
-      ],
-      "frame_count": 9,
-      "sheet_columns": 3,
-      "sheet_rows": 3,
-      "active_hit_frames": [
-        6,
-        7
-      ],
-      "file": "thirdpunch.png",
-      "frame_order": "row_major",
-      "frame_indices": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8
-      ]
-    },
+  "path": "animations/attack_03",
+  "file": "attack3.png",
+  "format": "sheet",
+  "fps": 20.7,
+  "loop": false,
+  "frame_size": [
+    200,
+    200
+  ],
+  "frame_count": 9,
+  "sheet_columns": 3,
+  "sheet_rows": 3,
+  "frame_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "active_hit_frames": [
+    5,
+    6
+  ],
+  "placeholder": false
+},
     "jump": {
       "path": "animations/jump",
       "format": "sheet",
@@ -835,7 +836,40 @@
         6
       ],
       "placeholder": false
-    }
+    },
+    "ultimate_alt": {
+  "path": "animations/ultimate_alt",
+  "format": "sheet",
+  "fps": 5.625,
+  "loop": false,
+  "frame_size": [
+    200,
+    200
+  ],
+  "frame_count": 9,
+  "sheet_columns": 3,
+  "sheet_rows": 3,
+  "active_hit_frames": [
+    6,
+    7
+  ],
+  "file": "ultimate_alt.png",
+  "frame_order": "row_major",
+  "frame_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "impact_frame": 6,
+  "impact_progress": 0.59,
+  "placeholder": false
+}
   },
   "reference": "source/betopixel.png",
   "pivot_pixels": [

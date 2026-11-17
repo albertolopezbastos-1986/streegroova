@@ -116,6 +116,10 @@ func run() -> void:
 	check(alito["definition"]["animations"]["idle"]["frame_indices"].size() == 41, "Alito idle uses 41 nonempty frames")
 	check(alito["sheets"]["pickup"].resource_path.ends_with("alito/animations/pickup/grab.png"), "Alito uses his new pickup sheet")
 	check(alito["sheets"]["death"].resource_path.ends_with("alito/animations/death/ko.png"), "Alito uses his new death sheet")
+	for motion in ["hurt", "runslide"]:
+		check(alito["sheets"][motion].resource_path == "res://assets/characters/alito/animations/%s/%s.png" % [motion, motion], "Alito uses his own " + motion + " sheet")
+		check(alito["definition"]["animations"][motion]["frame_indices"] == range(9), "Alito uses nine frames for " + motion)
+	check(alito["definition"]["animations"]["runslide"]["active_hit_frames"] == alito["definition"]["animations"]["attack_02"]["active_hit_frames"], "Alito slide preserves kick contacts")
 	check(alito["definition"]["animations"]["walk"]["frame_indices"] == range(20), "Alito walk uses exactly frames 0 through 19")
 	check(alito["sheets"]["walk"] != alito["sheets"]["idle"], "Alito walk has its own texture")
 	game.player.moving = true
@@ -168,7 +172,7 @@ func run() -> void:
 		check(not newcomer.is_empty() and newcomer["id"] == id, id.capitalize() + " loads as a playable character")
 		for motion in ["idle", "walk", "attack_01", "hurt", "death", "pickup"]:
 			check(newcomer["sheets"].has(motion), id.capitalize() + " has its basic " + motion + " animation")
-		for motion in ["attack_02", "stomp"]:
+		for motion in ["attack_02", "attack_03", "stomp"]:
 			check(newcomer["sheets"][motion].resource_path.begins_with("res://assets/characters/%s/animations/%s/" % [id, motion]), id.capitalize() + " uses its own " + motion + " sheet")
 			check(newcomer["definition"]["animations"][motion]["frame_indices"] == range(9), id.capitalize() + " uses nine frames for " + motion)
 	for motion in ["runslide", "ultimate"]:

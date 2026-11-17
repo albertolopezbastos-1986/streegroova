@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bpp8r7xwxltqk"
-path="res://.godot/imported/thirdpunch.png-a88e5b38a20f854072f8230002ef92f4.ctex"
+uid="uid://d3men5hopbfa2"
+path="res://.godot/imported/hurt.png-5b8e66899a28e9b2757dcadaedc53216.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/beto/animations/attack_03/thirdpunch.png"
-dest_files=["res://.godot/imported/thirdpunch.png-a88e5b38a20f854072f8230002ef92f4.ctex"]
+source_file="res://assets/characters/alito/animations/hurt/hurt.png"
+dest_files=["res://.godot/imported/hurt.png-5b8e66899a28e9b2757dcadaedc53216.ctex"]
 
 [params]
 

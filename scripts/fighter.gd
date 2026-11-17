@@ -14,6 +14,8 @@ const ENEMY_SLIDE_INTERVALS = [12.0, 9.0, 8.0]
 const PLAYER_COMBO := [1, 2, 1, 3]
 const HIT_LOCK_DURATION := 0.65
 const HIT_SHAKE_DURATION := 0.16
+const HITSTOP_DURATION := 10.0 / 60.0
+const HITSTOP_SHAKE := 3.0
 
 const WALK_SPEED := 170.0
 const RUN_SPEED := 300.0
@@ -75,6 +77,10 @@ var cooldown := 0.0
 var stun := 0.0
 var hit_lock := 0.0
 var hit_shake := 0.0
+var hitstop_remaining := 0.0
+var hitstop_elapsed := 0.0
+var hitstop_victim := false
+var hitstop_visual_position := Vector2.ZERO
 var invincible := 0.0
 var dead := false
 var death_time := 0.0
@@ -88,6 +94,8 @@ var ai_wait := 0.0
 var windup := 0.0
 var ultimate_pose := 0.0
 var ultimate_airborne := false
+var ultimate_ground_motion := "ultimate"
+var ultimate_variant_index := 0
 var air_attack := false
 var visual: Node2D
 var ultimate_air_material: ShaderMaterial
@@ -134,6 +142,9 @@ func make_boss() -> void:
 	queue_redraw()
 
 func tick(dt: float) -> void:
+	if hitstop_remaining > 0:
+		tick_hitstop(dt)
+		return
 	anim += dt
 	hit_lock = maxf(0, hit_lock - dt)
 	hit_shake = maxf(0, hit_shake - dt)
@@ -227,6 +238,8 @@ func tick(dt: float) -> void:
 				position.x = clampf(position.x - facing * float(movement.get("retreat_distance", 0.0)) * step, movement_left_bound(), game.right_bound)
 		if attack_is_active():
 			strike()
+			if hitstop_remaining > 0:
+				return
 	if run_attack and attack_time <= 0:
 		run_attack = false
 		combo_window = 0
@@ -570,6 +583,8 @@ func attack_is_active() -> bool:
 	return false
 
 func update_visual(dt: float) -> void:
+	if hitstop_remaining > 0:
+		return
 	if not is_instance_valid(visual):
 		return
 	var motion := "idle"
@@ -596,7 +611,7 @@ func update_visual(dt: float) -> void:
 		motion = "get_up" if visual.sheets.has("get_up") else "jump"
 		progress = 1.0 - getup_time / GETUP_DURATION
 	elif ultimate_pose > 0 and can_use_ultimate():
-		motion = "ultimate_air" if ultimate_airborne else "ultimate"
+		motion = "ultimate_air" if ultimate_airborne else ultimate_ground_motion
 		progress = (1.6 - game.ult_time) / 1.6
 	elif stun > 0:
 		motion = "hurt"
@@ -674,11 +689,43 @@ func strike() -> void:
 				combo_connected = true
 			if kind == -1 and target.has_method("lock_on_hit") and target.hp < hp_before:
 				target.lock_on_hit()
+				if is_combo_finisher() or air_attack or run_attack or weapon_attack or prop_attack:
+					apply_hitstop(target)
 			if weapon_attack and target.has_method("launch_away") and target.hp < hp_before:
 				weapon_durability = maxi(0, weapon_durability - weapon_hit_cost(target))
 				if weapon_durability == 0:
 					break_equipped_weapon()
 					break
+
+# Pair-local hitstop leaves unrelated fighters and the rest of the scene running.
+func apply_hitstop(target: Node2D) -> void:
+	if not game.enable_hitstop or kind != -1:
+		return
+	start_hitstop(false)
+	target.start_hitstop(true)
+
+func start_hitstop(is_victim: bool) -> void:
+	if hitstop_remaining <= 0:
+		# Capture the actual contact pose before freezing animation clocks and physics.
+		if is_victim:
+			hit_shake = 0
+		update_visual(0)
+		hitstop_visual_position = visual.position
+	hitstop_remaining = HITSTOP_DURATION
+	hitstop_elapsed = 0
+	hitstop_victim = is_victim
+
+func tick_hitstop(dt: float) -> void:
+	hitstop_elapsed += minf(dt, hitstop_remaining)
+	hitstop_remaining = maxf(0, hitstop_remaining - dt)
+	if hitstop_remaining < 0.000001:
+		hitstop_remaining = 0
+	var offset := 0.0
+	if hitstop_victim and hitstop_remaining > 0:
+		offset = HITSTOP_SHAKE * (1.0 if int(hitstop_elapsed * 60.0) % 2 == 0 else -1.0)
+	visual.position = hitstop_visual_position + Vector2(offset, 0)
+	visual.queue_redraw()
+	queue_redraw()
 
 static func weapon_hit_cost(target: Node2D) -> int:
 	return 50 if target.is_boss else ([10, 20, 30][target.kind] if target.kind >= 0 else 10)

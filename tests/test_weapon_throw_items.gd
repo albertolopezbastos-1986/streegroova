@@ -27,6 +27,7 @@ func run() -> void:
 		game.debug_spawn_item("crate" if i % 2 else "barrel")
 		game.props[-1].hurt(1, 1)
 		assert(game.food.size() == i + 1)
+		assert(game.weapons.is_empty(), "crates and barrels only drop food")
 		types[game.food[-1].beer] = true
 	assert(types.size() == 2)
 	game._input(key(KEY_0))
