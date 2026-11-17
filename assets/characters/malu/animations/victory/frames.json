@@ -1,0 +1,49 @@
+{
+  "sheet": "assets/characters/malu/animations/victory/victory.png",
+  "source_sha256": "30d3d9dff086e8212c82a6074bacebabd7cbc492cbfc27f1005a5c59fe86a73a",
+  "frame_size": [
+    168,
+    256
+  ],
+  "columns": 3,
+  "rows": 3,
+  "frames": 9,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "empty_cells": [],
+  "declared_frame_count": 9,
+  "runtime_manifest": "assets/characters/malu/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "preview_fps": 8,
+  "preview_durations": [
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.325
+  ],
+  "gif": "assets/characters/malu/animations/victory/preview.gif"
+}

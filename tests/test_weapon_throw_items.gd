@@ -15,7 +15,7 @@ func run() -> void:
 	game.set_process(false)
 	game.new_run(true)
 	game._input(key(KEY_0))
-	assert(game.debug_items_menu.open and game.debug_items_menu.buttons.size() == 11)
+	assert(game.debug_items_menu.open and game.debug_items_menu.buttons.size() == game.debug_items_menu.ACTIONS.size())
 	game.debug_items_menu.choose(7)
 	assert(not game.debug_items_menu.open and game.props.size() == 1 and game.props[0].barrel)
 	game._input(key(KEY_0))

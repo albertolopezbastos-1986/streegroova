@@ -31,7 +31,7 @@ func run() -> void:
 		assert(game.active_character_id == character_ids[code - KEY_1])
 		assert(game.player.hp == game.player.max_hp)
 	game._input(key(KEY_0))
-	assert(game.debug_items_menu.open and game.debug_items_menu.buttons.size() == 12)
+	assert(game.debug_items_menu.open and game.debug_items_menu.buttons.size() == game.debug_items_menu.ACTIONS.size())
 	assert(game.debug_items_menu.ACTIONS[5]["action"] == "concert")
 	game.debug_items_menu.choose(0)
 	game._input(key(KEY_0))

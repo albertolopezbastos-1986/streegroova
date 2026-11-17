@@ -153,3 +153,7 @@ Para volver al comportamiento anterior, desmarcar **Enable Hitstop** en el nodo 
 Beto, Dami, Malu, Meli, Pato y Vampi usan sus nuevas hojas de nueve cuadros en `attack_03/`. Pato conserva el nombre de archivo recibido, `attrack3.png`. Beto mantiene la duración anterior de su remate y su pausa de impacto. Cami conserva su tercer ataque propio; Alito mantiene su combo de dos golpes.
 
 El antiguo `thirdpunch.png` de Beto está en `ultimate_alt/ultimate_alt.png`. Sus ultis terrestres alternan entre `ultimate` y `ultimate_alt`, elegidas al activarlas, con la misma duración y daño. `ultimate_variants` en el manifiesto controla la secuencia; dejar solo `["ultimate"]` desactiva la variante.
+
+## Poses de victoria
+
+Los ocho personajes tienen hoja propia `animations/victory/victory.png`. Dami, Pato y Vampi usan 13 cuadros en cuadrícula 4 × 4 (celdas 180 × 240); Malu y Meli usan nueve cuadros en cuadrícula 3 × 3 (168 × 256). Estas cinco hojas se reproducen a 8 FPS, sin bucle, y mantienen el último cuadro durante el resto de la celebración. Beto, Alito y Cami conservan sus secuencias existentes. Prueba: `tests/test_victory_poses.gd`.

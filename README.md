@@ -222,3 +222,5 @@ Los multiplicadores se multiplican entre sí: Groova Break llena ×1,1; impactos
 Cada golpe da diez puntos base por unidad de daño real, sin premiar el daño excedente al KO. El KO de un jefe duplica su bonus base. Completar un nivel entrega 250 puntos base, o 1000 si no se recibió daño; este bonus usa barra, consumibles y penalización por vidas, sin multiplicador de combo. El HUD muestra el multiplicador y los segundos restantes de cada consumible. El puntaje se redondea a decenas, con máximo 9.999.990 para mantener compatibilidad con el ranking; Debug Room no genera puntos. Las reglas están en `scripts/score_rules.gd` y la prueba en `tests/test_score_system.gd`.
 
 Los jefes ya no reciben el bloqueo adicional de impactos (`hit_lock`) que facilita completar combos contra rivales comunes. Conservan daño, reacción normal y sus resistencias a agarres/lanzamientos.
+
+En la sala de debug, `0 / OPCIONES` → **POSE DE VICTORIA** reproduce la animación del personaje actual, mantiene el último cuadro cinco segundos y vuelve a `idle`, recuperando el movimiento. El combate se pausa durante la vista previa. Prueba: `tests/test_debug_victory.gd`.

@@ -18,7 +18,8 @@ const ACTIONS := [
 	{"label": "BARRIL / COMIDA", "action": "barrel"},
 	{"label": "CAJA / COMIDA", "action": "crate"},
 	{"label": "TABLON DE MADERA", "action": "wood"},
-	{"label": "CAÑO GRIS", "action": "pipe"}
+	{"label": "CAÑO GRIS", "action": "pipe"},
+	{"label": "POSE DE VICTORIA", "action": "victory"}
 ]
 
 func _ready() -> void:
@@ -36,7 +37,7 @@ func _ready() -> void:
 	for i in range(ACTIONS.size()):
 		var button := Button.new()
 		button.text = str(ACTIONS[i]["label"])
-		button.position = Vector2(130 + (i % 2) * 360, 105 + (i / 2) * 66)
+		button.position = Vector2(130 + (i % 2) * 360, 105 + (i / 2) * 56)
 		button.size = Vector2(340, 48)
 		button.add_theme_font_size_override("font_size", 12)
 		button.pressed.connect(choose.bind(i))

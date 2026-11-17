@@ -1,0 +1,65 @@
+{
+  "sheet": "assets/characters/vampi/animations/victory/victory.png",
+  "source_sha256": "b4dced43aa2d36ebeda4b7c30e8eee487b1de2ac2ce8375349f2a78b5a04ec8e",
+  "frame_size": [
+    180,
+    240
+  ],
+  "columns": 4,
+  "rows": 4,
+  "frames": 13,
+  "indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "empty_cells": [
+    13,
+    14,
+    15
+  ],
+  "declared_frame_count": 13,
+  "runtime_manifest": "assets/characters/vampi/character.json",
+  "preview_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "preview_fps": 8,
+  "preview_durations": [
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.125,
+    0.325
+  ],
+  "gif": "assets/characters/vampi/animations/victory/preview.gif"
+}

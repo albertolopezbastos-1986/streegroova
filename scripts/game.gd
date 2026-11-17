@@ -68,6 +68,8 @@ var particles: Array = []
 var props: Array = []
 var food: Array = []
 var weapons: Array = []
+var debug_victory_elapsed := -1.0
+const DEBUG_VICTORY_HOLD := 5.0
 var debug_items_menu: CanvasLayer
 var weapon_spawn_waves: Array[int] = []
 var weapon_spawned_waves: Array[int] = []
@@ -255,6 +257,7 @@ func new_run(as_debug := false) -> void:
 		fade_screen.color.a = 0
 		fade_screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	mobile_controls.release_all()
+	debug_victory_elapsed = -1.0
 	debug_room = as_debug
 	debug_items_menu.close()
 	debug_panel.get_child(0).visible = as_debug
@@ -619,6 +622,8 @@ func debug_menu_action(action: String) -> void:
 			debug_spawn_enemy(0, true)
 		"ultimate":
 			charge = 100
+		"victory":
+			debug_preview_victory()
 		"concert":
 			begin_screen_transition("concert")
 		"wave":
@@ -633,6 +638,48 @@ func debug_menu_action(action: String) -> void:
 					enemy.thrown_time = 0
 					enemy.getup_time = 0
 					enemy.hurt(enemy.hp, 1, true)
+
+func debug_preview_victory() -> void:
+	if not debug_room or state != "play" or player.dead:
+		return
+	mobile_controls.release_all()
+	player.grapple.release()
+	if is_instance_valid(player.grabbed_by):
+		player.grabbed_by.grapple.release()
+	player.reset_running()
+	player.velocity = Vector2.ZERO
+	player.attack_time = 0
+	player.attack_buffer = 0
+	player.cooldown = 0
+	player.combo_window = 0
+	player.combo_connected = false
+	player.pickup_target = null
+	player.hitstop_remaining = 0
+	player.hit_shake = 0
+	player.hit_lock = 0
+	player.invincible = 0
+	player.stun = 0
+	player.thrown_time = 0
+	player.getup_time = 0
+	player.height = 0
+	player.jump_speed = 0
+	player.moving = false
+	player.ultimate_pose = 0
+	ult_time = 0
+	freeze = 0
+	debug_victory_elapsed = 0
+	player.victory_time = 0
+	player.update_visual(0)
+
+func update_debug_victory(dt: float) -> void:
+	debug_victory_elapsed += dt
+	var duration: float = player.visual.duration("victory")
+	player.victory_time = minf(debug_victory_elapsed, duration)
+	if debug_victory_elapsed >= duration + DEBUG_VICTORY_HOLD:
+		debug_victory_elapsed = -1.0
+		player.victory_time = -1.0
+	player.update_visual(dt)
+	player.queue_redraw()
 
 func debug_spawn_enemy(kind: int, boss := false) -> void:
 	var enemy := Fighter.new()
@@ -875,6 +922,9 @@ func world_to_screen(point: Vector2) -> Vector2:
 func update_game(dt: float) -> void:
 	if state != "play" or debug_items_menu.open:
 		return
+	if debug_victory_elapsed >= 0:
+		update_debug_victory(dt)
+		return
 	score_rules.tick(dt)
 	banner_time = maxf(0, banner_time - dt)
 	combo_timer = maxf(0, combo_timer - dt)
@@ -1007,6 +1057,8 @@ func complete_level() -> void:
 	player.grapple.release()
 	player.reset_running()
 	player.velocity = Vector2.ZERO
+	# Celebration must not retain a hitstop started by the finishing blow.
+	player.hitstop_remaining = 0
 	player.attack_time = 0
 	player.attack_buffer = 0
 	player.stun = 0
