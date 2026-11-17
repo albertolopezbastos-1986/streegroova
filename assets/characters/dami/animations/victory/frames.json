@@ -28,7 +28,7 @@
     14,
     15
   ],
-  "declared_frame_count": 13,
+  "declared_frame_count": 11,
   "runtime_manifest": "assets/characters/dami/character.json",
   "preview_indices": [
     0,
@@ -41,14 +41,10 @@
     7,
     8,
     9,
-    10,
-    11,
-    12
+    10
   ],
   "preview_fps": 8,
   "preview_durations": [
-    0.125,
-    0.125,
     0.125,
     0.125,
     0.125,
